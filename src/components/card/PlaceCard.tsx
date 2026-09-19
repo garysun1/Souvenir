@@ -13,7 +13,9 @@ export function PlaceCard({ place }: { place: Place }) {
             <CardTitle className="text-base">{place.name}</CardTitle>
             <RarityBadge tier={place.rarityTier} />
           </div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">{place.category.replace("_", " ")}</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {place.category.replace("_", " ")}
+          </p>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">{place.description}</CardContent>
       </Card>

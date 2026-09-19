@@ -3,7 +3,9 @@ import { categorySchema, identifyRequestSchema, placeSchema } from "@/lib/schema
 describe("schemas", () => {
   it("accepts valid inputs", () => {
     expect(categorySchema.parse("nature")).toBe("nature");
-    expect(identifyRequestSchema.parse({ imageUrl: "https://example.com/photo.jpg" }).imageUrl).toContain("example");
+    expect(
+      identifyRequestSchema.parse({ imageUrl: "https://example.com/photo.jpg" }).imageUrl,
+    ).toContain("example");
   });
   it("rejects malformed inputs", () => {
     expect(() => categorySchema.parse("museum")).toThrow();

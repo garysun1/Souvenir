@@ -1,7 +1,13 @@
 import { z } from "zod";
 
-const optionalString = z.preprocess((value) => value === "" ? undefined : value, z.string().optional());
-const optionalUrl = z.preprocess((value) => value === "" ? undefined : value, z.string().url().optional());
+const optionalString = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().optional(),
+);
+const optionalUrl = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().url().optional(),
+);
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,

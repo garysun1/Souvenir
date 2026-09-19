@@ -81,12 +81,8 @@
           "name": "editions_user_id_users_id_fk",
           "tableFrom": "editions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -94,12 +90,8 @@
           "name": "editions_place_id_places_id_fk",
           "tableFrom": "editions",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -109,11 +101,7 @@
         "editions_user_place_variant_unique": {
           "name": "editions_user_place_variant_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "place_id",
-            "variant"
-          ]
+          "columns": ["user_id", "place_id", "variant"]
         }
       },
       "policies": {},
@@ -151,12 +139,8 @@
           "name": "friendships_user_id_users_id_fk",
           "tableFrom": "friendships",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -164,12 +148,8 @@
           "name": "friendships_friend_id_users_id_fk",
           "tableFrom": "friendships",
           "tableTo": "users",
-          "columnsFrom": [
-            "friend_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["friend_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -179,10 +159,7 @@
         "friendships_unique": {
           "name": "friendships_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "friend_id"
-          ]
+          "columns": ["user_id", "friend_id"]
         }
       },
       "policies": {},
@@ -212,12 +189,8 @@
           "name": "outing_members_outing_id_outings_id_fk",
           "tableFrom": "outing_members",
           "tableTo": "outings",
-          "columnsFrom": [
-            "outing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -225,12 +198,8 @@
           "name": "outing_members_user_id_users_id_fk",
           "tableFrom": "outing_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -240,10 +209,7 @@
         "outing_members_unique": {
           "name": "outing_members_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "outing_id",
-            "user_id"
-          ]
+          "columns": ["outing_id", "user_id"]
         }
       },
       "policies": {},
@@ -292,12 +258,8 @@
           "name": "outings_wishlist_id_wishlists_id_fk",
           "tableFrom": "outings",
           "tableTo": "wishlists",
-          "columnsFrom": [
-            "wishlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -305,12 +267,8 @@
           "name": "outings_created_by_users_id_fk",
           "tableFrom": "outings",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -433,9 +391,7 @@
         "places_slug_unique": {
           "name": "places_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -484,12 +440,8 @@
           "name": "rankings_user_id_users_id_fk",
           "tableFrom": "rankings",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -497,12 +449,8 @@
           "name": "rankings_place_id_places_id_fk",
           "tableFrom": "rankings",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -512,10 +460,7 @@
         "rankings_user_place_unique": {
           "name": "rankings_user_place_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["user_id", "place_id"]
         }
       },
       "policies": {},
@@ -551,12 +496,8 @@
           "name": "set_places_set_id_sets_id_fk",
           "tableFrom": "set_places",
           "tableTo": "sets",
-          "columnsFrom": [
-            "set_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -564,12 +505,8 @@
           "name": "set_places_place_id_places_id_fk",
           "tableFrom": "set_places",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -579,10 +516,7 @@
         "set_places_set_place_unique": {
           "name": "set_places_set_place_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "set_id",
-            "place_id"
-          ]
+          "columns": ["set_id", "place_id"]
         }
       },
       "policies": {},
@@ -638,9 +572,7 @@
         "sets_slug_unique": {
           "name": "sets_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -697,9 +629,7 @@
         "users_handle_unique": {
           "name": "users_handle_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "handle"
-          ]
+          "columns": ["handle"]
         }
       },
       "policies": {},
@@ -742,12 +672,8 @@
           "name": "wishlist_items_wishlist_id_wishlists_id_fk",
           "tableFrom": "wishlist_items",
           "tableTo": "wishlists",
-          "columnsFrom": [
-            "wishlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -755,12 +681,8 @@
           "name": "wishlist_items_place_id_places_id_fk",
           "tableFrom": "wishlist_items",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -768,12 +690,8 @@
           "name": "wishlist_items_added_by_users_id_fk",
           "tableFrom": "wishlist_items",
           "tableTo": "users",
-          "columnsFrom": [
-            "added_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["added_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -783,10 +701,7 @@
         "wishlist_items_unique": {
           "name": "wishlist_items_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "wishlist_id",
-            "place_id"
-          ]
+          "columns": ["wishlist_id", "place_id"]
         }
       },
       "policies": {},
@@ -830,12 +745,8 @@
           "name": "wishlists_owner_id_users_id_fk",
           "tableFrom": "wishlists",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -851,42 +762,22 @@
     "public.category": {
       "name": "category",
       "schema": "public",
-      "values": [
-        "nature",
-        "culture",
-        "food",
-        "landmark",
-        "hidden_gem"
-      ]
+      "values": ["nature", "culture", "food", "landmark", "hidden_gem"]
     },
     "public.edition_variant": {
       "name": "edition_variant",
       "schema": "public",
-      "values": [
-        "standard",
-        "revisit",
-        "group",
-        "seasonal"
-      ]
+      "values": ["standard", "revisit", "group", "seasonal"]
     },
     "public.friendship_status": {
       "name": "friendship_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted"
-      ]
+      "values": ["pending", "accepted"]
     },
     "public.rarity_tier": {
       "name": "rarity_tier",
       "schema": "public",
-      "values": [
-        "common",
-        "uncommon",
-        "rare",
-        "epic",
-        "legendary"
-      ]
+      "values": ["common", "uncommon", "rare", "epic", "legendary"]
     }
   },
   "schemas": {},

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
@@ -25,7 +27,7 @@
     "drizzle-orm": "0.36.4",
     "lucide-react": "^1.47.0",
     "maplibre-gl": "4.7.1",
-    "next": "15.1.7",
+    "next": "15.5.9",
     "openai": "4.76.3",
     "postgres": "3.4.5",
     "react": "19.2.8",
@@ -42,11 +44,13 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "0.27.2",
     "eslint": "^9",
-    "eslint-config-next": "15.1.7",
+    "eslint-config-next": "16.3.5",
+    "eslint-config-prettier": "9.1.0",
+    "prettier": "3.4.2",
     "tailwindcss": "^4",
+    "tsx": "4.19.2",
     "typescript": "^5",
-    "vitest": "2.1.8",
-    "tsx": "4.19.2"
+    "vitest": "2.1.8"
   },
   "packageManager": "pnpm@9.15.5"
 }

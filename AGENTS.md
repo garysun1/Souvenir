@@ -6,15 +6,15 @@ Use one branch per component: `feat/capture`, `feat/collection`, `feat/search`,
 `feat/agent`, `feat/social`, or `feat/dropbox`. Open a PR into `main`; one human
 merges it with squash.
 
-| Area | Owner |
-| --- | --- |
-| capture pages and capture APIs | Capture & Reveal |
-| collection, map, and places APIs | Collection & Map |
-| `src/lib/search`, external data adapters | Search & Data |
-| `src/lib/ai`, plan API | Agent |
-| friends, wishlists, outings APIs | Social |
-| Dropbox import API | Dropbox |
-| shared UI primitives | Scaffold; append-only |
+| Area                                     | Owner                 |
+| ---------------------------------------- | --------------------- |
+| capture pages and capture APIs           | Capture & Reveal      |
+| collection, map, and places APIs         | Collection & Map      |
+| `src/lib/search`, external data adapters | Search & Data         |
+| `src/lib/ai`, plan API                   | Agent                 |
+| friends, wishlists, outings APIs         | Social                |
+| Dropbox import API                       | Dropbox               |
+| shared UI primitives                     | Scaffold; append-only |
 
 ## Frozen contracts
 

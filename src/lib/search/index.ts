@@ -1,5 +1,6 @@
 import { env } from "@/lib/env";
 import type { SearchQuery, SearchResult } from "@/lib/schemas";
+import { ElasticSearchService } from "./es";
 import { searchPg } from "./pgFallback";
 
 export interface SearchService {
@@ -8,7 +9,7 @@ export interface SearchService {
 
 export function getSearchService(): SearchService {
   if (env.SEARCH_PROVIDER === "es") {
-    return new (require("./es").ElasticSearchService)() as SearchService;
+    return new ElasticSearchService();
   }
   return { search: searchPg };
 }
