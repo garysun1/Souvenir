@@ -11,8 +11,8 @@ const optionalUrl = z.preprocess(
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
-  SUPABASE_SERVICE_ROLE_KEY: optionalString,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optionalString,
+  SUPABASE_SECRET_KEY: optionalString,
   OPENAI_API_KEY: optionalString,
   ELASTICSEARCH_URL: optionalUrl,
   ELASTICSEARCH_API_KEY: optionalString,
@@ -25,8 +25,8 @@ const envSchema = z.object({
 export const env = envSchema.parse({
   DATABASE_URL: process.env.DATABASE_URL,
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL,
   ELASTICSEARCH_API_KEY: process.env.ELASTICSEARCH_API_KEY,
