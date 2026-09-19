@@ -101,10 +101,6 @@
   }
 
   body {
-    @apply bg-surface-muted text-text-primary;
-  }
-
-  html {
-    @apply font-sans;
+    @apply bg-surface-muted font-sans text-text-primary;
   }
 }
