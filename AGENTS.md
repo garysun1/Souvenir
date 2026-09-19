@@ -35,6 +35,8 @@ flags are `SEARCH_PROVIDER=pg|es` and `AI_PROVIDER=openai|mock`.
 - Use `src/components/ui/*` primitives for shared UI. These are append-only.
 - Primary navigation is Discover, Collection, Capture, Friends, and Profile.
   Planner entry points live under Discover and Profile rather than in the tab bar.
+- Layout is responsive: bottom tab bar below `lg`, `SideNav` at `lg`+; page
+  content lives in `PageBody` (max-w-6xl).
 - Appeal, discovery frequency, and availability remain three separate rarity
   signals. Sentiment colors are reserved for recommendations.
 - Read the design references in

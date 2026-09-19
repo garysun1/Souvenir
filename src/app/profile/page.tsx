@@ -3,6 +3,7 @@ import { ChevronRight, Heart, Import, Settings, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/ui/app-header";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { getCurrentCollection } from "@/lib/data";
+import { PageBody } from "@/components/ui/page";
 
 const rows = [
   { label: "Favorites", icon: Heart },
@@ -17,20 +18,22 @@ export default async function ProfilePage() {
   return (
     <>
       <AppHeader title="Profile" />
-      <div className="space-y-7 px-[18px] pt-7">
-        <div className="flex flex-col items-center">
-          <div className="flex size-20 items-center justify-center rounded-full bg-brand font-serif text-3xl font-bold text-white">
-            Y
+      <PageBody className="space-y-7 lg:flex lg:items-start lg:gap-8">
+        <div className="space-y-7 lg:w-80 lg:shrink-0">
+          <div className="flex flex-col items-center">
+            <div className="flex size-20 items-center justify-center rounded-full bg-brand font-serif text-3xl font-bold text-white">
+              Y
+            </div>
+            <p className="mt-3 text-sm font-semibold">@you</p>
           </div>
-          <p className="mt-3 text-sm font-semibold">@you</p>
+          <div className="grid grid-cols-3 divide-x divide-divider rounded-xl border border-divider py-4">
+            <Stat label="Places" value={new Set(collection.map((entry) => entry.place.id)).size} />
+            <Stat label="Sets" value={0} />
+            <Stat label="Friends" value={3} />
+          </div>
+          <AvatarStack names={["Maya", "Jordan", "Sam"]} />
         </div>
-        <div className="grid grid-cols-3 divide-x divide-divider rounded-xl border border-divider py-4">
-          <Stat label="Places" value={new Set(collection.map((entry) => entry.place.id)).size} />
-          <Stat label="Sets" value={0} />
-          <Stat label="Friends" value={3} />
-        </div>
-        <AvatarStack names={["Maya", "Jordan", "Sam"]} />
-        <div className="divide-y divide-divider border-y border-divider">
+        <div className="flex-1 divide-y divide-divider border-y border-divider">
           {rows.map(({ label, icon: Icon, href }) => {
             const content = (
               <>
@@ -59,7 +62,7 @@ export default async function ProfilePage() {
             );
           })}
         </div>
-      </div>
+      </PageBody>
     </>
   );
 }

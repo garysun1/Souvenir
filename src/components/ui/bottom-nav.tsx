@@ -2,25 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, Compass, Heart, Plus, UserRound, UsersRound } from "lucide-react";
+import { Camera, Plus } from "lucide-react";
 import { cn } from "cn";
-
-const items = [
-  { label: "Discover", href: "/discover", icon: Compass },
-  { label: "Collection", href: "/collection", icon: Heart },
-  { label: "Friends", href: "/friends", icon: UsersRound },
-  { label: "Profile", href: "/profile", icon: UserRound },
-];
+import { navItems, type NavItem as NavItemType } from "./nav-items";
 
 export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-20 mx-auto grid max-w-[480px] grid-cols-5 border-t border-divider bg-white/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-20 mx-auto grid max-w-[480px] grid-cols-5 border-t border-divider bg-white/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden"
     >
-      <NavItem item={items[0]} pathname={pathname} />
-      <NavItem item={items[1]} pathname={pathname} />
+      <NavItem item={navItems[0]} pathname={pathname} />
+      <NavItem item={navItems[1]} pathname={pathname} />
       <Link
         aria-label="Capture"
         className="flex min-h-11 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-text-secondary"
@@ -32,13 +26,13 @@ export function BottomNav() {
         </span>
         <span>Capture</span>
       </Link>
-      <NavItem item={items[2]} pathname={pathname} />
-      <NavItem item={items[3]} pathname={pathname} />
+      <NavItem item={navItems[2]} pathname={pathname} />
+      <NavItem item={navItems[3]} pathname={pathname} />
     </nav>
   );
 }
 
-function NavItem({ item, pathname }: { item: (typeof items)[number]; pathname: string }) {
+export function NavItem({ item, pathname }: { item: NavItemType; pathname: string }) {
   const Icon = item.icon;
   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
   return (

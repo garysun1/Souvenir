@@ -7,7 +7,7 @@ export function PlaceCard({ place }: { place: Place }) {
   return (
     <Link href={`/places/${place.slug}`}>
       <Card className="h-full overflow-hidden rounded-xl border-0 bg-white shadow-none ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-md">
-        <div className="h-36 bg-gradient-to-br from-amber-100 via-rose-100 to-sky-100" />
+        <div className="h-36 bg-gradient-to-br from-amber-100 via-rose-100 to-sky-100 md:h-44" />
         <CardHeader className="gap-2 pb-2">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="font-serif text-base font-bold">{place.name}</CardTitle>

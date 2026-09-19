@@ -24,7 +24,7 @@ export default async function DiscoverPage() {
           </Link>
         }
       />
-      <DiscoverContent places={places} set={sets[0]} />
+      <DiscoverContent places={places} sets={sets} />
     </>
   );
 }
