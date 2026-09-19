@@ -6,18 +6,20 @@ import { RarityBadge } from "./RarityBadge";
 export function PlaceCard({ place }: { place: Place }) {
   return (
     <Link href={`/places/${place.slug}`}>
-      <Card className="h-full overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
-        <div className="h-28 bg-gradient-to-br from-amber-100 via-rose-100 to-sky-100" />
+      <Card className="h-full overflow-hidden rounded-xl border-0 bg-white shadow-none ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-md">
+        <div className="h-36 bg-gradient-to-br from-amber-100 via-rose-100 to-sky-100" />
         <CardHeader className="gap-2 pb-2">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base">{place.name}</CardTitle>
+            <CardTitle className="font-serif text-base font-bold">{place.name}</CardTitle>
             <RarityBadge tier={place.rarityTier} />
           </div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs capitalize text-text-secondary">
             {place.category.replace("_", " ")}
           </p>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">{place.description}</CardContent>
+        <CardContent className="line-clamp-2 text-sm text-text-secondary">
+          {place.description}
+        </CardContent>
       </Card>
     </Link>
   );

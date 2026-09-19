@@ -5,6 +5,9 @@ Collect places. Keep memories. Find your next adventure.
 Souvenir is a mobile-first web PWA for turning places into collectible
 memories, planning outings, and sharing discoveries.
 
+The app uses a Beli-inspired five-tab shell: Discover, Collection, Capture,
+Friends, and Profile. Planner entry points live under Discover and Profile.
+
 ## Start in 3 commands
 
 ```bash

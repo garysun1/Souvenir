@@ -15,6 +15,8 @@ merges it with squash.
 | friends, wishlists, outings APIs         | Social                |
 | Dropbox import API                       | Dropbox               |
 | shared UI primitives                     | Scaffold; append-only |
+| Discover page                            | Search & Data         |
+| Profile page                             | Collection & Map      |
 
 ## Frozen contracts
 
@@ -25,3 +27,16 @@ breaking changes are not.
 Every route validates input with its Zod schema and returns `{ data }` or
 `{ error }`. Read environment variables only through `src/lib/env.ts`. Feature
 flags are `SEARCH_PROVIDER=pg|es` and `AI_PROVIDER=openai|mock`.
+
+## Design system
+
+- Tokens live in `src/app/globals.css`; use the serif font for wordmarks,
+  headings, and place names, and the sans font for functional text.
+- Use `src/components/ui/*` primitives for shared UI. These are append-only.
+- Primary navigation is Discover, Collection, Capture, Friends, and Profile.
+  Planner entry points live under Discover and Profile rather than in the tab bar.
+- Appeal, discovery frequency, and availability remain three separate rarity
+  signals. Sentiment colors are reserved for recommendations.
+- Read the design references in
+  [docs/design/beli-style-notes.md](docs/design/beli-style-notes.md) and
+  [docs/design/mobile-ui-plan.md](docs/design/mobile-ui-plan.md).

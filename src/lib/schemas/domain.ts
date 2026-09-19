@@ -4,6 +4,8 @@ export const categorySchema = z.enum(["nature", "culture", "food", "landmark", "
 export const rarityTierSchema = z.enum(["common", "uncommon", "rare", "epic", "legendary"]);
 export const editionVariantSchema = z.enum(["standard", "revisit", "group", "seasonal"]);
 export const friendshipStatusSchema = z.enum(["pending", "accepted"]);
+export const sentimentSchema = z.enum(["recommend", "depends", "skip"]);
+export type Sentiment = z.infer<typeof sentimentSchema>;
 
 export const placeSchema = z.object({
   id: z.string(),

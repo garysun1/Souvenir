@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api";
 import { wishlistItemRequestSchema } from "@/lib/schemas";
 
 export async function POST(request: Request) {
-  const parsed = wishlistItemRequestSchema.safeParse(await request.json());
-  if (!parsed.success)
-    return NextResponse.json(
-      { error: "invalid_request", details: parsed.error.flatten() },
-      { status: 400 },
-    );
+  const parsed = await parseJsonBody(request, wishlistItemRequestSchema);
+  if ("response" in parsed) return parsed.response;
   return NextResponse.json({ error: "not_implemented", owner: "Social" }, { status: 501 });
 }

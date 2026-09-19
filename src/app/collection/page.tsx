@@ -1,8 +1,13 @@
-export default function CollectionPage() {
+import { AppHeader } from "@/components/ui/app-header";
+import { getCurrentCollection } from "@/lib/data";
+import { CollectionContent } from "./collection-content";
+
+export default async function CollectionPage() {
+  const collection = await getCurrentCollection();
   return (
-    <div className="space-y-3 p-5">
-      <h1 className="text-3xl font-semibold">Collection</h1>
-      <p className="text-muted-foreground">Owner: Collection &amp; Map</p>
-    </div>
+    <>
+      <AppHeader title="Collection" />
+      <CollectionContent collection={collection} />
+    </>
   );
 }
