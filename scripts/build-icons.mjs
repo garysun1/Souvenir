@@ -299,16 +299,37 @@ ${glyphBody(shapes)}
 }
 
 // App mark: a collectible place card with a pin — the Souvenir loop in one shape.
-function appIcon({ maskable = false } = {}) {
-  const card = maskable ? "" : ` rx="112"`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512"${card} fill="${BRAND}"/>
-  <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+const MARK = `<g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
     <rect x="146" y="106" width="220" height="300" rx="30"/>
     <path d="M256 314c-40-42-60-70-60-96a60 60 0 1 1 120 0c0 26-20 54-60 96Z"/>
     <circle cx="256" cy="216" r="20"/>
     <path d="M200 360h112"/>
+  </g>`;
+
+function appIcon({ maskable = false } = {}) {
+  const card = maskable ? "" : ` rx="112"`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512"${card} fill="${BRAND}"/>
+  ${MARK}
+</svg>
+`;
+}
+
+// Glyph only, transparent background, optionally scaled about the center
+// (Android adaptive foregrounds keep content inside the middle 66%).
+function markOnly({ scale = 1 } = {}) {
+  const t = 256 - 256 * scale;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <g transform="translate(${t} ${t}) scale(${scale})">
+  ${MARK}
   </g>
+</svg>
+`;
+}
+
+function solid() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="${BRAND}"/>
 </svg>
 `;
 }
@@ -403,4 +424,15 @@ for (const [name, glyph] of Object.entries(glyphs)) {
 writeFileSync(join(root, "public", "icon.svg"), appIcon());
 writeFileSync(join(root, "public", "icon-maskable.svg"), appIcon({ maskable: true }));
 writeFileSync(join(root, "docs", "design", "icons.svg"), previewSheet());
+
+// Expo sources; rasterized to apps/mobile/assets/images by scripts/rasterize-mobile-icons.sh
+const mobileDir = join(root, "apps", "mobile", "assets", "icon-src");
+mkdirSync(mobileDir, { recursive: true });
+writeFileSync(join(mobileDir, "icon.svg"), appIcon({ maskable: true }));
+writeFileSync(join(mobileDir, "android-foreground.svg"), markOnly({ scale: 0.72 }));
+writeFileSync(join(mobileDir, "android-background.svg"), solid());
+writeFileSync(join(mobileDir, "mark.svg"), markOnly());
+const iosAssets = join(root, "apps", "mobile", "assets", "expo.icon", "Assets");
+mkdirSync(iosAssets, { recursive: true });
+writeFileSync(join(iosAssets, "souvenir-mark.svg"), markOnly());
 console.log(`Wrote ${Object.keys(glyphs).length} glyphs, app icons and docs/design/icons.svg`);
