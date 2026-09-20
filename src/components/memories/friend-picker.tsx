@@ -26,7 +26,7 @@ export function FriendPicker({
       .includes(query.trim().toLocaleLowerCase()),
   );
   return (
-    <fieldset disabled={disabled} className="space-y-3">
+    <fieldset disabled={disabled} className="min-w-0 space-y-3">
       <legend className="text-sm font-semibold">Who were you with?</legend>
       <div className="flex flex-wrap gap-2">
         {selected.map((id) => (
@@ -34,6 +34,7 @@ export function FriendPicker({
             key={id}
             type="button"
             variant="outline"
+            className="h-auto max-w-full whitespace-normal [overflow-wrap:anywhere]"
             aria-label={`Remove ${friends.find(({ user }) => user.id === id)?.user.displayName ?? "selected account"}`}
             onClick={() => onChange(selected.filter((value) => value !== id))}
           >
@@ -53,9 +54,10 @@ export function FriendPicker({
       <ResourceState {...resource} label="Loading accepted friends…" />
       <div className="max-h-52 overflow-y-auto">
         {matches.map(({ user }) => (
-          <label key={user.id} className="flex min-h-11 items-center gap-3 text-sm">
+          <label key={user.id} className="flex min-h-11 items-center gap-3 py-2 text-sm">
             <input
               type="checkbox"
+              className="shrink-0"
               checked={selected.includes(user.id)}
               disabled={!selected.includes(user.id) && selected.length >= 100}
               onChange={(event) =>
@@ -66,7 +68,10 @@ export function FriendPicker({
                 )
               }
             />
-            {user.displayName} <span className="text-text-secondary">@{user.handle}</span>
+            <span className="min-w-0 [overflow-wrap:anywhere]">
+              <span className="block">{user.displayName}</span>
+              <span className="block text-text-secondary">@{user.handle}</span>
+            </span>
           </label>
         ))}
       </div>

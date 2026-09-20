@@ -186,7 +186,7 @@ export function ContributionForm({
               )}
             </p>
           )}
-          <fieldset disabled={busy || Boolean(draft.pending)} className="space-y-4">
+          <fieldset disabled={busy || Boolean(draft.pending)} className="min-w-0 space-y-4">
             {!source && !captureId && (
               <label className="block space-y-1 text-sm">
                 Choose your saved visit
