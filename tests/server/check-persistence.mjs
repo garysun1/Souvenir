@@ -39,7 +39,7 @@ try {
     await client.unsafe(readFileSync(new URL(`../../drizzle/${tag}.sql`, import.meta.url), "utf8"));
   }
   const env = {
-    ...process.env,
+    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.includes("SUPABASE"))),
     DATABASE_URL: url,
     SOUVENIR_DISPOSABLE_TEST_DB: url,
     NEXT_PUBLIC_SUPABASE_URL: "",
