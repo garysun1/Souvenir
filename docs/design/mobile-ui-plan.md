@@ -17,7 +17,8 @@ Use these defaults so implementation can begin without further product decisions
 - **Data:** In-bundle TypeScript fixtures, asynchronous mock-service interfaces, and local persistence. No server is required.
 - **Platforms:** iOS/Android UI, plus an Expo web preview. Native maps use `react-native-maps`; web and offline mode use an interactive, explicitly labeled schematic map.
 - **Device features:** Camera, photo picker, and optional foreground location when available. Each has a sample-data alternative.
-- **External integrations:** AI identification, Elasticsearch search, Meta, OpenAI planning, Dropbox, and source feeds are simulations. A visible “Demo data” label and per-source provenance make this clear.
+- **Place matching:** location-first, Beli-style. Nearby places from a provider-backed catalog, user taps to choose, search and custom-place fallbacks. See §6.0. AI is optional suggestion only.
+- **External integrations:** places provider, Elasticsearch search, Meta, OpenAI planning, Dropbox, and source feeds are simulations. A visible “Demo data” label and per-source provenance make this clear.
 - **Images:** Bundle place images with documented rights/attribution and the required font files. User-selected photos remain local.
 - **Release:** A runnable prototype and reviewable code changes. Production integrations, deployment, authentication, payments, and booking are separate work.
 
@@ -160,7 +161,7 @@ src/app/
   capture/
     _layout.tsx                     modal stack
     index.tsx                       camera / picker / sample
-    identify.tsx
+    locate.tsx                      nearby list / search / add a place
     confirm.tsx
     reveal.tsx
   recommend/[placeId].tsx            modal recommendation/ranking sequence
@@ -289,25 +290,39 @@ Edit profile changes the local name, handle, avatar choice, and short personal l
 
 Settings groups: Preferences, Data sources, Demo controls, and About. About explains which device features work and which providers are simulated. Use sample avatars or a chosen local image. Do not add a global leaderboard, follower system, or streak just to fill the profile.
 
-## 6. Flow 1 — Capture, identify, confirm, reveal
+## 6. Flow 1 — Capture, locate, confirm, reveal
+
+### 6.0 Place-matching approach
+
+Souvenir matches a photo to a place the way Beli matches a meal to a restaurant: **location first, user chooses, custom fallback.** The catalog is a cache of an external places provider, not a hand-curated list, and AI is never required to identify a place.
+
+1. **Locate.** Take coordinates from device location, photo EXIF GPS, or the place the user launched Capture from (in that priority). No coordinates → skip to search.
+2. **Nearby list.** Query the catalog (and, when online, the places provider) for places within ~250 m, filtered to Souvenir categories (museums, galleries, parks, gardens, landmarks, viewpoints), sorted by distance. Widen to 1 km if fewer than three results.
+3. **Tap to choose.** The user picks the place. One tap for the common case.
+4. **Search fallback.** “Search all places” opens the catalog/provider text search (Flow 3 boundary).
+5. **Custom place.** “Add a place” creates a catalog row with name, category, and the captured coordinates, flagged `userSubmitted`. It is a real place from then on (editions, sets, map). A later merge step reconciles it with a provider match.
+
+Catalog rows store `externalIds` per provider (Google Places, Apple MapKit, OpenTripMap, OSM) so a provider can be swapped or added without touching editions. For the prototype the 30 Los Angeles places are seeded from a provider export into Postgres and served from the `pg` search provider.
+
+AI is optional polish, not a dependency: a vision model may reorder the nearby list (“this looks like a garden”) and highlight a suggestion, but it only chooses among the nearby candidates, returns catalog IDs (never free text), and shows its real confidence. Sample photos map directly to known destination IDs. Do not generate a random “92% confident” claim.
 
 ### 6.1 Screen sequence
 
 | Step | Visible UI | Action and transition |
 |---|---|---|
-| Capture | Camera viewport; close; shutter; gallery; “Use sample photo”; optional flash | Take/pick a photo → draft → identify |
-| Identify | Frozen photo, subtle scanning line, “Finding a place”; “Demo identification” note | Resolve deterministic candidates after approximately 900 ms |
-| Confirm | Photo, candidate name, “Is this the place?”, alternatives, manual search | Select destination and edit visit metadata |
+| Capture | Camera viewport; close; shutter; gallery; “Use sample photo”; optional flash | Take/pick a photo → draft → locate |
+| Locate | Frozen photo, “Finding places near you”, distance-sorted nearby list with category icons; optional “Suggested” highlight; “Search all places”; “Add a place” | Tap a place → confirm. Location unavailable → search. Nothing fits → custom place |
+| Confirm | Photo, chosen place, “Change place”, visit metadata | Edit visit metadata |
 | Reveal | Card back → personal edition front, shared place label, edition stamp | “Add to collection” commits once |
 | Saved | “Added to your collection,” set progress, rate/open edition/next visit | Continue into the collection or recommendation flow |
 
-Camera and gallery can be real device interactions, but selected pixels are not analyzed by an AI. Sample photos map to known destination IDs. For arbitrary photos, use the originating place context when available or ask the user to choose among fixture suggestions. Do not generate a random “92% confident” claim.
+Camera and gallery can be real device interactions. Selected pixels are analyzed only by the optional suggestion step, and only to rank places already on the nearby list.
 
 ### 6.2 Confirmation form
 
 Top half: selected image and current place. Under it:
 
-- **Place:** “The Broad · Downtown.” “Change place” opens catalog search and alternate candidates.
+- **Place:** “The Broad · Downtown.” “Change place” reopens the nearby list, with search and “Add a place” available.
 - **Visit date/time:** defaults to the demo clock; editable date picker; stored with timezone. An imported date is marked as imported and remains editable.
 - **Companions:** avatar picker with Maya, Jordan, Sam; no automatic invitation.
 - **Moment:** optional multiline text, maximum 160 characters, visible counter.
@@ -353,9 +368,11 @@ If deletion removes the user’s last edition for a place, the place leaves Been
 
 - Denied camera permission → explanation, gallery, sample photo, retry/settings option.
 - Canceled picker → return to camera without clearing an existing draft.
-- Unrecognized/poor photo → manual place selection; no dead end.
-- No candidates → searchable catalog; user can cancel.
-- Backgrounded or canceled identification → ignore late results using request IDs/abort signals.
+- Location denied or unavailable → skip the nearby list; open search with “Add a place” visible; no dead end.
+- Nearby list empty → widen radius once, then search; user can cancel.
+- Provider unreachable → serve the nearby list from the local catalog only and say so.
+- Custom place name matches an existing place within 250 m → offer “Use existing” before creating a duplicate.
+- Backgrounded or canceled lookup → ignore late results using request IDs/abort signals.
 - Save failure → preserve draft and local image; show retry. No fake success toast.
 - Reduced motion → immediate card reveal plus short fade; no flip.
 - **Acceptance:** save once updates all screens; retry does not duplicate; revisit changes editions only; changing the confirmed place updates the resulting edition and set correctly.
@@ -808,7 +825,7 @@ type Sentiment = 'recommend' | 'depends' | 'skip';
 type DataMode = 'sample' | 'verified-snapshot';
 type CaptureStatus =
   | 'choosing-photo'
-  | 'identifying'
+  | 'locating'
   | 'confirming'
   | 'revealing'
   | 'saving'
@@ -863,7 +880,9 @@ Add a schema version and small migration registry. Reset should be atomic from t
 
 | Service | Input | Output / key behavior |
 |---|---|---|
-| `identifyPlace` | Media ID, sample/context place ID, abort signal | Candidates or needs-manual-selection |
+| `nearbyPlaces` | Coordinates, radius, categories, abort signal | Distance-sorted catalog/provider places; empty when location unavailable |
+| `suggestPlace` (optional) | Media ID, nearby candidate IDs, abort signal | At most one highlighted candidate ID with real confidence, or none |
+| `createCustomPlace` | Name, category, coordinates | New `userSubmitted` place ID, or existing ID when a near-duplicate is chosen |
 | `searchPlaces` | Text, structured filters, origin, demo clock | Parsed intent, result IDs, match explanations |
 | `getRecommendations` | Preferences, assessments, visits, saves | Ordered IDs and reason labels |
 | `createEdition` | Draft ID, validated metadata | Existing or new edition ID; idempotent |
