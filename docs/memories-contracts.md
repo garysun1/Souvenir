@@ -113,6 +113,9 @@ An edition source without consentImages permits existing text/place facts only,
 never provider image bytes. import_item sources require explicit image consent.
 Optional notes are untrusted context; they cannot fabricate source IDs.
 AI cannot infer preferences, sensitive traits, faces, identities, or emotions.
+Validate provider output with `tasteAnalysisResultSchema` / `TasteAnalysisResult`;
+every observation's source must also belong to the authorized selected set.
+The model returns observations, never evidence IDs, profile revisions, or sharing.
 
 Generate only controlled TASTE_INTERESTS. Persist analysis lease/version and
 selected sources before provider work. A late result must match both lease and

@@ -201,6 +201,16 @@ export interface TasteEvidenceDto {
   analysisVersion: number;
   excluded: boolean;
 }
+export interface TasteAnalysisResult {
+  title: string | null;
+  observations: {
+    source: TasteSourceRef;
+    interest: TasteInterest;
+    intent: TasteIntent;
+    confidence: number;
+    explanation: string;
+  }[];
+}
 export interface TasteProfileDto {
   userId: UUID;
   version: number;
