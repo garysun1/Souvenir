@@ -76,9 +76,13 @@ existing active invitations and exact request replays return 200.
   album writers should lock the album before checking current membership.
 - Import commit must write the contract's author/source columns consistently;
   the media reader checks both source and batch ownership. Imported photo paths
-  must equal `<authorId>/<item.requestId>.jpg|png|webp`. Edition paths use the
-  edition's request ID. Sources that are removed, cancelled, or no longer complete
-  cannot be read through a surviving moment.
+  must equal `<authorId>/<item.requestId>.jpg|png|webp`. Captured edition paths use
+  the edition's request ID. Imported editions retain the original upload path,
+  verified against the owner's durable `import.item.create` receipt, including
+  after the import item is deleted. Sources that are removed, cancelled, or no
+  longer complete cannot be read through a surviving moment.
+  Deleting an edition or import removes its photo only after no edition or import
+  item references the path; the cleanup holds the owner's account lock.
 - Photo GET authorizes first, resolves the owned source server-side, validates
   the exact private object identity, rechecks access, then signs `captures` for
   300 seconds. It returns only `url`/`expiresAt`. It never uses external `photoUrl`.

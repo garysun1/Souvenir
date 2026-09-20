@@ -1,8 +1,8 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { editions, importItems } from "@/lib/db/schema";
+import { apiRequests, editions, importItems } from "@/lib/db/schema";
 import { env } from "@/lib/env";
 import { uuidSchema } from "@/lib/contracts/api";
 import type { MemoryPhotoDto } from "../../../shared/memories-contract";
@@ -15,11 +15,19 @@ export async function getMemoryPhoto(userId: string, momentId: string): Promise<
   const moment = await requireMoment(userId, momentId);
   const [source] = moment.sourceEditionId
     ? await db
-        .select({ path: editions.photoPath, requestId: editions.requestId })
+        .select({
+          path: editions.photoPath,
+          requestId: editions.requestId,
+          importSourceId: editions.importSourceId,
+        })
         .from(editions)
         .where(and(eq(editions.id, moment.sourceEditionId), eq(editions.userId, moment.authorId)))
     : await db
-        .select({ path: importItems.photoPath, requestId: importItems.requestId })
+        .select({
+          path: importItems.photoPath,
+          requestId: importItems.requestId,
+          importSourceId: sql<null>`null`,
+        })
         .from(importItems)
         .where(
           and(
@@ -27,10 +35,27 @@ export async function getMemoryPhoto(userId: string, momentId: string): Promise<
             eq(importItems.ownerId, moment.authorId),
           ),
         );
-  const expected = `${moment.authorId}/${source?.requestId}`;
+  let requestId = source?.requestId;
+  if (source?.importSourceId?.startsWith("memory:")) {
+    const itemId = source.importSourceId.slice("memory:".length);
+    if (!uuidSchema.safeParse(itemId).success || !source.path) notFound();
+    const [receipt] = await db
+      .select({ requestId: apiRequests.requestId })
+      .from(apiRequests)
+      .where(
+        and(
+          eq(apiRequests.userId, moment.authorId),
+          eq(apiRequests.operation, "import.item.create"),
+          eq(apiRequests.resourceId, itemId),
+          eq(apiRequests.resourcePath, source.path),
+        ),
+      );
+    requestId = receipt?.requestId;
+  }
+  const expected = `${moment.authorId}/${requestId}`;
   if (
     !source?.path ||
-    !uuidSchema.safeParse(source.requestId).success ||
+    !uuidSchema.safeParse(requestId).success ||
     !["jpg", "png", "webp"].some((extension) => source.path === `${expected}.${extension}`)
   ) {
     notFound();

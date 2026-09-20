@@ -15,7 +15,7 @@ import {
   tripAlbums,
   tripAlbumMembers,
 } from "@/lib/db/schema";
-import { createCaptureUpload, deleteCapturePhoto, signCapturePhoto } from "@/lib/auth/storage";
+import { createCaptureUpload, signCapturePhoto } from "@/lib/auth/storage";
 import { memoryAnalysisSchema } from "@/lib/contracts/memories";
 import { tasteProvider, TasteProviderError } from "@/lib/ai/taste";
 import { afterEditionChange, syncEditionActivity } from "./activity";
@@ -31,6 +31,7 @@ import {
   type Transaction,
 } from "./transactions";
 import { downloadImportBytes, inspectImportBytes } from "./memory-import-media";
+import { cleanupMemoryPhotos } from "./memory-media-cleanup";
 import type { AuthContext } from "../../../shared/api-contract";
 import type {
   ImportAnalyzeRequest,
@@ -661,22 +662,6 @@ export async function commitImport(
   });
 }
 
-async function cleanupPaths(auth: AuthContext, paths: string[]) {
-  for (const path of new Set(paths)) {
-    const [edition] = await db
-      .select({ id: editions.id })
-      .from(editions)
-      .where(eq(editions.photoPath, path))
-      .limit(1);
-    const [item] = await db
-      .select({ id: importItems.id })
-      .from(importItems)
-      .where(eq(importItems.photoPath, path))
-      .limit(1);
-    if (!edition && !item) await deleteCapturePhoto(auth, path);
-  }
-}
-
 export async function deleteImport(
   auth: AuthContext,
   batchId: string,
@@ -790,6 +775,6 @@ export async function deleteImport(
     }
     return paths;
   });
-  await cleanupPaths(auth, paths);
+  await cleanupMemoryPhotos(auth, paths);
   return { deleted: true as const };
 }
