@@ -1,0 +1,178 @@
+[
+  {
+    "slug": "griffith-park",
+    "name": "Griffith Park",
+    "category": "nature",
+    "lat": 34.1366,
+    "lng": -118.2942,
+    "description": "Parkland and trails in the eastern Santa Monica Mountains."
+  },
+  {
+    "slug": "echo-park-lake",
+    "name": "Echo Park Lake",
+    "category": "nature",
+    "lat": 34.0719,
+    "lng": -118.2606,
+    "description": "An urban lake in Echo Park."
+  },
+  {
+    "slug": "elysian-park",
+    "name": "Elysian Park",
+    "category": "nature",
+    "lat": 34.082,
+    "lng": -118.237,
+    "description": "Hillside parkland near Downtown Los Angeles."
+  },
+  {
+    "slug": "grand-park",
+    "name": "Grand Park",
+    "category": "nature",
+    "lat": 34.0558,
+    "lng": -118.2456,
+    "description": "A public park in the Los Angeles Civic Center."
+  },
+  {
+    "slug": "los-angeles-state-historic-park",
+    "name": "Los Angeles State Historic Park",
+    "category": "nature",
+    "lat": 34.0689,
+    "lng": -118.2308,
+    "description": "Open parkland near Chinatown."
+  },
+  {
+    "slug": "barnsdall-art-park",
+    "name": "Barnsdall Art Park",
+    "category": "nature",
+    "lat": 34.1002,
+    "lng": -118.2947,
+    "description": "A hilltop art park in East Hollywood."
+  },
+  {
+    "slug": "macarthur-park",
+    "name": "MacArthur Park",
+    "category": "nature",
+    "lat": 34.0595,
+    "lng": -118.2788,
+    "description": "An urban park and lake in Westlake."
+  },
+  {
+    "slug": "exposition-park-rose-garden",
+    "name": "Exposition Park Rose Garden",
+    "category": "nature",
+    "lat": 34.0168,
+    "lng": -118.286,
+    "description": "A rose garden within Exposition Park."
+  },
+  {
+    "slug": "lake-balboa-park",
+    "name": "Lake Balboa Park",
+    "category": "nature",
+    "lat": 34.1804,
+    "lng": -118.499,
+    "description": "Lakeside parkland in the San Fernando Valley."
+  },
+  {
+    "slug": "vista-hermosa-natural-park",
+    "name": "Vista Hermosa Natural Park",
+    "category": "nature",
+    "lat": 34.0635,
+    "lng": -118.2572,
+    "description": "A hillside natural park near Downtown."
+  },
+  {
+    "slug": "moca-grand-avenue",
+    "name": "MOCA Grand Avenue",
+    "category": "culture",
+    "lat": 34.0534,
+    "lng": -118.2504,
+    "description": "A contemporary art museum on Grand Avenue."
+  },
+  {
+    "slug": "japanese-american-national-museum",
+    "name": "Japanese American National Museum",
+    "category": "culture",
+    "lat": 34.0493,
+    "lng": -118.2385,
+    "description": "A museum of Japanese American history in Little Tokyo."
+  },
+  {
+    "slug": "los-angeles-central-library",
+    "name": "Los Angeles Central Library",
+    "category": "culture",
+    "lat": 34.0505,
+    "lng": -118.2552,
+    "description": "The central branch of the Los Angeles Public Library."
+  },
+  {
+    "slug": "california-african-american-museum",
+    "name": "California African American Museum",
+    "category": "culture",
+    "lat": 34.0159,
+    "lng": -118.2834,
+    "description": "A museum of African American art and history in Exposition Park."
+  },
+  {
+    "slug": "california-science-center",
+    "name": "California Science Center",
+    "category": "culture",
+    "lat": 34.0156,
+    "lng": -118.2862,
+    "description": "A science museum in Exposition Park."
+  },
+  {
+    "slug": "autry-museum",
+    "name": "Autry Museum",
+    "category": "culture",
+    "lat": 34.1489,
+    "lng": -118.2818,
+    "description": "A museum of the American West in Griffith Park."
+  },
+  {
+    "slug": "bradbury-building",
+    "name": "Bradbury Building",
+    "category": "landmark",
+    "lat": 34.0505,
+    "lng": -118.2479,
+    "description": "A historic building in Downtown Los Angeles."
+  },
+  {
+    "slug": "angels-flight",
+    "name": "Angels Flight",
+    "category": "landmark",
+    "lat": 34.0516,
+    "lng": -118.2506,
+    "description": "A hillside railway in Downtown Los Angeles."
+  },
+  {
+    "slug": "olvera-street",
+    "name": "Olvera Street",
+    "category": "landmark",
+    "lat": 34.0571,
+    "lng": -118.2375,
+    "description": "A historic street in El Pueblo de Los Angeles."
+  },
+  {
+    "slug": "watts-towers",
+    "name": "Watts Towers",
+    "category": "landmark",
+    "lat": 33.9386,
+    "lng": -118.2413,
+    "description": "Sculptural towers in the Watts neighborhood."
+  },
+  {
+    "slug": "hollywood-walk-of-fame",
+    "name": "Hollywood Walk of Fame",
+    "category": "landmark",
+    "lat": 34.1016,
+    "lng": -118.3267,
+    "description": "The star-lined sidewalks of Hollywood."
+  },
+  {
+    "slug": "korean-bell-of-friendship",
+    "name": "Korean Bell of Friendship",
+    "category": "landmark",
+    "lat": 33.7093,
+    "lng": -118.2937,
+    "description": "A bell and pavilion overlooking the coast in San Pedro."
+  }
+]

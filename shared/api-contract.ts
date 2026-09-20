@@ -106,12 +106,13 @@ export interface PhotoUploadRequest {
   contentType: "image/jpeg" | "image/png" | "image/webp";
   size: number;
 }
-export interface PhotoUploadDto {
+export type PhotoUploadDto = {
   bucket: "captures";
   path: string;
-  token: string;
-  signedUrl: string;
-}
+} & (
+  | { uploaded: false; token: string; signedUrl: string }
+  | { uploaded: true; token: null; signedUrl: null }
+);
 export interface WishlistEntryDto {
   placeId: UUID;
   saverIds: UUID[];

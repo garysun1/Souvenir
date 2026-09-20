@@ -1,0 +1,10 @@
+import type { AppState, Wishlist } from '@/domain/types';
+import { downtownSet } from '@/fixtures/catalog';
+export const ownEditions = (state: AppState) => state.editions.filter(edition => edition.ownerId === 'you');
+export const collectedPlaceIds = (state: AppState) => [...new Set(ownEditions(state).map(edition => edition.placeId))];
+export const savedPlaceIds = (state: AppState, userId = 'you') => [...new Set(state.wishlists.flatMap(list => list.entries.filter(entry => entry.saverIds.includes(userId)).map(entry => entry.placeId)))];
+export const setProgress = (state: AppState) => downtownSet.placeIds.filter(id => collectedPlaceIds(state).includes(id)).length;
+export const overlapIds = (list: Wishlist) => list.entries.filter(entry => list.memberIds.every(id => entry.saverIds.includes(id))).map(entry => entry.placeId);
+export const latestEdition = (state: AppState, placeId: string) => ownEditions(state).filter(edition => edition.placeId === placeId).sort((a, b) => b.visitedAt.localeCompare(a.visitedAt))[0];
+export const money = (cents: number) => !Number.isFinite(cents) ? 'Cost unknown' : cents === 0 ? 'Free' : `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`;
+export const visitDate = (date: string, timeZone = 'America/Los_Angeles') => new Date(date).toLocaleDateString('en-US', { timeZone, month: 'short', day: 'numeric', year: 'numeric' });
