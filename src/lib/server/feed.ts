@@ -1,7 +1,15 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db";
-import { activityEvents, editions, placeNotes, places, rankings, users } from "@/lib/db/schema";
+import {
+  activityEvents,
+  editions,
+  friendships,
+  placeNotes,
+  places,
+  rankings,
+  users,
+} from "@/lib/db/schema";
 import { decodeFeedCursor, encodeFeedCursor } from "@/lib/contracts/api";
 import { serializeSocialEditionDto, serializeSocialProfileDto } from "@/lib/contracts/serializers";
 import type { ActivityEventDto, FeedDto, FeedQuery } from "../../../shared/api-contract";
@@ -9,10 +17,11 @@ import { acceptedFriends, visiblePlace, visibleTo } from "./social-access";
 import { getSetCompletion } from "./stats";
 import { socialPlaceDto } from "./social";
 
-export async function getFeed(viewerId: string, query: FeedQuery): Promise<FeedDto> {
-  const cursor = query.cursor ? decodeFeedCursor(query.cursor) : null;
+const eventTimestamp = sql<string>`to_char(${activityEvents.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
+
+async function visibleEvents(viewerId: string, ids: string[], limit: number) {
   const friend = alias(users, "friend_profile");
-  const rows = await db
+  return db
     .select({
       event: activityEvents,
       actor: users,
@@ -21,7 +30,7 @@ export async function getFeed(viewerId: string, query: FeedQuery): Promise<FeedD
       ranking: rankings,
       note: placeNotes,
       friend,
-      timestamp: sql<string>`to_char(${activityEvents.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+      timestamp: eventTimestamp,
     })
     .from(activityEvents)
     .innerJoin(users, eq(users.id, activityEvents.userId))
@@ -38,11 +47,9 @@ export async function getFeed(viewerId: string, query: FeedQuery): Promise<FeedD
     .leftJoin(friend, eq(friend.id, activityEvents.friendId))
     .where(
       and(
+        inArray(activityEvents.id, ids),
         acceptedFriends(viewerId, sql`${activityEvents.userId}`),
         sql`${activityEvents.visibility} <> 'private'`,
-        cursor
-          ? sql`(${activityEvents.createdAt}, ${activityEvents.id}) < (${cursor.createdAt}::timestamptz, ${cursor.id}::uuid)`
-          : undefined,
         sql`(
         (${activityEvents.kind} = 'edition' AND ${editions.visibility} <> 'private' AND ${visiblePlace(viewerId)})
         OR (${activityEvents.kind} = 'ranking' AND ${rankings.visibility} <> 'private' AND ${visiblePlace(viewerId)})
@@ -66,7 +73,51 @@ export async function getFeed(viewerId: string, query: FeedQuery): Promise<FeedD
       ),
     )
     .orderBy(desc(activityEvents.createdAt), desc(activityEvents.id))
-    .limit(query.limit + 1);
+    .limit(limit);
+}
+
+export async function getFeed(viewerId: string, query: FeedQuery): Promise<FeedDto> {
+  let cursor = query.cursor ? decodeFeedCursor(query.cursor) : null;
+  const batchSize = Math.max(64, query.limit + 1);
+  const actors = db
+    .select({
+      id: sql<string>`CASE WHEN ${friendships.userId} = ${viewerId}::uuid THEN ${friendships.friendId} ELSE ${friendships.userId} END`,
+    })
+    .from(friendships)
+    .where(
+      and(
+        eq(friendships.status, "accepted"),
+        or(eq(friendships.userId, viewerId), eq(friendships.friendId, viewerId)),
+      ),
+    );
+  const rows: Awaited<ReturnType<typeof visibleEvents>> = [];
+  while (rows.length <= query.limit) {
+    const candidates = await db
+      .select({ id: activityEvents.id, timestamp: eventTimestamp })
+      .from(activityEvents)
+      .where(
+        and(
+          inArray(activityEvents.userId, actors),
+          sql`${activityEvents.visibility} <> 'private'`,
+          cursor
+            ? sql`(${activityEvents.createdAt}, ${activityEvents.id}) < (${cursor.createdAt}::timestamptz, ${cursor.id}::uuid)`
+            : undefined,
+        ),
+      )
+      .orderBy(desc(activityEvents.createdAt), desc(activityEvents.id))
+      .limit(batchSize);
+    if (!candidates.length) break;
+    rows.push(
+      ...(await visibleEvents(
+        viewerId,
+        candidates.map((candidate) => candidate.id),
+        query.limit + 1 - rows.length,
+      )),
+    );
+    if (candidates.length < batchSize) break;
+    const last = candidates[candidates.length - 1];
+    cursor = { id: last.id, createdAt: last.timestamp };
+  }
   const page = rows.slice(0, query.limit);
   const events: ActivityEventDto[] = [];
   for (const row of page) {

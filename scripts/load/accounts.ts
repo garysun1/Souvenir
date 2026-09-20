@@ -12,6 +12,38 @@ export function emailFor(runId: string, index: number) {
   return `souvenir-load-${runId}-${index}@example.invalid`;
 }
 
+export async function provisionLogin(
+  manifest: Manifest,
+  config: LocalStatus,
+  index: number,
+  password: string,
+) {
+  assert(!manifest.has("run", "cleaned"), "Cannot log into a cleaned run");
+  assert(Number.isInteger(index) && index >= 0 && index < manifest.options.accounts);
+  assert(
+    password.length >= 16 && password.length <= 256,
+    "Use a session-only password of 16–256 characters",
+  );
+  const record = manifest.has(`account:${index}`, "account");
+  assert(
+    record?.id && record.email === emailFor(manifest.options.runId, index),
+    "Account not recorded",
+  );
+  const admin = adminClient(config);
+  const { data, error } = await admin.auth.admin.getUserById(record.id);
+  assert(
+    !error &&
+      data.user?.email === record.email &&
+      data.user.app_metadata.load_run_id === manifest.options.runId,
+    "Local Auth ownership mismatch",
+  );
+  const result = await admin.auth.admin.updateUserById(record.id, { password });
+  assert(!result.error, "Local password provision failed");
+  console.log(
+    `Local-only login ready for ${record.email}; password withheld. Resume/verify rotates it.`,
+  );
+}
+
 export async function reconcileAccounts(manifest: Manifest, config: LocalStatus) {
   const missing = new Map(
     manifest.records

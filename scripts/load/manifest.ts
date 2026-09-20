@@ -52,7 +52,7 @@ export const recordSchema = z
       .string()
       .regex(/^[a-f0-9]{64}$/)
       .optional(),
-    index: z.number().int().min(0).max(999).optional(),
+    index: z.number().int().min(0).optional(),
   })
   .strict();
 export type RecordEntry = z.infer<typeof recordSchema>;
