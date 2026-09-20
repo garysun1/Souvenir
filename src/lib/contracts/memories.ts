@@ -169,6 +169,24 @@ export const tasteDraftSchema = z
     coverage: z.enum(["insufficient", "ready"]),
   })
   .strict() satisfies z.ZodType<DTO.TasteDraft>;
+export const tasteAnalysisResultSchema = z
+  .object({
+    title: title.nullable(),
+    observations: z
+      .array(
+        z
+          .object({
+            source: tasteSourceRefSchema,
+            interest: tasteInterestSchema,
+            intent,
+            confidence: z.number().min(0).max(1),
+            explanation: z.string().trim().min(1).max(500),
+          })
+          .strict(),
+      )
+      .max(MEMORY_LIMITS.sourceCount),
+  })
+  .strict() satisfies z.ZodType<DTO.TasteAnalysisResult>;
 export const tastePreferencesSchema = z
   .object({
     pace: z.enum(["relaxed", "balanced", "busy"]).nullable(),

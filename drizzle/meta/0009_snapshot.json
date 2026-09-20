@@ -171,12 +171,8 @@
           "name": "activity_events_user_id_users_id_fk",
           "tableFrom": "activity_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -184,12 +180,8 @@
           "name": "activity_events_place_id_places_id_fk",
           "tableFrom": "activity_events",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -197,12 +189,8 @@
           "name": "activity_events_set_id_sets_id_fk",
           "tableFrom": "activity_events",
           "tableTo": "sets",
-          "columnsFrom": [
-            "set_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -210,12 +198,8 @@
           "name": "activity_events_friend_id_users_id_fk",
           "tableFrom": "activity_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "friend_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["friend_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -223,16 +207,8 @@
           "name": "activity_events_edition_owner_fk",
           "tableFrom": "activity_events",
           "tableTo": "editions",
-          "columnsFrom": [
-            "edition_id",
-            "user_id",
-            "place_id"
-          ],
-          "columnsTo": [
-            "id",
-            "user_id",
-            "place_id"
-          ],
+          "columnsFrom": ["edition_id", "user_id", "place_id"],
+          "columnsTo": ["id", "user_id", "place_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -240,16 +216,8 @@
           "name": "activity_events_note_owner_fk",
           "tableFrom": "activity_events",
           "tableTo": "place_notes",
-          "columnsFrom": [
-            "note_id",
-            "user_id",
-            "place_id"
-          ],
-          "columnsTo": [
-            "id",
-            "user_id",
-            "place_id"
-          ],
+          "columnsFrom": ["note_id", "user_id", "place_id"],
+          "columnsTo": ["id", "user_id", "place_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -257,14 +225,8 @@
           "name": "activity_events_ranking_fk",
           "tableFrom": "activity_events",
           "tableTo": "rankings",
-          "columnsFrom": [
-            "user_id",
-            "ranking_place_id"
-          ],
-          "columnsTo": [
-            "user_id",
-            "place_id"
-          ],
+          "columnsFrom": ["user_id", "ranking_place_id"],
+          "columnsTo": ["user_id", "place_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -274,11 +236,7 @@
         "activity_events_request_unique": {
           "name": "activity_events_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "request_id",
-            "kind"
-          ]
+          "columns": ["user_id", "request_id", "kind"]
         }
       },
       "policies": {},
@@ -350,12 +308,8 @@
           "name": "api_requests_user_id_users_id_fk",
           "tableFrom": "api_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -363,20 +317,14 @@
       "compositePrimaryKeys": {
         "api_requests_user_id_request_id_pk": {
           "name": "api_requests_user_id_request_id_pk",
-          "columns": [
-            "user_id",
-            "request_id"
-          ]
+          "columns": ["user_id", "request_id"]
         }
       },
       "uniqueConstraints": {
         "api_requests_user_import_unique": {
           "name": "api_requests_user_import_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "import_source_id"
-          ]
+          "columns": ["user_id", "import_source_id"]
         }
       },
       "policies": {},
@@ -471,10 +419,7 @@
       "compositePrimaryKeys": {
         "coverage_cells_geohash_provider_pk": {
           "name": "coverage_cells_geohash_provider_pk",
-          "columns": [
-            "geohash",
-            "provider"
-          ]
+          "columns": ["geohash", "provider"]
         }
       },
       "uniqueConstraints": {},
@@ -524,12 +469,8 @@
           "name": "edition_counters_user_id_users_id_fk",
           "tableFrom": "edition_counters",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -537,12 +478,8 @@
           "name": "edition_counters_place_id_places_id_fk",
           "tableFrom": "edition_counters",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -550,10 +487,7 @@
       "compositePrimaryKeys": {
         "edition_counters_user_id_place_id_pk": {
           "name": "edition_counters_user_id_place_id_pk",
-          "columns": [
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["user_id", "place_id"]
         }
       },
       "uniqueConstraints": {},
@@ -739,12 +673,8 @@
           "name": "editions_user_id_users_id_fk",
           "tableFrom": "editions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -752,12 +682,8 @@
           "name": "editions_place_id_places_id_fk",
           "tableFrom": "editions",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -765,12 +691,8 @@
           "name": "editions_outing_id_outings_id_fk",
           "tableFrom": "editions",
           "tableTo": "outings",
-          "columnsFrom": [
-            "outing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -780,36 +702,22 @@
         "editions_user_request_unique": {
           "name": "editions_user_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "request_id"
-          ]
+          "columns": ["user_id", "request_id"]
         },
         "editions_user_place_sequence_unique": {
           "name": "editions_user_place_sequence_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "place_id",
-            "visit_sequence"
-          ]
+          "columns": ["user_id", "place_id", "visit_sequence"]
         },
         "editions_user_import_unique": {
           "name": "editions_user_import_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "import_source_id"
-          ]
+          "columns": ["user_id", "import_source_id"]
         },
         "editions_event_identity_unique": {
           "name": "editions_event_identity_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["id", "user_id", "place_id"]
         }
       },
       "policies": {},
@@ -890,12 +798,8 @@
           "name": "friendships_user_id_users_id_fk",
           "tableFrom": "friendships",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -903,12 +807,8 @@
           "name": "friendships_friend_id_users_id_fk",
           "tableFrom": "friendships",
           "tableTo": "users",
-          "columnsFrom": [
-            "friend_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["friend_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -918,10 +818,7 @@
         "friendships_unique": {
           "name": "friendships_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "friend_id"
-          ]
+          "columns": ["user_id", "friend_id"]
         }
       },
       "policies": {},
@@ -1015,12 +912,8 @@
           "name": "import_batches_owner_id_users_id_fk",
           "tableFrom": "import_batches",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1030,18 +923,12 @@
         "import_batches_owner_request_unique": {
           "name": "import_batches_owner_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "owner_id",
-            "request_id"
-          ]
+          "columns": ["owner_id", "request_id"]
         },
         "import_batches_id_owner_unique": {
           "name": "import_batches_id_owner_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "owner_id"
-          ]
+          "columns": ["id", "owner_id"]
         }
       },
       "policies": {},
@@ -1278,12 +1165,8 @@
           "name": "import_items_owner_id_users_id_fk",
           "tableFrom": "import_items",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1291,12 +1174,8 @@
           "name": "import_items_edition_id_editions_id_fk",
           "tableFrom": "import_items",
           "tableTo": "editions",
-          "columnsFrom": [
-            "edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1304,14 +1183,8 @@
           "name": "import_items_batch_owner_fk",
           "tableFrom": "import_items",
           "tableTo": "import_batches",
-          "columnsFrom": [
-            "batch_id",
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id",
-            "owner_id"
-          ],
+          "columnsFrom": ["batch_id", "owner_id"],
+          "columnsTo": ["id", "owner_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1319,14 +1192,8 @@
           "name": "import_items_duplicate_owner_fk",
           "tableFrom": "import_items",
           "tableTo": "import_items",
-          "columnsFrom": [
-            "duplicate_of_item_id",
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id",
-            "owner_id"
-          ],
+          "columnsFrom": ["duplicate_of_item_id", "owner_id"],
+          "columnsTo": ["id", "owner_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1336,18 +1203,12 @@
         "import_items_owner_request_unique": {
           "name": "import_items_owner_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "owner_id",
-            "request_id"
-          ]
+          "columns": ["owner_id", "request_id"]
         },
         "import_items_id_owner_unique": {
           "name": "import_items_id_owner_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "owner_id"
-          ]
+          "columns": ["id", "owner_id"]
         }
       },
       "policies": {},
@@ -1546,12 +1407,8 @@
           "name": "memory_moments_author_id_users_id_fk",
           "tableFrom": "memory_moments",
           "tableTo": "users",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1559,12 +1416,8 @@
           "name": "memory_moments_album_id_trip_albums_id_fk",
           "tableFrom": "memory_moments",
           "tableTo": "trip_albums",
-          "columnsFrom": [
-            "album_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["album_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1572,12 +1425,8 @@
           "name": "memory_moments_place_id_places_id_fk",
           "tableFrom": "memory_moments",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1585,16 +1434,8 @@
           "name": "memory_moments_edition_owner_fk",
           "tableFrom": "memory_moments",
           "tableTo": "editions",
-          "columnsFrom": [
-            "source_edition_id",
-            "author_id",
-            "place_id"
-          ],
-          "columnsTo": [
-            "id",
-            "user_id",
-            "place_id"
-          ],
+          "columnsFrom": ["source_edition_id", "author_id", "place_id"],
+          "columnsTo": ["id", "user_id", "place_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1602,14 +1443,8 @@
           "name": "memory_moments_import_owner_fk",
           "tableFrom": "memory_moments",
           "tableTo": "import_items",
-          "columnsFrom": [
-            "source_import_item_id",
-            "author_id"
-          ],
-          "columnsTo": [
-            "id",
-            "owner_id"
-          ],
+          "columnsFrom": ["source_import_item_id", "author_id"],
+          "columnsTo": ["id", "owner_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1619,18 +1454,12 @@
         "memory_moments_author_request_unique": {
           "name": "memory_moments_author_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "author_id",
-            "request_id"
-          ]
+          "columns": ["author_id", "request_id"]
         },
         "memory_moments_id_author_unique": {
           "name": "memory_moments_id_author_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "author_id"
-          ]
+          "columns": ["id", "author_id"]
         }
       },
       "policies": {},
@@ -1753,12 +1582,8 @@
           "name": "moment_person_tags_sender_id_users_id_fk",
           "tableFrom": "moment_person_tags",
           "tableTo": "users",
-          "columnsFrom": [
-            "sender_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sender_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1766,12 +1591,8 @@
           "name": "moment_person_tags_user_id_users_id_fk",
           "tableFrom": "moment_person_tags",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1779,14 +1600,8 @@
           "name": "moment_person_tags_author_fk",
           "tableFrom": "moment_person_tags",
           "tableTo": "memory_moments",
-          "columnsFrom": [
-            "moment_id",
-            "sender_id"
-          ],
-          "columnsTo": [
-            "id",
-            "author_id"
-          ],
+          "columnsFrom": ["moment_id", "sender_id"],
+          "columnsTo": ["id", "author_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1796,18 +1611,12 @@
         "moment_person_tags_moment_user_unique": {
           "name": "moment_person_tags_moment_user_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "moment_id",
-            "user_id"
-          ]
+          "columns": ["moment_id", "user_id"]
         },
         "moment_person_tags_sender_request_unique": {
           "name": "moment_person_tags_sender_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "sender_id",
-            "request_id"
-          ]
+          "columns": ["sender_id", "request_id"]
         }
       },
       "policies": {},
@@ -1846,12 +1655,8 @@
           "name": "outing_members_outing_id_outings_id_fk",
           "tableFrom": "outing_members",
           "tableTo": "outings",
-          "columnsFrom": [
-            "outing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1859,12 +1664,8 @@
           "name": "outing_members_user_id_users_id_fk",
           "tableFrom": "outing_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1874,10 +1675,7 @@
         "outing_members_unique": {
           "name": "outing_members_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "outing_id",
-            "user_id"
-          ]
+          "columns": ["outing_id", "user_id"]
         }
       },
       "policies": {},
@@ -1939,12 +1737,8 @@
           "name": "outings_wishlist_id_wishlists_id_fk",
           "tableFrom": "outings",
           "tableTo": "wishlists",
-          "columnsFrom": [
-            "wishlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1952,12 +1746,8 @@
           "name": "outings_created_by_users_id_fk",
           "tableFrom": "outings",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2135,12 +1925,8 @@
           "name": "place_images_place_id_places_id_fk",
           "tableFrom": "place_images",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2148,12 +1934,8 @@
           "name": "place_images_source_id_place_sources_id_fk",
           "tableFrom": "place_images",
           "tableTo": "place_sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2161,12 +1943,8 @@
           "name": "place_images_uploaded_by_users_id_fk",
           "tableFrom": "place_images",
           "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2176,19 +1954,12 @@
         "place_images_provider_key_unique": {
           "name": "place_images_provider_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "place_id",
-            "provider",
-            "provider_id"
-          ]
+          "columns": ["place_id", "provider", "provider_id"]
         },
         "place_images_upload_request_unique": {
           "name": "place_images_upload_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "uploaded_by",
-            "request_id"
-          ]
+          "columns": ["uploaded_by", "request_id"]
         }
       },
       "policies": {},
@@ -2336,12 +2107,8 @@
           "name": "place_notes_place_id_places_id_fk",
           "tableFrom": "place_notes",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2349,12 +2116,8 @@
           "name": "place_notes_user_id_users_id_fk",
           "tableFrom": "place_notes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2364,19 +2127,12 @@
         "place_notes_user_request_unique": {
           "name": "place_notes_user_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "request_id"
-          ]
+          "columns": ["user_id", "request_id"]
         },
         "place_notes_event_identity_unique": {
           "name": "place_notes_event_identity_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["id", "user_id", "place_id"]
         }
       },
       "policies": {},
@@ -2429,12 +2185,8 @@
           "name": "place_preferences_user_id_users_id_fk",
           "tableFrom": "place_preferences",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2442,12 +2194,8 @@
           "name": "place_preferences_place_id_places_id_fk",
           "tableFrom": "place_preferences",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2455,10 +2203,7 @@
       "compositePrimaryKeys": {
         "place_preferences_user_id_place_id_pk": {
           "name": "place_preferences_user_id_place_id_pk",
-          "columns": [
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["user_id", "place_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2612,12 +2357,8 @@
           "name": "place_sources_place_id_places_id_fk",
           "tableFrom": "place_sources",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2627,10 +2368,7 @@
         "place_sources_provider_key_unique": {
           "name": "place_sources_provider_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "provider",
-            "provider_id"
-          ]
+          "columns": ["provider", "provider_id"]
         }
       },
       "policies": {},
@@ -2834,12 +2572,8 @@
           "name": "place_stats_place_id_places_id_fk",
           "tableFrom": "place_stats",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2954,12 +2688,8 @@
           "name": "place_suggestions_place_id_places_id_fk",
           "tableFrom": "place_suggestions",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2967,12 +2697,8 @@
           "name": "place_suggestions_user_id_users_id_fk",
           "tableFrom": "place_suggestions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2982,10 +2708,7 @@
         "place_suggestions_user_request_unique": {
           "name": "place_suggestions_user_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "request_id"
-          ]
+          "columns": ["user_id", "request_id"]
         }
       },
       "policies": {},
@@ -3061,12 +2784,8 @@
           "name": "place_tags_place_id_places_id_fk",
           "tableFrom": "place_tags",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3074,12 +2793,8 @@
           "name": "place_tags_user_id_users_id_fk",
           "tableFrom": "place_tags",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3087,11 +2802,7 @@
       "compositePrimaryKeys": {
         "place_tags_place_id_user_id_tag_pk": {
           "name": "place_tags_place_id_user_id_tag_pk",
-          "columns": [
-            "place_id",
-            "user_id",
-            "tag"
-          ]
+          "columns": ["place_id", "user_id", "tag"]
         }
       },
       "uniqueConstraints": {},
@@ -3385,12 +3096,8 @@
           "name": "places_owner_id_users_id_fk",
           "tableFrom": "places",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3400,17 +3107,12 @@
         "places_slug_unique": {
           "name": "places_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         },
         "places_owner_request_unique": {
           "name": "places_owner_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "owner_id",
-            "request_id"
-          ]
+          "columns": ["owner_id", "request_id"]
         }
       },
       "policies": {},
@@ -3482,12 +3184,8 @@
           "name": "ranking_groups_user_id_users_id_fk",
           "tableFrom": "ranking_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3495,11 +3193,7 @@
       "compositePrimaryKeys": {
         "ranking_groups_user_id_category_sentiment_pk": {
           "name": "ranking_groups_user_id_category_sentiment_pk",
-          "columns": [
-            "user_id",
-            "category",
-            "sentiment"
-          ]
+          "columns": ["user_id", "category", "sentiment"]
         }
       },
       "uniqueConstraints": {},
@@ -3606,12 +3300,8 @@
           "name": "rankings_user_id_users_id_fk",
           "tableFrom": "rankings",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3619,12 +3309,8 @@
           "name": "rankings_place_id_places_id_fk",
           "tableFrom": "rankings",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3632,12 +3318,8 @@
           "name": "rankings_compared_to_places_id_fk",
           "tableFrom": "rankings",
           "tableTo": "places",
-          "columnsFrom": [
-            "compared_to"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["compared_to"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3645,12 +3327,8 @@
           "name": "rankings_tied_with_places_id_fk",
           "tableFrom": "rankings",
           "tableTo": "places",
-          "columnsFrom": [
-            "tied_with"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tied_with"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3660,10 +3338,7 @@
         "rankings_user_place_unique": {
           "name": "rankings_user_place_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "place_id"
-          ]
+          "columns": ["user_id", "place_id"]
         }
       },
       "policies": {},
@@ -3699,12 +3374,8 @@
           "name": "set_places_set_id_sets_id_fk",
           "tableFrom": "set_places",
           "tableTo": "sets",
-          "columnsFrom": [
-            "set_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3712,12 +3383,8 @@
           "name": "set_places_place_id_places_id_fk",
           "tableFrom": "set_places",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3727,10 +3394,7 @@
         "set_places_set_place_unique": {
           "name": "set_places_set_place_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "set_id",
-            "place_id"
-          ]
+          "columns": ["set_id", "place_id"]
         }
       },
       "policies": {},
@@ -3786,9 +3450,7 @@
         "sets_slug_unique": {
           "name": "sets_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -3919,12 +3581,8 @@
           "name": "taste_evidence_user_id_taste_profiles_user_id_fk",
           "tableFrom": "taste_evidence",
           "tableTo": "taste_profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3934,13 +3592,7 @@
         "taste_evidence_source_interest_unique": {
           "name": "taste_evidence_source_interest_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "source_kind",
-            "source_id",
-            "interest",
-            "intent"
-          ]
+          "columns": ["user_id", "source_kind", "source_id", "interest", "intent"]
         }
       },
       "policies": {},
@@ -4096,12 +3748,8 @@
           "name": "taste_profiles_user_id_users_id_fk",
           "tableFrom": "taste_profiles",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4247,12 +3895,8 @@
           "name": "trip_album_members_album_id_trip_albums_id_fk",
           "tableFrom": "trip_album_members",
           "tableTo": "trip_albums",
-          "columnsFrom": [
-            "album_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["album_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4260,12 +3904,8 @@
           "name": "trip_album_members_user_id_users_id_fk",
           "tableFrom": "trip_album_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4273,12 +3913,8 @@
           "name": "trip_album_members_invited_by_users_id_fk",
           "tableFrom": "trip_album_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "invited_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4288,18 +3924,12 @@
         "trip_album_members_album_user_unique": {
           "name": "trip_album_members_album_user_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "album_id",
-            "user_id"
-          ]
+          "columns": ["album_id", "user_id"]
         },
         "trip_album_members_inviter_request_unique": {
           "name": "trip_album_members_inviter_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "invited_by",
-            "request_id"
-          ]
+          "columns": ["invited_by", "request_id"]
         }
       },
       "policies": {},
@@ -4412,12 +4042,8 @@
           "name": "trip_albums_owner_id_users_id_fk",
           "tableFrom": "trip_albums",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4425,12 +4051,8 @@
           "name": "trip_albums_outing_id_outings_id_fk",
           "tableFrom": "trip_albums",
           "tableTo": "outings",
-          "columnsFrom": [
-            "outing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -4438,12 +4060,8 @@
           "name": "trip_albums_source_batch_id_import_batches_id_fk",
           "tableFrom": "trip_albums",
           "tableTo": "import_batches",
-          "columnsFrom": [
-            "source_batch_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_batch_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4453,10 +4071,7 @@
         "trip_albums_owner_request_unique": {
           "name": "trip_albums_owner_request_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "owner_id",
-            "request_id"
-          ]
+          "columns": ["owner_id", "request_id"]
         }
       },
       "policies": {},
@@ -4588,12 +4203,8 @@
           "name": "user_stats_user_id_users_id_fk",
           "tableFrom": "user_stats",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4673,9 +4284,7 @@
         "users_handle_unique": {
           "name": "users_handle_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "handle"
-          ]
+          "columns": ["handle"]
         }
       },
       "policies": {},
@@ -4718,12 +4327,8 @@
           "name": "wishlist_items_wishlist_id_wishlists_id_fk",
           "tableFrom": "wishlist_items",
           "tableTo": "wishlists",
-          "columnsFrom": [
-            "wishlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4731,12 +4336,8 @@
           "name": "wishlist_items_place_id_places_id_fk",
           "tableFrom": "wishlist_items",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4744,12 +4345,8 @@
           "name": "wishlist_items_added_by_users_id_fk",
           "tableFrom": "wishlist_items",
           "tableTo": "users",
-          "columnsFrom": [
-            "added_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["added_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4759,10 +4356,7 @@
         "wishlist_items_unique": {
           "name": "wishlist_items_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "wishlist_id",
-            "place_id"
-          ]
+          "columns": ["wishlist_id", "place_id"]
         }
       },
       "policies": {},
@@ -4792,12 +4386,8 @@
           "name": "wishlist_members_wishlist_id_wishlists_id_fk",
           "tableFrom": "wishlist_members",
           "tableTo": "wishlists",
-          "columnsFrom": [
-            "wishlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4805,12 +4395,8 @@
           "name": "wishlist_members_user_id_users_id_fk",
           "tableFrom": "wishlist_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4818,10 +4404,7 @@
       "compositePrimaryKeys": {
         "wishlist_members_wishlist_id_user_id_pk": {
           "name": "wishlist_members_wishlist_id_user_id_pk",
-          "columns": [
-            "wishlist_id",
-            "user_id"
-          ]
+          "columns": ["wishlist_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -4902,12 +4485,8 @@
           "name": "wishlist_saves_wishlist_id_wishlists_id_fk",
           "tableFrom": "wishlist_saves",
           "tableTo": "wishlists",
-          "columnsFrom": [
-            "wishlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4915,12 +4494,8 @@
           "name": "wishlist_saves_place_id_places_id_fk",
           "tableFrom": "wishlist_saves",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4928,12 +4503,8 @@
           "name": "wishlist_saves_user_id_users_id_fk",
           "tableFrom": "wishlist_saves",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4941,11 +4512,7 @@
       "compositePrimaryKeys": {
         "wishlist_saves_wishlist_id_place_id_user_id_pk": {
           "name": "wishlist_saves_wishlist_id_place_id_user_id_pk",
-          "columns": [
-            "wishlist_id",
-            "place_id",
-            "user_id"
-          ]
+          "columns": ["wishlist_id", "place_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -5014,12 +4581,8 @@
           "name": "wishlists_owner_id_users_id_fk",
           "tableFrom": "wishlists",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5035,53 +4598,27 @@
     "public.activity_kind": {
       "name": "activity_kind",
       "schema": "public",
-      "values": [
-        "edition",
-        "ranking",
-        "note",
-        "set_complete",
-        "friend"
-      ]
+      "values": ["edition", "ranking", "note", "set_complete", "friend"]
     },
     "public.category": {
       "name": "category",
       "schema": "public",
-      "values": [
-        "nature",
-        "culture",
-        "food",
-        "landmark",
-        "hidden_gem"
-      ]
+      "values": ["nature", "culture", "food", "landmark", "hidden_gem"]
     },
     "public.edition_variant": {
       "name": "edition_variant",
       "schema": "public",
-      "values": [
-        "standard",
-        "revisit",
-        "group",
-        "seasonal"
-      ]
+      "values": ["standard", "revisit", "group", "seasonal"]
     },
     "public.friendship_status": {
       "name": "friendship_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted"
-      ]
+      "values": ["pending", "accepted"]
     },
     "public.import_batch_state": {
       "name": "import_batch_state",
       "schema": "public",
-      "values": [
-        "open",
-        "processing",
-        "ready",
-        "committed",
-        "cancelled"
-      ]
+      "values": ["open", "processing", "ready", "committed", "cancelled"]
     },
     "public.import_item_state": {
       "name": "import_item_state",
@@ -5099,23 +4636,12 @@
     "public.memory_invitation_state": {
       "name": "memory_invitation_state",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted",
-        "declined",
-        "removed"
-      ]
+      "values": ["pending", "accepted", "declined", "removed"]
     },
     "public.place_note_kind": {
       "name": "place_note_kind",
       "schema": "public",
-      "values": [
-        "tip",
-        "warning",
-        "hours",
-        "access",
-        "story"
-      ]
+      "values": ["tip", "warning", "hours", "access", "story"]
     },
     "public.place_source": {
       "name": "place_source",
@@ -5134,78 +4660,42 @@
     "public.ranking_status": {
       "name": "ranking_status",
       "schema": "public",
-      "values": [
-        "settled",
-        "provisional",
-        "unranked"
-      ]
+      "values": ["settled", "provisional", "unranked"]
     },
     "public.rarity_tier": {
       "name": "rarity_tier",
       "schema": "public",
-      "values": [
-        "common",
-        "uncommon",
-        "rare",
-        "epic",
-        "legendary"
-      ]
+      "values": ["common", "uncommon", "rare", "epic", "legendary"]
     },
     "public.retention_policy": {
       "name": "retention_policy",
       "schema": "public",
-      "values": [
-        "metadata_only",
-        "do_not_store",
-        "expiring",
-        "licensed"
-      ]
+      "values": ["metadata_only", "do_not_store", "expiring", "licensed"]
     },
     "public.sample_status": {
       "name": "sample_status",
       "schema": "public",
-      "values": [
-        "unavailable",
-        "insufficient",
-        "ready",
-        "stale"
-      ]
+      "values": ["unavailable", "insufficient", "ready", "stale"]
     },
     "public.sentiment": {
       "name": "sentiment",
       "schema": "public",
-      "values": [
-        "recommend",
-        "depends",
-        "skip"
-      ]
+      "values": ["recommend", "depends", "skip"]
     },
     "public.suggestion_status": {
       "name": "suggestion_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted",
-        "rejected"
-      ]
+      "values": ["pending", "accepted", "rejected"]
     },
     "public.taste_analysis_state": {
       "name": "taste_analysis_state",
       "schema": "public",
-      "values": [
-        "idle",
-        "processing",
-        "ready",
-        "failed"
-      ]
+      "values": ["idle", "processing", "ready", "failed"]
     },
     "public.taste_intent": {
       "name": "taste_intent",
       "schema": "public",
-      "values": [
-        "enjoyed",
-        "want_to_try"
-      ]
+      "values": ["enjoyed", "want_to_try"]
     },
     "public.taste_interest": {
       "name": "taste_interest",
@@ -5236,19 +4726,12 @@
     "public.taste_sharing": {
       "name": "taste_sharing",
       "schema": "public",
-      "values": [
-        "private",
-        "friends"
-      ]
+      "values": ["private", "friends"]
     },
     "public.visibility": {
       "name": "visibility",
       "schema": "public",
-      "values": [
-        "private",
-        "friends",
-        "public"
-      ]
+      "values": ["private", "friends", "public"]
     }
   },
   "schemas": {},
