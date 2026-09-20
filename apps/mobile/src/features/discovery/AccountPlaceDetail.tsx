@@ -103,10 +103,12 @@ export function AccountPlaceDetail({ placeId }: { placeId: string }) {
       <T variant="small" muted>Source: {detail.source ?? 'unknown'} · Timezone: {detail.timezone ?? 'unknown'} · Visibility: {detail.visibility ?? 'unknown'}</T>
       <SourceLink url={detail.website} label="Official website" />
       <Button label="Capture a visit" onPress={() => router.push({ pathname: '/capture', params: { placeId } })} />
+      <Button label="Add to a plan" variant="outline" onPress={() => router.push({ pathname: '/planner', params: { placeIds: placeId } })} />
       <Button label={state.favorites.includes(placeId) ? 'Remove favorite' : 'Favorite place'} variant="outline" onPress={() => commit({ type: 'FAVORITE', placeId })} />
       <SectionHeading title="Save to a list" />
       {state.wishlists.map(list => <Button key={list.id} variant="outline" label={`${list.entries.some(entry => entry.placeId === placeId && entry.saverIds.includes('you')) ? 'Unsave from' : 'Save to'} ${list.title}`} onPress={() => commit({ type: 'SAVE_PLACE', placeId, wishlistId: list.id })} />)}
       {!state.wishlists.length && <T muted>Create a wishlist in Friends to save this place.</T>}
+      <Button label="Create or manage shared lists" variant="ghost" onPress={() => router.push('/friends')} />
       <SectionHeading title="Your personal appeal" /><T>{appealFor(mapPlace(detail), state).explanation}</T>
       <SectionHeading title="Discovery frequency" /><T>{frequencyLabel(detail.metrics)}</T>
       {detail.metrics && <T>{detail.metrics.collectors} collectors · {detail.metrics.editions} editions · {detail.metrics.saves} saves</T>}

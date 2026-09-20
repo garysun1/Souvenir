@@ -13,6 +13,7 @@ import { SignedPhoto } from "./signed-photo";
 import { PlacePreferences } from "@/components/catalog/place-preferences";
 import { companionNames, localDateTime } from "@/lib/web/collection";
 import { errorMessage } from "@/lib/web/api";
+import { setProgress } from "@/lib/web/collection";
 
 export function EditionDetail({ id }: { id: string }) {
   return (
@@ -167,6 +168,50 @@ function Edition({ id }: { id: string }) {
         </div>
       )}
       <PlacePreferences place={edition.place} />
+      {edition.outingId && (
+        <Link
+          href={`/collection?outingId=${edition.outingId}`}
+          className="block min-h-11 py-3 text-brand underline"
+        >
+          See this outing&apos;s memories
+        </Link>
+      )}
+      {data!.collection.filter((item) => item.placeId === edition.placeId && item.id !== edition.id)
+        .length > 0 && (
+        <section className="space-y-2">
+          <h2 className="font-serif text-xl font-bold text-brand">Your return visits</h2>
+          {data!.collection
+            .filter((item) => item.placeId === edition.placeId && item.id !== edition.id)
+            .map((item) => (
+              <Link
+                key={item.id}
+                href={`/editions/${item.id}`}
+                className="block min-h-11 py-3 text-sm text-brand underline"
+              >
+                Edition {item.visitSequence} ·{" "}
+                {new Date(item.capturedAt).toLocaleDateString(undefined, {
+                  timeZone: item.timezone,
+                })}
+              </Link>
+            ))}
+        </section>
+      )}
+      {data!.sets
+        .filter((set) => set.places.some((place) => place.id === edition.placeId))
+        .map((set) => (
+          <section key={set.id} className="space-y-2 rounded-xl bg-surface-muted p-4">
+            <h2 className="font-serif text-xl font-bold text-brand">{set.name}</h2>
+            <p className="text-sm">
+              {setProgress(set, data!.collection)} of {set.places.length} places collected
+            </p>
+            <Link
+              href={`/sets/${set.slug}`}
+              className="inline-flex min-h-11 items-center text-brand underline"
+            >
+              Explore the next stop
+            </Link>
+          </section>
+        ))}
       <div className="flex flex-wrap gap-4">
         <Link
           className="inline-flex min-h-11 items-center text-sm text-brand underline"

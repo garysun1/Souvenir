@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { CalendarDays, Globe } from "lucide-react";
 import { AppHeader } from "@/components/ui/app-header";
 import { DiscoverContent } from "./discover-content";
@@ -22,7 +23,9 @@ export default function DiscoverPage() {
           </Link>
         }
       />
-      <DiscoverContent />
+      <Suspense fallback={<p role="status">Loading destinations…</p>}>
+        <DiscoverContent />
+      </Suspense>
     </>
   );
 }

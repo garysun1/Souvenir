@@ -1,10 +1,10 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Avatar, Button, ChipRow, Field, Icon, Screen, Sheet, T } from '@/components/ui';
+import { Avatar, Button, Chip, ChipRow, Field, Icon, Screen, Sheet, T } from '@/components/ui';
 import { PlacePhoto } from '@/components/cards/PlacePhoto';
 import type { CaptureDraft } from '@/domain/types';
-import { CAPTURE_TIMEZONE, identifyCapture, localVisitInput, suspectedDuplicate, validateVisit, validTimezone } from '@/domain/capture';
+import { CAPTURE_TIMEZONE, captureToEdition, identifyCapture, localVisitInput, suspectedDuplicate, validateVisit, validTimezone } from '@/domain/capture';
 import { categoryLabels, placeById, users } from '@/fixtures/catalog';
 import { useApp } from '@/state/AppProvider';
 import { CaptureHeader } from '@/features/capture/CaptureHeader';
@@ -24,23 +24,32 @@ export default function ConfirmCapture() {
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [separate, setSeparate] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  if (draft?.status === 'saved') return <Redirect href="/capture/reveal" />;
   if (!draft || !local || draft.id !== local.id || !['confirm', 'reveal'].includes(draft.status)) return <CaptureUnavailable />;
   const place = local.placeId ? placeById(local.placeId) : undefined;
   const timezone = local.timezone ?? (state.mode === 'account' ? place?.timezone ?? 'UTC' : CAPTURE_TIMEZONE);
   const timezoneValid = validTimezone(timezone);
   const visitError = validateVisit(local.visitedAt, state.mode === 'account' ? new Date().toISOString() : state.clock, local.moment);
   const patch = (update: Partial<CaptureDraft>) => {
+    if (saving || draft.submittedEdition) return;
     const next = { ...local, ...update, status: 'confirm' as const };
     setLocal(next); setSaveError(undefined);
     void commit({ type: 'DRAFT', draft: next }).catch(() => setSaveError('Your latest edit could not be saved. Retry before revealing.'));
   };
   const reveal = async (forceSeparate = false) => {
-    if (!place || visitError) return;
+    if (!place || visitError || saving) return;
     const duplicate = suspectedDuplicate(state, local);
     if (duplicate && !separate && !forceSeparate) { setDuplicateOpen(true); return; }
-    const next = { ...local, status: 'reveal' as const };
-    try { await commit({ type: 'DRAFT', draft: next }); router.replace('/capture/reveal'); }
-    catch { setSaveError('Your draft could not be saved. It is still on this screen; retry when storage is available.'); }
+    const next = draft.submittedEdition ? draft : { ...local, status: 'reveal' as const };
+    setSaving(true); setSaveError(undefined);
+    try {
+      if (!draft.submittedEdition) await commit({ type: 'DRAFT', draft: next });
+      await commit({ type: 'ADD_EDITION', edition: captureToEdition(next, state.mode === 'account' ? new Date().toISOString() : state.clock) });
+      router.replace('/capture/reveal');
+    } catch (reason) { setSaveError(reason instanceof Error ? reason.message : 'Your visit could not be saved. Your draft is preserved; retry when connected.'); }
+    finally { setSaving(false); }
   };
   return <Screen>
     <CaptureHeader title="Confirm your visit" />
@@ -49,6 +58,10 @@ export default function ConfirmCapture() {
     <View style={{ marginTop: 22, gap: 18 }}>
       <View style={captureStyles.detailCard}><View style={captureStyles.row}><Icon name="pin" /><View style={{ flex: 1 }}>{place ? <><T variant="place">{place.name}</T><T variant="small" muted>{categoryLabels[place.category]} · {place.neighborhood}</T></> : <><T variant="place">Choose the place</T><T variant="small" muted>We won’t guess from an arbitrary photo.</T></>}</View></View><Button label={place ? 'Change place' : 'Search catalog'} variant="outline" onPress={() => setPlaceSearch(true)} /></View>
       {value(params.note) && <View style={captureStyles.notice}><T variant="small">{value(params.note)}</T></View>}
+      <T variant="small" muted>{new Date(local.visitedAt).toLocaleDateString()} · {local.companions.length ? `${local.companions.length} companions` : 'Just your moment'}</T>
+      {state.mode === 'account' && <><T variant="label">Share this visit</T><ChipRow>{(['private', 'friends', 'public'] as const).map(visibility => <Chip key={visibility} label={visibility === 'private' ? 'Only me' : visibility === 'friends' ? 'Friends' : 'Public'} selected={(local.visibility ?? 'private') === visibility} onPress={saving || !!draft.submittedEdition ? undefined : () => patch({ visibility })} />)}</ChipRow><T variant="small" muted>Shared activity includes the place and date. Your original photo, moment and companions stay private.</T></>}
+      <Button label={detailsOpen ? 'Hide optional details' : 'Date, moment & companions'} variant="ghost" disabled={saving || !!draft.submittedEdition} onPress={() => setDetailsOpen(!detailsOpen)} />
+      {(detailsOpen || !timezoneValid || !!visitError) && <View style={{ gap: 16 }}>
       {timezoneValid && <DateTimeField value={local.visitedAt} timezone={timezone} onChange={visitedAt => patch({ visitedAt })} />}
       {state.mode === 'account' && <Field label="Visit timezone (IANA name)" value={timezone} onChangeText={value => patch({ timezone: value })} autoCapitalize="none" />}
       {!timezoneValid && <T accessibilityRole="alert">Choose a valid timezone, for example Asia/Tokyo or UTC.</T>}
@@ -58,8 +71,11 @@ export default function ConfirmCapture() {
       {local.outingId && <View style={captureStyles.detailCard}><T variant="label">Linked outing</T><T>{state.outings.find(item => item.id === local.outingId)?.title ?? 'Accepted plan'}</T><Button label="Remove outing link" variant="ghost" onPress={() => patch({ outingId: undefined })} /></View>}
       <Field label="Moment (optional)" value={local.moment} onChangeText={moment => patch({ moment: moment.slice(0, 160) })} placeholder="What stayed with you?" multiline maxLength={160} />
       <T variant="small" muted style={{ textAlign: 'right' }}>{local.moment.length}/160</T>
+      </View>}
+      {local.outingId && !detailsOpen && <T variant="small" muted>Linked to {state.outings.find(item => item.id === local.outingId)?.title ?? 'your outing'}</T>}
+      {draft.submittedEdition && <T muted>This visit is locked for safe retry. You can edit its details after saving.</T>}
       {saveError && <View style={captureStyles.error}><T color="#A3383C">{saveError}</T></View>}
-      <Button label="Confirm & reveal" icon="sparkles" disabled={!place || !!visitError || !timezoneValid} onPress={() => reveal()} />
+      <Button label={draft.submittedEdition ? 'Retry save & reveal' : 'Save & reveal your souvenir'} icon="sparkles" loading={saving} disabled={!place || !!visitError || !timezoneValid} onPress={() => reveal()} />
     </View>
     <PlaceSearchSheet visible={placeSearch} onClose={() => setPlaceSearch(false)} onChoose={placeId => patch({ placeId, timezone: state.mode === 'account' ? placeById(placeId)?.timezone ?? timezone : undefined })} candidateIds={candidates} />
     <Sheet visible={duplicateOpen} onClose={() => setDuplicateOpen(false)} title="This looks familiar">

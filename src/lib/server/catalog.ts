@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, gte, ilike, inArray, lte, or } from "drizzle-orm";
+import { and, asc, eq, gt, gte, ilike, inArray, isNull, lte, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { places, setPlaces, sets } from "@/lib/db/schema";
@@ -71,6 +71,7 @@ export async function getPlacePage(viewerId: string | undefined, query: CatalogQ
           : undefined,
         query.city ? eq(places.city, query.city) : undefined,
         query.country ? eq(places.country, query.country) : undefined,
+        query.countryUnknown ? isNull(places.country) : undefined,
         query.category ? eq(places.category, query.category) : undefined,
         query.south !== undefined
           ? and(

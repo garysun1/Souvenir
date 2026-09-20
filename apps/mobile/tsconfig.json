@@ -9,6 +9,9 @@
       "node"
     ],
     "paths": {
+      "maplibre-gl": [
+        "./node_modules/maplibre-gl"
+      ],
       "@/*": [
         "./src/*"
       ],

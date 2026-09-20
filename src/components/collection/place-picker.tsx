@@ -30,6 +30,7 @@ export function PlacePicker({
   const { data, request, refresh } = useAccount();
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("search");
+  const [changing, setChanging] = useState(!value);
   const { location, locating, error: locationError, locate } = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<PlaceChoice | null>(null);
@@ -65,6 +66,7 @@ export function PlacePicker({
       return;
     }
     setPicked(place);
+    setChanging(false);
     onSelect(place);
   }
 
@@ -126,207 +128,219 @@ export function PlacePicker({
       {value && !canonicalPlaceId(value) && (
         <ErrorNotice message="Mobile demo IDs and slugs cannot be used to capture. Choose a real destination below." />
       )}
-      <div className="flex flex-wrap gap-2">
-        {["search", "nearby", "custom"].map((item) => (
-          <Button
-            key={item}
-            type="button"
-            variant={mode === item ? "default" : "outline"}
-            aria-pressed={mode === item}
-            onClick={() => setMode(item)}
-          >
-            {item === "custom" ? "Add a place" : item === "nearby" ? "Nearby" : "Search"}
-          </Button>
-        ))}
-      </div>
-      <ErrorNotice message={error} />
-      {mode === "nearby" && <ErrorNotice message={locationError} />}
-      {mode === "search" && (
-        <label className="block space-y-1 text-sm">
-          Search worldwide
-          <Input
-            maxLength={200}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Place name or city"
-          />
-        </label>
-      )}
-      {mode === "nearby" && (
+      {selected && !changing ? (
+        <Button type="button" variant="outline" onClick={() => setChanging(true)}>
+          Change place
+        </Button>
+      ) : (
         <>
-          <Button type="button" variant="outline" disabled={locating} onClick={locate}>
-            {locating ? "Finding location…" : "Use my location"}
-          </Button>
-          <p className="text-xs text-text-secondary">
-            Within 5 km. Nearby candidates are suggestions; only you can confirm the place.
-          </p>
-          {nearby.data && (
-            <p className="text-xs">
-              Coverage: {nearby.data.coverage} · source: {nearby.data.provenance}
-              {nearby.data.coverage !== "ready"
-                ? " — this area may be incomplete; search or add a place."
-                : ""}
-            </p>
-          )}
-        </>
-      )}
-      {mode !== "custom" && (
-        <>
-          <ResourceState {...(mode === "nearby" ? nearby : results)} label="Finding places…" />
-          {places?.length === 0 && (
-            <p className="text-sm">No matches. Try another name or add a private place.</p>
-          )}
-          <ul className="max-h-72 space-y-2 overflow-auto">
-            {places?.map((place) => (
-              <li key={place.id}>
-                <Button
-                  type="button"
-                  disabled={busy}
-                  variant={value === place.id ? "secondary" : "outline"}
-                  className="h-auto w-full justify-between whitespace-normal py-3 text-left"
-                  onClick={() => choose(place)}
-                >
-                  <span>
-                    <span className="block font-serif">{place.name}</span>
-                    <span className="block text-xs font-normal">{placeLocation(place)}</span>
-                  </span>
-                  <span className="ml-2 text-xs">{value === place.id ? "Selected" : "Choose"}</span>
-                </Button>
-              </li>
-            ))}
-          </ul>
-          {mode === "search" && customPlaces.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="font-serif font-bold text-brand">Your private places</h3>
-              {customPlaces.map((place) => (
-                <Button
-                  key={place.id}
-                  type="button"
-                  variant="outline"
-                  disabled={busy}
-                  onClick={() => choose(place)}
-                >
-                  Choose {place.name} · {placeLocation(place)}
-                </Button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-      {mode === "custom" && (
-        <div className="space-y-3">
-          <p className="text-sm">
-            Creates a private destination. Leave unknown city or country blank. Coordinates must be
-            confirmed by you.
-          </p>
-          {created ? (
-            <Button type="button" onClick={() => choose(created)}>
-              Choose {created.name}
-            </Button>
-          ) : (
-            <>
-              <fieldset disabled={busy || Boolean(pending)} className="space-y-3">
-                <label className="block text-sm">
-                  Name
-                  <Input
-                    value={fields.name}
-                    onChange={(event) => setFields({ ...fields, name: event.target.value })}
-                    maxLength={200}
-                  />
-                </label>
-                <label className="block text-sm">
-                  Category
-                  <select
-                    value={fields.category}
-                    onChange={(event) =>
-                      setFields({
-                        ...fields,
-                        category: event.target.value as PlaceCreate["category"],
-                      })
-                    }
-                    className="min-h-11 w-full rounded-xl border border-border px-3"
-                  >
-                    {["nature", "culture", "food", "landmark", "hidden_gem"].map((category) => (
-                      <option key={category} value={category}>
-                        {category.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="text-sm">
-                    Latitude
-                    <Input
-                      value={fields.lat}
-                      onChange={(event) => setFields({ ...fields, lat: event.target.value })}
-                      type="number"
-                      step="any"
-                      min={-90}
-                      max={90}
-                    />
-                  </label>
-                  <label className="text-sm">
-                    Longitude
-                    <Input
-                      value={fields.lng}
-                      onChange={(event) => setFields({ ...fields, lng: event.target.value })}
-                      type="number"
-                      step="any"
-                      min={-180}
-                      max={180}
-                    />
-                  </label>
-                  <label className="text-sm">
-                    City (optional)
-                    <Input
-                      value={fields.city}
-                      onChange={(event) => setFields({ ...fields, city: event.target.value })}
-                      maxLength={200}
-                    />
-                  </label>
-                  <label className="text-sm">
-                    Country code (optional)
-                    <Input
-                      value={fields.country}
-                      onChange={(event) => setFields({ ...fields, country: event.target.value })}
-                      maxLength={2}
-                    />
-                  </label>
-                </div>
-              </fieldset>
-              {pending && (
-                <p className="text-xs">
-                  Retry keeps the same request and details. Cancel to edit after checking for a
-                  saved place.
-                </p>
-              )}
-              <Button type="button" disabled={busy} onClick={() => void create()}>
-                {busy ? "Saving…" : pending ? "Retry creating place" : "Create private place"}
+          <div className="flex flex-wrap gap-2">
+            {["search", "nearby", "custom"].map((item) => (
+              <Button
+                key={item}
+                type="button"
+                variant={mode === item ? "default" : "outline"}
+                aria-pressed={mode === item}
+                onClick={() => setMode(item)}
+              >
+                {item === "custom" ? "Add a place" : item === "nearby" ? "Nearby" : "Search"}
               </Button>
-              {pending && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() => setPending(null)}
-                >
-                  Cancel pending request
-                </Button>
+            ))}
+          </div>
+          <ErrorNotice message={error} />
+          {mode === "nearby" && <ErrorNotice message={locationError} />}
+          {mode === "search" && (
+            <label className="block space-y-1 text-sm">
+              Search worldwide
+              <Input
+                maxLength={200}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Place name or city"
+              />
+            </label>
+          )}
+          {mode === "nearby" && (
+            <>
+              <Button type="button" variant="outline" disabled={locating} onClick={locate}>
+                {locating ? "Finding location…" : "Use my location"}
+              </Button>
+              <p className="text-xs text-text-secondary">
+                Within 5 km. Nearby candidates are suggestions; only you can confirm the place.
+              </p>
+              {nearby.data && (
+                <p className="text-xs">
+                  Coverage: {nearby.data.coverage} · source: {nearby.data.provenance}
+                  {nearby.data.coverage !== "ready"
+                    ? " — this area may be incomplete; search or add a place."
+                    : ""}
+                </p>
               )}
             </>
           )}
-          {duplicate && (
-            <div className="space-y-2">
+          {mode !== "custom" && (
+            <>
+              <ResourceState {...(mode === "nearby" ? nearby : results)} label="Finding places…" />
+              {places?.length === 0 && (
+                <p className="text-sm">No matches. Try another name or add a private place.</p>
+              )}
+              <ul className="max-h-72 space-y-2 overflow-auto">
+                {places?.map((place) => (
+                  <li key={place.id}>
+                    <Button
+                      type="button"
+                      disabled={busy}
+                      variant={value === place.id ? "secondary" : "outline"}
+                      className="h-auto w-full justify-between whitespace-normal py-3 text-left"
+                      onClick={() => choose(place)}
+                    >
+                      <span>
+                        <span className="block font-serif">{place.name}</span>
+                        <span className="block text-xs font-normal">{placeLocation(place)}</span>
+                      </span>
+                      <span className="ml-2 text-xs">
+                        {value === place.id ? "Selected" : "Choose"}
+                      </span>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              {mode === "search" && customPlaces.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-serif font-bold text-brand">Your private places</h3>
+                  {customPlaces.map((place) => (
+                    <Button
+                      key={place.id}
+                      type="button"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => choose(place)}
+                    >
+                      Choose {place.name} · {placeLocation(place)}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {mode === "custom" && (
+            <div className="space-y-3">
               <p className="text-sm">
-                A similar place exists: {duplicate.name} · {placeLocation(duplicate)}. Review before
-                choosing.
+                Creates a private destination. Leave unknown city or country blank. Coordinates must
+                be confirmed by you.
               </p>
-              <Button type="button" onClick={() => choose(duplicate)}>
-                Choose existing place
-              </Button>
+              {created ? (
+                <Button type="button" onClick={() => choose(created)}>
+                  Choose {created.name}
+                </Button>
+              ) : (
+                <>
+                  <fieldset disabled={busy || Boolean(pending)} className="space-y-3">
+                    <label className="block text-sm">
+                      Name
+                      <Input
+                        value={fields.name}
+                        onChange={(event) => setFields({ ...fields, name: event.target.value })}
+                        maxLength={200}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      Category
+                      <select
+                        value={fields.category}
+                        onChange={(event) =>
+                          setFields({
+                            ...fields,
+                            category: event.target.value as PlaceCreate["category"],
+                          })
+                        }
+                        className="min-h-11 w-full rounded-xl border border-border px-3"
+                      >
+                        {["nature", "culture", "food", "landmark", "hidden_gem"].map((category) => (
+                          <option key={category} value={category}>
+                            {category.replace("_", " ")}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="text-sm">
+                        Latitude
+                        <Input
+                          value={fields.lat}
+                          onChange={(event) => setFields({ ...fields, lat: event.target.value })}
+                          type="number"
+                          step="any"
+                          min={-90}
+                          max={90}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        Longitude
+                        <Input
+                          value={fields.lng}
+                          onChange={(event) => setFields({ ...fields, lng: event.target.value })}
+                          type="number"
+                          step="any"
+                          min={-180}
+                          max={180}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        City (optional)
+                        <Input
+                          value={fields.city}
+                          onChange={(event) => setFields({ ...fields, city: event.target.value })}
+                          maxLength={200}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        Country code (optional)
+                        <Input
+                          value={fields.country}
+                          onChange={(event) =>
+                            setFields({ ...fields, country: event.target.value })
+                          }
+                          maxLength={2}
+                        />
+                      </label>
+                    </div>
+                  </fieldset>
+                  {pending && (
+                    <p className="text-xs">
+                      Retry keeps the same request and details. Cancel to edit after checking for a
+                      saved place.
+                    </p>
+                  )}
+                  <Button type="button" disabled={busy} onClick={() => void create()}>
+                    {busy ? "Saving…" : pending ? "Retry creating place" : "Create private place"}
+                  </Button>
+                  {pending && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={busy}
+                      onClick={() => setPending(null)}
+                    >
+                      Cancel pending request
+                    </Button>
+                  )}
+                </>
+              )}
+              {duplicate && (
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    A similar place exists: {duplicate.name} · {placeLocation(duplicate)}. Review
+                    before choosing.
+                  </p>
+                  <Button type="button" onClick={() => choose(duplicate)}>
+                    Choose existing place
+                  </Button>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
     </section>
   );

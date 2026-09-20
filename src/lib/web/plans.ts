@@ -1,4 +1,4 @@
-import type { PlaceDto, PlanCreate } from "../../../shared/api-contract";
+import type { PlaceDto, PlanCreate, WishlistDto } from "../../../shared/api-contract";
 
 export function samplePlan(
   userId: string,
@@ -7,6 +7,7 @@ export function samplePlan(
   date: string,
   selectedIds: string[],
   catalog: PlaceDto[],
+  wishlist?: WishlistDto,
 ): PlanCreate {
   const places = selectedIds.map((id) => catalog.find((place) => place.id === id));
   if (
@@ -26,13 +27,13 @@ export function samplePlan(
   }));
   return {
     requestId,
-    wishlistId: null,
+    wishlistId: wishlist?.id ?? null,
     plan: {
       title: title.trim(),
       version: 1,
       provenance: "simulation",
       constraints: {
-        participantIds: [userId],
+        participantIds: [...new Set([userId, ...(wishlist?.memberIds ?? [])])],
         date,
         startMinute: 840,
         endMinute: 1200,

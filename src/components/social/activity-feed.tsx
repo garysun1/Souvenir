@@ -9,6 +9,7 @@ import { RecommendationBadge } from "@/components/ui/recommendation-badge";
 import { ResourceState } from "@/components/catalog/resource-state";
 import { useResource } from "@/lib/web/use-resource";
 import { placeLocation, placePath } from "@/lib/web/worldwide";
+import { SavePlace } from "@/components/catalog/save-place";
 
 function Activity({ event }: { event: ActivityEventDto }) {
   const { data } = useAccount();
@@ -62,6 +63,7 @@ function Activity({ event }: { event: ActivityEventDto }) {
           {event.edition.variant.replaceAll("_", " ")}
         </p>
       )}
+      <SavePlace placeId={event.place.id} />
     </div>
   );
 }

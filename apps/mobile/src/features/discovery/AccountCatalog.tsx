@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import type { Category, PlaceDto } from '../../../../../shared/api-contract';
 import type { NearbyDto } from '../../../../../shared/worldwide-contract';
-import { Button, Chip, ChipRow, Field, T } from '@/components/ui';
+import { Button, Chip, ChipRow, Field, Tabs, T } from '@/components/ui';
+import PlaceMap from '@/components/map/PlaceMap';
 import { PlaceRow } from '@/components/cards/PlaceRow';
 import { mapPlace } from '@/lib/bootstrap';
 import { queryString, type SearchHit } from '@/lib/worldwide';
@@ -21,8 +22,10 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [view, setView] = useState<'list' | 'map'>('list');
+  const [selectedId, setSelectedId] = useState<string>();
   const generation = useRef(0);
-  const pagePath = `/api/places?${queryString({ q: query.trim(), city, country, category, limit: 50 })}`;
+  const pagePath = `/api/places?${queryString({ q: query.trim(), city, country, countryUnknown: city && !country ? 'true' : undefined, category, limit: 50 })}`;
   const requestKey = JSON.stringify([pagePath, location, accountRevision, attempt]);
   useEffect(() => {
     const id = ++generation.current;
@@ -37,7 +40,7 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
           accountPage<PlaceDto[]>(pagePath),
           query.trim() ? accountRequest<SearchHit[]>('/api/search', 'POST', { q: query.trim(), category, limit: 50 }) : Promise.resolve([]),
         ]);
-        const matches = search.map(hit => hit.place).filter(place => (!city || place.city === city) && (!country || place.country === country));
+        const matches = search.map(hit => hit.place).filter(place => (!city || place.city === city) && (country ? place.country === country : !city || !place.country));
         return { data: [...new Map([...matches, ...result.data].map(place => [place.id, place])).values()], cursor: result.nextCursor };
       };
       void read().then(result => {
@@ -60,6 +63,7 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
     finally { if (id === generation.current) setLoading(false); }
   };
   const current = page.key === requestKey;
+  const mapped = useMemo(() => page.data.map(mapPlace), [page.data]);
   return <View style={{ gap: 10 }}>
     <Field label="Search destinations" value={query} onChangeText={setQuery} placeholder="Name or description" maxLength={200} />
     <ChipRow>{(['nature', 'culture', 'food', 'landmark', 'hidden_gem'] as const).map(value => <Chip key={value} label={value.replace('_', ' ')} selected={category === value} onPress={() => setCategory(category === value ? undefined : value)} />)}</ChipRow>
@@ -72,10 +76,12 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
       else setLocationError('Location unavailable or denied. Search by name or retry location.');
     }} />
     {locationError && <T accessibilityRole="alert">{locationError}</T>}
-    <T variant="small" muted>{location && !query.trim() ? page.coverage ?? 'Finding nearby catalog places…' : `Global catalog${city ? ` · ${city}, ${country}` : ''}`}. {onChoose ? 'Tap a place to choose it; confirm your visit on the next screen.' : 'Hours and prices remain unknown unless documented.'}</T>
+    <T variant="small" muted>{location && !query.trim() ? page.coverage ?? 'Finding nearby catalog places…' : `Global catalog${city ? ` · ${city}, ${country || 'country not recorded'}` : ''}`}. {onChoose ? 'Tap a place to choose it; confirm your visit on the next screen.' : 'Hours and prices remain unknown unless documented.'}</T>
     {(loading || !current) && <ActivityIndicator accessibilityLabel="Loading destinations" />}
     {current && error && <><T accessibilityRole="alert">{error}</T><Button label="Retry search" onPress={() => setAttempt(value => value + 1)} /></>}
     {current && !loading && !error && !page.data.length && <T muted>No destinations found. Try a broader search or add a place in Capture.</T>}
+    {!onChoose && <Tabs value={view} onChange={setView} options={[{ value: 'list', label: 'List' }, { value: 'map', label: 'Map' }]} />}
+    {current && view === 'map' && !onChoose && <><PlaceMap places={mapped} selectedId={selectedId} onSelect={setSelectedId} /><T variant="small" muted>Accessible results are listed below.</T></>}
     {current && page.data.map(place => <PlaceRow key={place.id} place={mapPlace(place)} subtitle={[place.city, place.country, place.source].filter(Boolean).join(' · ')} onPress={onChoose ? () => onChoose(place.id) : undefined} />)}
     {current && page.cursor && <Button label="More destinations" loading={loading} variant="outline" onPress={more} />}
   </View>;

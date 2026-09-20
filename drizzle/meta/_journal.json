@@ -64,6 +64,20 @@
       "when": 1789880866498,
       "tag": "0008_nullable_website_corrections",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789894479905,
+      "tag": "0009_married_demogoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789898153588,
+      "tag": "0010_memories_private_api_boundary",
+      "breakpoints": true
     }
   ]
 }

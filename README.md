@@ -24,10 +24,16 @@ application database.
 
 ## Hosted database (Supabase)
 
-Set `DATABASE_URL` to the Supabase Session pooler URI:
-`postgresql://postgres.<ref>:PASSWORD@aws-…pooler.supabase.com:5432/postgres`.
+Set the deployed server's `DATABASE_URL` to the Supabase **Transaction pooler** URI
+from the project's Connect dialog (port `6543`). The runtime uses one connection
+per process and disables prepared statements for transaction pooling. Keep this
+URL server-only; never use a `NEXT_PUBLIC_` prefix. Set it in the hosting provider's
+Preview and Production environments as needed, then redeploy for it to take effect.
+
+Keep the **Session pooler** URI (port `5432`) or a direct connection separately for
+migrations, and supply it as `DATABASE_URL` only when running `pnpm db:migrate`.
 The direct `db.<ref>.supabase.co` host is IPv6-only. Inspect the migration journal
-and existing schema before applying `pnpm db:migrate`; an existing database must
+and existing schema before applying migrations; an existing database must
 have a baseline matching migration `0000` before incremental migrations run.
 Never run `db:seed` against a shared project.
 

@@ -110,7 +110,7 @@ export function PlacePreferences({ place, onSaved }: { place: PlaceDto; onSaved?
         </Button>
       </form>
       {visited && (
-        <div className="space-y-3 border-t border-divider pt-4">
+        <div id="recommend" className="scroll-mt-24 space-y-3 border-t border-divider pt-4">
           <h3 className="font-serif text-lg font-bold">Would you recommend it?</h3>
           <label className="block space-y-1 text-sm">
             Visibility for this recommendation

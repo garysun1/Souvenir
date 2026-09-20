@@ -1,6 +1,9 @@
 import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
+import { View } from 'react-native';
+import { mutualDestinations } from '../../../../../shared/journey';
+import { placeById } from '@/fixtures/catalog';
 import { Button, Field, Header, Screen, SectionHeading, T } from '@/components/ui';
 import { useApp } from '@/state/AppProvider';
 import { OutingRow, WishlistCard } from './components';
@@ -17,7 +20,16 @@ export function AccountFriends() {
     requestId.current = randomUUID(); setName(''); setLocked(false);
   };
   return <Screen><Header title="Friends" subtitle="Shared places, separate memories." />
-    <AccountFriendDirectory />
+    <SectionHeading title="Places to go together" />
+    {state.wishlists.filter(list => list.memberIds.length > 1).map(list => {
+      const mutual = mutualDestinations(list, 'you');
+      return mutual.length ? <View key={list.id} style={{ gap: 8, paddingVertical: 12 }}>
+        <T variant="heading">{mutual.length} mutual saves in {list.title}</T>
+        <T muted>{mutual.map(entry => placeById(entry.placeId)?.name).filter(Boolean).join(' · ')}</T>
+        <Button label="Plan together" onPress={() => router.push({ pathname: '/planner', params: { wishlistId: list.id, placeIds: mutual.map(entry => entry.placeId).slice(0, 30).join(',') } })} />
+      </View> : null;
+    })}
+    {!state.wishlists.some(list => mutualDestinations(list, 'you').length) && <T muted>Save destinations in a shared list to find places you both want to visit.</T>}
     <AccountFeed />
     <T muted>Share a list with an existing account by handle. Members can see shared saves and plans; your visit photos, notes and tips stay private.</T>
     <SectionHeading title="Your lists" />
@@ -28,5 +40,6 @@ export function AccountFriends() {
     <SectionHeading title="Shared outings" />
     {state.outings.filter(outing => outing.participantIds.length > 1).map(outing => <OutingRow key={outing.id} outing={outing} state={state} />)}
     <Button label="All saved plans" variant="outline" onPress={() => router.push('/plans')} />
+    <AccountFriendDirectory />
   </Screen>;
 }

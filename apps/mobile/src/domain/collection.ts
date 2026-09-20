@@ -3,6 +3,7 @@ import { places } from '@/fixtures/catalog';
 import { collectedPlaceIds, latestEdition, ownEditions, savedPlaceIds } from '@/state/selectors';
 
 export interface CollectionFilters {
+  outingId?: string;
   category: Category | 'all'; favorites: boolean; companion: string; after: string; before: string; sort: 'recent' | 'name' | 'ranking';
 }
 export const defaultCollectionFilters: CollectionFilters = { category: 'all', favorites: false, companion: '', after: '', before: '', sort: 'recent' };
@@ -13,11 +14,11 @@ export function visitDay(edition: Edition): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: edition.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(edition.visitedAt));
 }
 export function matchingEditions(state: AppState, filters: CollectionFilters): Edition[] {
-  return ownEditions(state).filter(edition => (!filters.companion || edition.companions.includes(filters.companion)) && (!filters.after || visitDay(edition) >= filters.after) && (!filters.before || visitDay(edition) <= filters.before));
+  return ownEditions(state).filter(edition => (!filters.outingId || edition.outingId === filters.outingId) && (!filters.companion || edition.companions.includes(filters.companion)) && (!filters.after || visitDay(edition) >= filters.after) && (!filters.before || visitDay(edition) <= filters.before));
 }
 export function collectionPlaces(state: AppState, section: 'been' | 'saved', filters: CollectionFilters): Place[] {
   const ids = section === 'been' ? collectedPlaceIds(state) : savedPlaceIds(state);
-  const visitFiltered = !!(filters.companion || filters.after || filters.before);
+  const visitFiltered = !!(filters.companion || filters.after || filters.before || filters.outingId);
   const matching = new Set(matchingEditions(state, filters).map(edition => edition.placeId));
   return places.filter(place => ids.includes(place.id) && (filters.category === 'all' || place.category === filters.category) && (!filters.favorites || state.favorites.includes(place.id)) && (!visitFiltered || matching.has(place.id))).sort((a, b) => {
     if (filters.sort === 'name') return a.name.localeCompare(b.name);

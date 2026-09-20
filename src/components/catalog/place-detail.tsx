@@ -71,6 +71,12 @@ export function PlaceDetail({ slug }: { slug: string }) {
       <div className="flex flex-wrap items-center gap-4">
         <SavePlace placeId={place.id} sharing onSaved={retry} />
         <Link
+          href={`/plan?placeIds=${place.id}`}
+          className="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-sm font-semibold text-brand"
+        >
+          Add to a plan
+        </Link>
+        <Link
           className="inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white"
           href={`/capture?placeId=${place.id}`}
         >
