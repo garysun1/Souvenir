@@ -11,6 +11,7 @@ import { useApp } from '@/state/AppProvider';
 import { deleteMedia } from '@/platform/media';
 import { DateTimeField } from '@/features/capture/DateTimeField';
 import { captureStyles } from '@/features/capture/styles';
+import { ShareMoment } from '@/features/memories/Moments';
 
 const value = (input?: string | string[]) => Array.isArray(input) ? input[0] : input;
 export default function EditionDetail() {
@@ -63,6 +64,7 @@ export default function EditionDetail() {
       <Button label={state.favorites.includes(place.id) ? 'Remove place from favorites' : 'Favorite this place'} variant="outline" icon="heart" onPress={() => commit({ type: 'FAVORITE', placeId: place.id })} />
       <Button label={state.tips[place.id] ? 'Edit private tip' : 'Add private tip'} variant="outline" icon="edit" onPress={() => { setTip(state.tips[place.id] ?? ''); setTipOpen(true); }} />
       <Button label="Share edition" variant="outline" icon="share" onPress={share} />
+      {state.mode === 'account' && <ShareMoment editionId={edition.id} />}
       <Button label="Delete edition" variant="ghost" onPress={() => setDeleting(true)} />
     </View>
     <Sheet visible={editing} onClose={() => setEditing(false)} title="Edit this edition">

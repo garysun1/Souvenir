@@ -11,14 +11,15 @@ function openMedia(): Promise<IDBDatabase> {
     request.onblocked = () => reject(new Error('Close other Souvenir tabs and retry photo storage.'));
   });
 }
-export async function persistMedia(uri: string): Promise<string> {
+export async function persistMedia(uri: string, contentHash?: string): Promise<string> {
   if (uri.startsWith('media:') || uri.startsWith('sample:')) return uri;
   const response = await fetch(uri);
   if (!response.ok) throw new Error('The selected photo could not be read. Choose it again.');
   const blob = await response.blob();
   if (!blob.size) throw new Error('The selected photo is empty. Choose another photo.');
   const extension = ({ 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'image/gif': 'gif' } as Record<string, string>)[blob.type] ?? 'jpg';
-  const key = `${mediaFingerprint(new Uint8Array(await blob.arrayBuffer()))}.${extension}`;
+  if (contentHash && !/^[a-f0-9]{64}$/.test(contentHash)) throw new Error('Invalid photo checksum.');
+  const key = `${contentHash ?? mediaFingerprint(new Uint8Array(await blob.arrayBuffer()))}.${extension}`;
   const database = await openMedia();
   try {
     await new Promise<void>((resolve, reject) => {
