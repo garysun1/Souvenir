@@ -5,6 +5,7 @@ import type { UserDetailDto } from "../../../shared/api-contract";
 import { ErrorNotice } from "@/components/account/account-state";
 import { Button } from "@/components/ui/button";
 import { useWrite } from "@/lib/web/use-write";
+import { notifyMemoriesChanged } from "@/components/memories/memory-state";
 
 export function FriendActions({
   userId,
@@ -16,7 +17,10 @@ export function FriendActions({
   refresh: () => void;
 }) {
   const [confirm, setConfirm] = useState(false);
-  const operation = useWrite(refresh);
+  const operation = useWrite(() => {
+    notifyMemoriesChanged();
+    refresh();
+  });
   if (relationship === "self") return null;
   const path = `/api/friends/${encodeURIComponent(userId)}`;
   return (

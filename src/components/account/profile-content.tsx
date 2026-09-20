@@ -13,6 +13,7 @@ import { errorMessage } from "@/lib/web/api";
 import { useResource } from "@/lib/web/use-resource";
 import { UserStats } from "@/components/social/user-stats";
 import { ResourceState } from "@/components/catalog/resource-state";
+import { TastePortrait } from "@/components/taste/taste-portrait";
 
 export function ProfileContent() {
   return (
@@ -156,6 +157,7 @@ function Profile() {
         )}
       </div>
       <div className="min-w-0 flex-1 space-y-7">
+        <TastePortrait />
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-serif text-xl font-bold text-brand">Your activity</h2>
