@@ -35,7 +35,7 @@ it("bounds the pool and releases idle connections", async () => {
 
   expect(mocks.postgres).toHaveBeenCalledWith(
     expect.any(String),
-    expect.objectContaining({ max: 5, idle_timeout: 20 }),
+    expect.objectContaining({ max: 1, prepare: false, idle_timeout: 20 }),
   );
   await closeDb();
   expect(mocks.end).toHaveBeenCalledOnce();
