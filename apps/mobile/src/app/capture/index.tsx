@@ -40,14 +40,14 @@ export default function Capture() {
   useEffect(() => { active.current = true; void CameraView.isAvailableAsync().then(value => { if (active.current) setAvailable(value); }).catch(() => { if (active.current) setAvailable(false); }); return () => { active.current = false; }; }, []);
   if (!contextValid) return <CaptureUnavailable message="The place or outing used to start this capture is unavailable." />;
   const routeFor = (draft: CaptureDraft) => `/capture/${draft.status === 'saved' ? 'reveal' : draft.status === 'photo' ? 'identify' : draft.status}` as '/capture/identify';
-  const makeDraft = (photoUri: string | undefined, status: CaptureDraft['status']): CaptureDraft => ({ id: newCaptureId(), photoUri, placeId: place?.id, visitedAt: state.mode === 'account' ? new Date().toISOString() : state.clock, companions: state.mode === 'account' ? [] : outing?.participantIds.filter(id => id !== 'you') ?? [], moment: '', outingId: outing?.id, status });
+  const makeDraft = (photoUri: string | undefined, status: CaptureDraft['status']): CaptureDraft => ({ id: newCaptureId(), photoUri, placeId: place?.id, timezone: state.mode === 'account' ? place?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC' : undefined, visitedAt: state.mode === 'account' ? new Date().toISOString() : state.clock, companions: state.mode === 'account' ? [] : outing?.participantIds.filter(id => id !== 'you') ?? [], moment: '', outingId: outing?.id, status });
   const savePhoto = async (rawUri: string, alreadyPersistent = false, suggestion?: ReturnType<typeof exifSuggestion>) => {
     if (saving.current) return;
     if (state.captureDraft && state.captureDraft.status !== 'saved') { setResume(true); return; }
     saving.current = true; setError(undefined); setPendingUri(rawUri);
     try {
       const work = pendingDraft.current?.rawUri === rawUri ? pendingDraft.current.draft : makeDraft(undefined, 'identify');
-      if (suggestion?.visitedAt) work.visitedAt = suggestion.visitedAt;
+      if (state.mode !== 'account' && suggestion?.visitedAt) work.visitedAt = suggestion.visitedAt;
       if (state.mode !== 'account' && !place && suggestion?.placeId) work.placeId = suggestion.placeId;
       pendingDraft.current = { rawUri, draft: work };
       const uri = alreadyPersistent ? rawUri : await persistMedia(rawUri);

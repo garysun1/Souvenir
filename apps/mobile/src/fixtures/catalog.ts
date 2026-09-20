@@ -60,3 +60,8 @@ export function installCatalog(catalog: Place[], collections: CatalogSet[], peop
   places = catalog; sets = collections; users = people;
   downtownSet = collections.find(set => set.title === 'Downtown Firsts') ?? { id: '', title: 'Sets', description: 'No sets available.', placeIds: [] };
 }
+export function mergeCatalog(incoming: Place[]) {
+  const merged = new Map(places.map(place => [place.id, place]));
+  for (const place of incoming) merged.set(place.id, place);
+  places = [...merged.values()];
+}

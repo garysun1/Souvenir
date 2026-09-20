@@ -12,8 +12,13 @@ import { ownEditions, setProgress } from '@/state/selectors';
 import { DiscoveryCard, FilterSheet, PlannerCard, SearchLauncher } from '@/features/discovery/components';
 import { downtownLocation, requestDiscoveryLocation, type DiscoveryLocation } from '@/platform/location';
 import { AccountSets } from '@/features/collection/AccountSets';
+import { AccountDiscover } from '@/features/discovery/AccountDiscover';
 
 export default function Discover() {
+  const { mode } = useApp();
+  return mode === 'account' ? <AccountDiscover /> : <DemoDiscover />;
+}
+function DemoDiscover() {
   const { state } = useApp();
   const [location, setLocation] = useState<DiscoveryLocation>(downtownLocation());
   const [locationSheet, setLocationSheet] = useState(false);

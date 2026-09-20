@@ -11,9 +11,16 @@ import { useApp } from '@/state/AppProvider';
 import { FilterSheet } from '@/features/discovery/components';
 import { DiscoveryMapProvider } from '@/features/discovery/MapSearchContext';
 import { downtownLocation, requestDiscoveryLocation, type DiscoveryLocation } from '@/platform/location';
+import { AccountCatalog } from '@/features/discovery/AccountCatalog';
 
 const examples = ['Quiet, free cultural place near us', 'Gardens nearby', 'Art open now'];
 export default function SearchScreen() {
+  const { mode } = useApp();
+  const { query } = useLocalSearchParams<{ query?: string }>();
+  if (mode === 'account') return <Screen><Header title="Search destinations" back /><AccountCatalog initialQuery={typeof query === 'string' ? query : ''} /></Screen>;
+  return <DemoSearchScreen />;
+}
+function DemoSearchScreen() {
   const params = useLocalSearchParams<{ query?: string; view?: string; lat?: string; lng?: string }>();
   const { state } = useApp();
   const initial = typeof params.query === 'string' ? params.query : '';

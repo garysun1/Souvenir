@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Button, Field, Header, Screen, SectionHeading, T } from '@/components/ui';
 import { useApp } from '@/state/AppProvider';
 import { OutingRow, WishlistCard } from './components';
+import { AccountFeed, AccountFriendDirectory } from './AccountSocial';
 
 export function AccountFriends() {
   const { state, commit } = useApp();
@@ -16,6 +17,8 @@ export function AccountFriends() {
     requestId.current = randomUUID(); setName(''); setLocked(false);
   };
   return <Screen><Header title="Friends" subtitle="Shared places, separate memories." />
+    <AccountFriendDirectory />
+    <AccountFeed />
     <T muted>Share a list with an existing account by handle. Members can see shared saves and plans; your visit photos, notes and tips stay private.</T>
     <SectionHeading title="Your lists" />
     {state.wishlists.map(list => <WishlistCard key={list.id} list={list} account />)}
