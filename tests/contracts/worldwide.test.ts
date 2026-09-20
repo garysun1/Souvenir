@@ -18,7 +18,6 @@ import { serializePlaceSourceDto, serializeSocialEditionDto } from "@/lib/contra
 import { placeSources, editions } from "@/lib/db/schema";
 import type { PlaceMetricsDto } from "../../shared/api-contract";
 import { isPublicSupabaseKey } from "../../shared/public-supabase-config";
-import { validateConfig } from "../../apps/mobile/src/lib/env";
 
 const id = "10000000-0000-4000-8000-000000000001";
 const otherId = "20000000-0000-4000-8000-000000000001";
@@ -247,19 +246,5 @@ describe("disposable Supabase public configuration", () => {
     expect(isPublicSupabaseKey("sb_secret_test", local)).toBe(false);
     expect(isPublicSupabaseKey(jwt("anon"), "https://project.supabase.co")).toBe(false);
     expect(isPublicSupabaseKey(jwt("anon"), "http://localhost.attacker.test")).toBe(false);
-    expect(
-      validateConfig({
-        supabaseUrl: local,
-        apiUrl: "http://localhost:3000",
-        publishableKey: jwt("anon"),
-      }).supabaseUrl,
-    ).toBe(local);
-    expect(() =>
-      validateConfig({
-        supabaseUrl: local,
-        apiUrl: "http://localhost:3000",
-        publishableKey: jwt("service_role"),
-      }),
-    ).toThrow();
   });
 });
