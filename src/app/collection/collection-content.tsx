@@ -13,6 +13,7 @@ import { useAccount } from "@/components/account/account-provider";
 import { SavePlace } from "@/components/catalog/save-place";
 import { CatalogSet } from "@/components/catalog/catalog-set";
 import { groupEditions, legacyPlace, savedPlaceIds, setProgress } from "@/lib/web/collection";
+import { Atlas } from "@/components/catalog/atlas";
 
 export function CollectionContent() {
   return (
@@ -42,7 +43,7 @@ function Collection() {
         </p>
         <RefreshAccount />
       </div>
-      <UnderlineTabs tabs={["been", "want to go", "sets"]} value={tab} onChange={setTab} />
+      <UnderlineTabs tabs={["been", "want to go", "sets", "atlas"]} value={tab} onChange={setTab} />
       {tab !== "sets" && (
         <div className="flex flex-wrap gap-3">
           <Input
@@ -163,6 +164,13 @@ function Collection() {
             <CatalogSet key={set.id} set={set} visited={setProgress(set, snapshot.collection)} />
           ))}
         </div>
+      )}
+      {tab === "atlas" && (
+        <Atlas
+          places={groups
+            .map((group) => group.place)
+            .filter((place) => visible(place.name, place.category))}
+        />
       )}
     </>
   );

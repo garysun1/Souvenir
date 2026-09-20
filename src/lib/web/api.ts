@@ -5,6 +5,7 @@ export class ApiError extends Error {
     public readonly code: ErrorCode,
     message: string,
     public readonly status: number,
+    public readonly details?: Record<string, unknown>,
   ) {
     super(message);
   }
@@ -45,12 +46,14 @@ export interface ApiOptions {
   signal?: AbortSignal;
   refreshSession?: () => Promise<boolean>;
   assertCurrent?: () => void;
+  onPagination?: (nextCursor: string | null) => void;
 }
 
 export async function requestJson<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const body = options.body === undefined ? undefined : JSON.stringify(options.body);
   for (let attempt = 0; attempt < 2; attempt++) {
     options.assertCurrent?.();
+    options.signal?.throwIfAborted();
     let response: Response;
     try {
       response = await fetch(path, {
@@ -71,9 +74,11 @@ export async function requestJson<T>(path: string, options: ApiOptions = {}): Pr
       );
     }
     options.assertCurrent?.();
+    options.signal?.throwIfAborted();
     if (response.status === 401 && attempt === 0 && options.refreshSession) {
       const refreshed = await options.refreshSession();
       options.assertCurrent?.();
+      options.signal?.throwIfAborted();
       if (refreshed) continue;
     }
     let result: ApiResult<T>;
@@ -87,6 +92,7 @@ export async function requestJson<T>(path: string, options: ApiOptions = {}): Pr
       );
     }
     options.assertCurrent?.();
+    options.signal?.throwIfAborted();
     if (response.status === 401) {
       throw new ApiError(
         "unauthorized",
@@ -99,6 +105,7 @@ export async function requestJson<T>(path: string, options: ApiOptions = {}): Pr
         result.error,
         result.message ?? "The request failed. Please try again.",
         response.status,
+        result.details,
       );
     }
     if (!response.ok || !result || typeof result !== "object" || !("data" in result)) {
@@ -108,6 +115,9 @@ export async function requestJson<T>(path: string, options: ApiOptions = {}): Pr
         response.status,
       );
     }
+    options.onPagination?.(
+      "nextCursor" in result && typeof result.nextCursor === "string" ? result.nextCursor : null,
+    );
     return result.data;
   }
   throw new ApiError("unauthorized", "Sign in again to continue.", 401);

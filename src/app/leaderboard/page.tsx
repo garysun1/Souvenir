@@ -1,13 +1,13 @@
 import { AppHeader } from "@/components/ui/app-header";
 import { PageBody } from "@/components/ui/page";
-import { FriendsContent } from "@/components/social/friends-content";
+import { Leaderboard } from "@/components/social/leaderboard";
 
-export default function FriendsPage() {
+export default function LeaderboardPage() {
   return (
     <>
-      <AppHeader title="Friends" />
+      <AppHeader title="Leaderboard" />
       <PageBody>
-        <FriendsContent />
+        <Leaderboard />
       </PageBody>
     </>
   );

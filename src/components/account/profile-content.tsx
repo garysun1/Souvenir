@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import type { ProfilePatch } from "../../../shared/api-contract";
+import type { ProfilePatch, ProfileStatsDto, Visibility } from "../../../shared/api-contract";
 import { useAccount } from "./account-provider";
 import { AccountRequired, ErrorNotice, RefreshAccount } from "./account-state";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { PlaceRow } from "@/components/ui/place-row";
 import { legacyPlace, savedPlaceIds, setProgress } from "@/lib/web/collection";
 import { errorMessage } from "@/lib/web/api";
+import { useResource } from "@/lib/web/use-resource";
+import { UserStats } from "@/components/social/user-stats";
+import { ResourceState } from "@/components/catalog/resource-state";
 
 export function ProfileContent() {
   return (
@@ -25,17 +28,21 @@ function Profile() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const snapshot = data!;
+  const statistics = useResource<ProfileStatsDto>("/api/me/stats");
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const fields = new FormData(event.currentTarget);
     const body: ProfilePatch = {
       displayName: String(fields.get("displayName")).trim(),
       homeCity: String(fields.get("homeCity")).trim() || null,
+      homeCountry: String(fields.get("homeCountry")).trim().toUpperCase() || null,
+      statsVisibility: String(fields.get("statsVisibility")) as Visibility,
     };
     setBusy(true);
     setError(null);
     try {
       await mutate("/api/me", { method: "PATCH", body });
+      statistics.retry();
       setEditing(false);
     } catch (failure) {
       setError(errorMessage(failure));
@@ -114,6 +121,28 @@ function Profile() {
               />
             </label>
             <label className="block space-y-2 text-sm">
+              Home country code
+              <Input
+                name="homeCountry"
+                maxLength={2}
+                pattern="[A-Za-z]{2}"
+                defaultValue={snapshot.user.homeCountry ?? ""}
+                placeholder="e.g. PT"
+              />
+            </label>
+            <label className="block space-y-2 text-sm">
+              Who can see my statistics?
+              <select
+                name="statsVisibility"
+                defaultValue={snapshot.user.statsVisibility ?? "private"}
+                className="min-h-11 w-full rounded-xl border border-border px-3"
+              >
+                <option value="private">Only me</option>
+                <option value="friends">Accepted friends</option>
+                <option value="public">Public</option>
+              </select>
+            </label>
+            <label className="block space-y-2 text-sm">
               Home city
               <Input name="homeCity" maxLength={100} defaultValue={snapshot.user.homeCity ?? ""} />
             </label>
@@ -127,6 +156,19 @@ function Profile() {
         )}
       </div>
       <div className="min-w-0 flex-1 space-y-7">
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-serif text-xl font-bold text-brand">Your activity</h2>
+            <Button variant="outline" onClick={statistics.retry}>
+              Refresh statistics
+            </Button>
+          </div>
+          <ResourceState {...statistics} label="Loading statistics…" />
+          {statistics.data && <UserStats stats={statistics.data.stats} />}
+          <Link href="/leaderboard" className="text-sm text-brand underline">
+            View leaderboards
+          </Link>
+        </section>
         <div className="divide-y divide-divider border-y border-divider">
           {[
             { href: "/collection", label: "Collection", count: snapshot.collection.length },

@@ -56,6 +56,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         return await requestJson<T>(path, {
           ...options,
           ...current,
+          signal: options.signal
+            ? AbortSignal.any([current.signal, options.signal])
+            : current.signal,
           refreshSession: async () => {
             const result = await client.auth.refreshSession();
             return !result.error && result.data.session?.user.id === owner;

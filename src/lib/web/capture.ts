@@ -3,6 +3,7 @@ import type {
   EditionDto,
   PhotoUploadDto,
   PhotoUploadRequest,
+  Visibility,
 } from "../../../shared/api-contract";
 import type { ApiOptions } from "./api";
 
@@ -18,6 +19,7 @@ export interface CaptureDraft {
   photoName: string | null;
   submission: EditionCreate | null;
   completedEditionId: string | null;
+  visibility?: Visibility;
 }
 
 const databaseName = "souvenir-web-drafts-v1";
