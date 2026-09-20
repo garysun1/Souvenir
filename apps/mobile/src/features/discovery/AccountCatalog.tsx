@@ -25,7 +25,7 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
   const [view, setView] = useState<'list' | 'map'>('list');
   const [selectedId, setSelectedId] = useState<string>();
   const generation = useRef(0);
-  const pagePath = `/api/places?${queryString({ q: query.trim(), city, country, category, limit: 50 })}`;
+  const pagePath = `/api/places?${queryString({ q: query.trim(), city, country, countryUnknown: city && !country ? 'true' : undefined, category, limit: 50 })}`;
   const requestKey = JSON.stringify([pagePath, location, accountRevision, attempt]);
   useEffect(() => {
     const id = ++generation.current;
@@ -40,7 +40,7 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
           accountPage<PlaceDto[]>(pagePath),
           query.trim() ? accountRequest<SearchHit[]>('/api/search', 'POST', { q: query.trim(), category, limit: 50 }) : Promise.resolve([]),
         ]);
-        const matches = search.map(hit => hit.place).filter(place => (!city || place.city === city) && (!country || place.country === country));
+        const matches = search.map(hit => hit.place).filter(place => (!city || place.city === city) && (country ? place.country === country : !city || !place.country));
         return { data: [...new Map([...matches, ...result.data].map(place => [place.id, place])).values()], cursor: result.nextCursor };
       };
       void read().then(result => {
@@ -76,7 +76,7 @@ export function AccountCatalog({ initialQuery = '', city, country, onChoose }: {
       else setLocationError('Location unavailable or denied. Search by name or retry location.');
     }} />
     {locationError && <T accessibilityRole="alert">{locationError}</T>}
-    <T variant="small" muted>{location && !query.trim() ? page.coverage ?? 'Finding nearby catalog places…' : `Global catalog${city ? ` · ${city}, ${country}` : ''}`}. {onChoose ? 'Tap a place to choose it; confirm your visit on the next screen.' : 'Hours and prices remain unknown unless documented.'}</T>
+    <T variant="small" muted>{location && !query.trim() ? page.coverage ?? 'Finding nearby catalog places…' : `Global catalog${city ? ` · ${city}, ${country || 'country not recorded'}` : ''}`}. {onChoose ? 'Tap a place to choose it; confirm your visit on the next screen.' : 'Hours and prices remain unknown unless documented.'}</T>
     {(loading || !current) && <ActivityIndicator accessibilityLabel="Loading destinations" />}
     {current && error && <><T accessibilityRole="alert">{error}</T><Button label="Retry search" onPress={() => setAttempt(value => value + 1)} /></>}
     {current && !loading && !error && !page.data.length && <T muted>No destinations found. Try a broader search or add a place in Capture.</T>}

@@ -39,15 +39,15 @@ export function DiscoverContent() {
   const [nearbyMode, setNearbyMode] = useState(false);
   const [citySearch, setCitySearch] = useState("");
   const [choosingCity, setChoosingCity] = useState(false);
-  const cities = destinationCities(catalog?.places ?? []);
+  const cities = destinationCities(catalog?.places ?? [], true);
   const location = useLocation();
-  const validLocality =
-    (!country || /^[A-Z]{2}$/.test(country)) && (!city.trim() || /^[A-Z]{2}$/.test(country));
+  const validLocality = !country || /^[A-Z]{2}$/.test(country);
   const query = new URLSearchParams({ limit: "100" });
   if (search.trim()) query.set("q", search.trim());
   if (selected) query.set("category", selected);
   if (city.trim()) query.set("city", city.trim());
   if (country) query.set("country", country);
+  if (city.trim() && !country) query.set("countryUnknown", "true");
   const filterKey = query.toString();
   const [page, setPage] = useState<{ filter: string; cursors: (string | null)[] }>({
     filter: "",
@@ -67,7 +67,7 @@ export function DiscoverContent() {
       : null,
   );
   const trends = useResource<TrendingDto>(
-    userId && city.trim() && validLocality
+    userId && city.trim() && country && validLocality
       ? `/api/places/trending?${new URLSearchParams({ city: city.trim(), country, limit: "8" })}`
       : null,
     false,
@@ -141,7 +141,9 @@ export function DiscoverContent() {
             aria-expanded={choosingCity}
             onClick={() => setChoosingCity(!choosingCity)}
           >
-            {city ? `${city}, ${countryName(country)}` : "Where are you exploring?"}
+            {city
+              ? `${city}, ${countryName(country) || "country not recorded"}`
+              : "Where are you exploring?"}
           </Button>
           {choosingCity && (
             <div className="space-y-2 rounded-xl border border-border p-3">
@@ -209,7 +211,7 @@ export function DiscoverContent() {
           This location link is incomplete. Choose a city or clear the filters.
         </p>
       )}
-      {userId && city && validLocality && (
+      {userId && city && country && validLocality && (
         <section className="space-y-3">
           <h2 className="font-serif text-xl font-bold text-brand">
             Trending in {city}, {countryName(country)}
