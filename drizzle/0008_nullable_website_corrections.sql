@@ -1,0 +1,2 @@
+ALTER TABLE "place_suggestions" ALTER COLUMN "value" DROP NOT NULL;--> statement-breakpoint
+ALTER TABLE "place_suggestions" ADD CONSTRAINT "place_suggestions_value_required" CHECK ("place_suggestions"."field" = 'website' OR ("place_suggestions"."value" IS NOT NULL AND jsonb_typeof("place_suggestions"."value") <> 'null'));
