@@ -8,9 +8,11 @@ import {
 import type { AuthContext } from "../../shared/api-contract";
 
 const mocks = vi.hoisted(() => ({
-  list: vi.fn<() => Promise<{ data: { name: string }[]; error: Error | null }>>(),
   info: vi.fn<
-    () => Promise<{ data: { size: number; contentType: string } | null; error: Error | null }>
+    (path: string) => Promise<{
+      data: { size: number; contentType: string } | null;
+      error: Error | null;
+    }>
   >(),
   createSignedUploadUrl:
     vi.fn<
@@ -40,14 +42,18 @@ const requestId = "22222222-2222-4222-8222-222222222222";
 const filename = `${requestId}.jpg`;
 const path = `${auth.userId}/${filename}`;
 const input = { requestId, contentType: "image/jpeg" as const, size: 1024 };
+const notFound = {
+  data: null,
+  error: Object.assign(new Error("Object not found"), { status: 404 }),
+};
+const uploaded = { data: { size: 1024, contentType: "image/jpeg" }, error: null };
 
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.env.NEXT_PUBLIC_SUPABASE_URL = "https://storage.test";
   mocks.env.SUPABASE_SECRET_KEY = "test-server-only-key";
   mocks.from.mockReturnValue(mocks);
-  mocks.list.mockResolvedValue({ data: [], error: null });
-  mocks.info.mockResolvedValue({ data: { size: 1024, contentType: "image/jpeg" }, error: null });
+  mocks.info.mockResolvedValue(notFound);
   mocks.createSignedUploadUrl.mockResolvedValue({
     data: { token: "one-object-token", signedUrl: "https://storage.test/private-upload" },
     error: null,
@@ -69,12 +75,16 @@ describe("private capture storage boundary", () => {
       token: "one-object-token",
     });
     expect(mocks.from).toHaveBeenCalledWith("captures");
-    expect(mocks.list).toHaveBeenCalledWith(auth.userId, { search: requestId, limit: 10 });
+    for (const extension of ["jpg", "png", "webp"]) {
+      expect(mocks.info).toHaveBeenCalledWith(`${auth.userId}/${requestId}.${extension}`);
+    }
     expect(mocks.createSignedUploadUrl).toHaveBeenCalledWith(path, { upsert: false });
   });
 
   it("reuses an already uploaded object only when its path, actual MIME and size match", async () => {
-    mocks.list.mockResolvedValue({ data: [{ name: filename }], error: null });
+    mocks.info.mockImplementation(async (objectPath) =>
+      objectPath === path ? uploaded : notFound,
+    );
     expect(await createCaptureUpload(auth, input)).toEqual({
       bucket: "captures",
       path,
@@ -88,8 +98,18 @@ describe("private capture storage boundary", () => {
       error: null,
     });
     await expect(createCaptureUpload(auth, input)).rejects.toMatchObject({ status: 409 });
-    mocks.list.mockResolvedValueOnce({ data: [{ name: `${requestId}.png` }], error: null });
-    await expect(createCaptureUpload(auth, input)).rejects.toMatchObject({ status: 409 });
+    mocks.info.mockImplementation(async (objectPath) => {
+      if (objectPath === path) return uploaded;
+      if (objectPath === `${auth.userId}/${requestId}.png`) {
+        return { data: { size: 1024, contentType: "image/png" }, error: null };
+      }
+      return notFound;
+    });
+    await expect(createCaptureUpload(auth, input)).rejects.toMatchObject({
+      status: 409,
+      code: "idempotency_conflict",
+    });
+    expect(mocks.createSignedUploadUrl).not.toHaveBeenCalled();
   });
 
   it("rejects foreign owners, traversal, arbitrary URLs and another draft before touching Storage", async () => {
@@ -101,26 +121,27 @@ describe("private capture storage boundary", () => {
       `${auth.userId}/33333333-3333-4333-8333-333333333333.jpg`,
     ]) {
       await expect(verifyCapturePhoto(auth, requestId, invalid)).rejects.toMatchObject({
-        status: 400,
+        status: 403,
+        code: "forbidden",
       });
     }
     await expect(signCapturePhoto(auth, `foreign/${filename}`)).rejects.toMatchObject({
-      status: 400,
+      status: 403,
     });
     await expect(deleteCapturePhoto(auth, `foreign/${filename}`)).rejects.toMatchObject({
-      status: 400,
+      status: 403,
     });
     expect(mocks.from).not.toHaveBeenCalled();
   });
 
-  it("rejects missing uploads, conflicting objects, invalid content and excessive actual size", async () => {
-    await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({ status: 422 });
-    mocks.list.mockResolvedValueOnce({
-      data: [{ name: filename }, { name: `${requestId}.png` }],
-      error: null,
+  it("requires a completed upload with valid content and actual size", async () => {
+    await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({
+      status: 422,
+      code: "photo_not_uploaded",
     });
-    await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({ status: 409 });
-    mocks.list.mockResolvedValue({ data: [{ name: filename }], error: null });
+    mocks.info.mockResolvedValueOnce(uploaded);
+    await expect(verifyCapturePhoto(auth, requestId, path)).resolves.toBeUndefined();
+    expect(mocks.info).toHaveBeenCalledWith(path);
     for (const contentType of ["application/pdf", "image/png"]) {
       mocks.info.mockResolvedValueOnce({ data: { size: 1024, contentType }, error: null });
       await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({
@@ -131,12 +152,16 @@ describe("private capture storage boundary", () => {
       data: { size: 10 * 1024 * 1024 + 1, contentType: "image/jpeg" },
       error: null,
     });
-    await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({ status: 413 });
+    await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({
+      status: 422,
+      code: "photo_not_uploaded",
+    });
     mocks.info.mockResolvedValueOnce({ data: { size: 0, contentType: "image/jpeg" }, error: null });
     await expect(verifyCapturePhoto(auth, requestId, path)).rejects.toMatchObject({ status: 422 });
   });
 
   it("issues five-minute read URLs and deletes only the authorized object", async () => {
+    mocks.info.mockResolvedValueOnce(uploaded);
     const now = Date.now();
     const signed = await signCapturePhoto(auth, path);
     expect(signed).toMatchObject({ path, url: "https://storage.test/private-read" });
@@ -149,13 +174,14 @@ describe("private capture storage boundary", () => {
 
   it("surfaces failures without provider details or false upload/read/delete success", async () => {
     const error = new Error("sensitive provider detail");
-    mocks.list.mockResolvedValueOnce({ data: [], error });
+    mocks.info.mockResolvedValueOnce({ data: null, error });
     await expect(createCaptureUpload(auth, input)).rejects.toMatchObject({
       status: 503,
       message: expect.not.stringContaining("sensitive"),
     });
     mocks.createSignedUploadUrl.mockResolvedValueOnce({ data: null, error });
     await expect(createCaptureUpload(auth, input)).rejects.toMatchObject({ status: 503 });
+    mocks.info.mockResolvedValueOnce(uploaded);
     mocks.createSignedUrl.mockResolvedValueOnce({ data: null, error });
     await expect(signCapturePhoto(auth, path)).rejects.toMatchObject({ status: 503 });
     mocks.remove.mockResolvedValueOnce({ error });
