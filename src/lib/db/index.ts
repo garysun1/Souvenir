@@ -7,7 +7,8 @@ const dbGlobal = globalThis as typeof globalThis & {
   souvenirSql?: ReturnType<typeof postgres>;
 };
 const client = (dbGlobal.souvenirSql ??= postgres(env.DATABASE_URL, {
-  max: 5,
+  max: 1,
+  prepare: false,
   idle_timeout: 20,
 }));
 export const db = drizzle(client, { schema });

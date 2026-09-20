@@ -63,9 +63,12 @@ export function apiErrorResponse(error: unknown): NextResponse {
       { status: 400 },
     );
   }
+  const code = error instanceof Error && "code" in error ? String(error.code) : undefined;
+  const connectionLimit =
+    code === "53300" ||
+    (code === "XX000" && error instanceof Error && error.message.includes("EMAXCONNSESSION"));
   const unavailable =
-    error instanceof Error &&
-    "code" in error &&
+    connectionLimit ||
     [
       "ECONNREFUSED",
       "ECONNRESET",
@@ -73,7 +76,8 @@ export function apiErrorResponse(error: unknown): NextResponse {
       "ENOTFOUND",
       "CONNECTION_CLOSED",
       "CONNECT_TIMEOUT",
-    ].includes(String(error.code));
+    ].includes(code ?? "");
+  if (connectionLimit) console.error("Database connection limit reached", { code });
   return NextResponse.json(
     {
       error: unavailable ? "service_unavailable" : "internal_error",
