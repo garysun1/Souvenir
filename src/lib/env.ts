@@ -107,6 +107,13 @@ export const env = {
   get OPENAI_API_KEY() {
     return serverValue(optionalString, process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
   },
+  get TASTE_MODEL() {
+    return serverValue(
+      z.enum(["gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06"]).default("gpt-4o-mini-2024-07-18"),
+      process.env.TASTE_MODEL,
+      "TASTE_MODEL",
+    );
+  },
   get ELASTICSEARCH_URL() {
     return serverValue(optionalUrl, process.env.ELASTICSEARCH_URL, "ELASTICSEARCH_URL");
   },
