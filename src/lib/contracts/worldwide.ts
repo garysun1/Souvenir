@@ -140,6 +140,7 @@ export const placeListQuerySchema = z
     q: z.string().trim().max(200).optional(),
     city: locality.optional(),
     country: countrySchema.optional(),
+    countryUnknown: z.literal("true").optional(),
     category: categorySchema.optional(),
     south: queryNumber(latitudeSchema).optional(),
     west: queryNumber(longitudeSchema).optional(),
@@ -148,7 +149,11 @@ export const placeListQuerySchema = z
     limit: queryNumber(z.number().int().min(1).max(100)).optional(),
   })
   .strict()
-  .refine((q) => !q.city || q.country, "City filters require a country")
+  .refine(
+    (q) =>
+      (!q.city || q.country || q.countryUnknown) && (!q.countryUnknown || (!q.country && q.city)),
+    "City filters require a country or an explicit unknown-country selection",
+  )
   .refine((q) => {
     const values = [q.south, q.west, q.north, q.east];
     return (

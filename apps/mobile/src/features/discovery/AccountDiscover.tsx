@@ -19,8 +19,8 @@ export function AccountDiscover() {
   const [citySearch, setCitySearch] = useState('');
   const [choosingCity, setChoosingCity] = useState(false);
   const [filter, setFilter] = useState<{ city: string; country: string }>();
-  const trending = useAccountResource<TrendingDto>(filter ? `/api/places/trending?${queryString({ ...filter, limit: 12 })}` : undefined);
-  const cities = destinationCities(places);
+  const trending = useAccountResource<TrendingDto>(filter?.country ? `/api/places/trending?${queryString({ ...filter, limit: 12 })}` : undefined);
+  const cities = destinationCities(places, true);
   useEffect(() => { if (trending.data) mergePlaces(trending.data.places); }, [trending.data, mergePlaces]);
   return <Screen><Header title="Discover" subtitle="Find your next adventure" />
     <T muted>Discover a place. Go together. Keep a souvenir.</T>
@@ -31,7 +31,7 @@ export function AccountDiscover() {
       <View style={{ gap: 8 }}>{cities.filter(item => item.label.toLowerCase().includes(citySearch.toLowerCase())).map(item => <Button key={item.label} label={item.label} variant="ghost" onPress={() => { setFilter({ city: item.city, country: item.country }); setChoosingCity(false); }} />)}</View>
       {!cities.some(item => item.label.toLowerCase().includes(citySearch.toLowerCase())) && <T muted>No catalog city matches. Try searching by destination name.</T>}
     </Sheet>
-    {filter && <><SectionHeading title={`Trending in ${filter.city}`} /><ResourceStatus {...trending} />
+    {filter?.country && <><SectionHeading title={`Trending in ${filter.city}`} /><ResourceStatus {...trending} />
       {trending.data && <><T variant="small" muted>Souvenir activity · computed {trending.data.computedAt ?? 'unavailable'}. Recent collectors compared with the previous eight-week baseline.</T>
         {trending.data.places.map(place => <PlaceRow key={place.id} place={mapPlace(place)} subtitle={frequencyLabel(place.metrics)} />)}
         {!trending.data.places.length && <T muted>No trending destinations with enough activity in this city yet.</T>}</>}
