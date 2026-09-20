@@ -65,8 +65,8 @@ try {
   assert.equal(sql("SELECT visibility FROM editions"), "private");
   assert.equal(sql("SELECT stats_visibility FROM users LIMIT 1"), "private");
   assert.equal(
-    sql("SELECT count(*) FROM pg_tables WHERE schemaname='public' AND rowsecurity"),
-    "26",
+    sql("SELECT count(*) FROM pg_tables WHERE schemaname='public' AND NOT rowsecurity"),
+    "0",
   );
   assert.equal(
     sql(`SELECT count(*) FROM information_schema.role_table_grants
