@@ -5,6 +5,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { SideNav } from "@/components/ui/side-nav";
+import { AccountProvider } from "@/components/account/account-provider";
 
 export const metadata: Metadata = {
   title: "Souvenir",
@@ -31,13 +32,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={`${playfair.variable} ${inter.variable} min-h-screen bg-surface`}>
-        <div className="flex min-h-screen">
-          <SideNav />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <main className="flex-1 pb-24 lg:pb-8">{children}</main>
+        <AccountProvider>
+          <div className="flex min-h-screen">
+            <SideNav />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <main className="flex-1 pb-24 lg:pb-8">{children}</main>
+            </div>
           </div>
-        </div>
-        <BottomNav />
+          <BottomNav />
+        </AccountProvider>
       </body>
     </html>
   );

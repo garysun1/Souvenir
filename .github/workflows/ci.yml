@@ -4,16 +4,36 @@ on:
   push:
     branches: [main]
 jobs:
-  checks:
+  web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: 9.15.5 }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
+        with: { node-version: 24.19.0, cache: pnpm, cache-dependency-path: pnpm-lock.yaml }
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
+      - run: node tests/contracts/check-migrations.mjs
+      - run: node tests/contracts/check-catalog.mjs --build
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npx expo install --check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --runInBand
+      - run: npm run export:web

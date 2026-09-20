@@ -1,18 +1,16 @@
 import Link from "next/link";
 import { CalendarDays, MapPin } from "lucide-react";
 import { AppHeader } from "@/components/ui/app-header";
-import { getCollectionSets, getFeaturedPlaces } from "@/lib/data";
 import { DiscoverContent } from "./discover-content";
 
-export default async function DiscoverPage() {
-  const [places, sets] = await Promise.all([getFeaturedPlaces(), getCollectionSets()]);
+export default function DiscoverPage() {
   return (
     <>
       <AppHeader
         left={
-          <button type="button" className="flex min-h-11 items-center gap-1 text-sm font-medium">
+          <span className="flex min-h-11 items-center gap-1 text-sm font-medium">
             <MapPin className="size-4 text-brand" /> Los Angeles
-          </button>
+          </span>
         }
         right={
           <Link
@@ -24,7 +22,7 @@ export default async function DiscoverPage() {
           </Link>
         }
       />
-      <DiscoverContent places={places} sets={sets} />
+      <DiscoverContent />
     </>
   );
 }

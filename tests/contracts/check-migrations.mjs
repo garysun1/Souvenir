@@ -28,7 +28,13 @@ try {
   );
   execFileSync(
     "docker",
-    ["exec", container, "sh", "-c", "until pg_isready -U postgres; do sleep 0.2; done"],
+    [
+      "exec",
+      container,
+      "sh",
+      "-c",
+      "until pg_isready -h 127.0.0.1 -U postgres; do sleep 0.2; done",
+    ],
     { timeout: 30000, stdio: "pipe" },
   );
   migration("0000_lean_baron_zemo.sql");

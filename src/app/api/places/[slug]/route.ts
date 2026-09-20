@@ -1,12 +1,9 @@
-import { eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { places } from "@/lib/db/schema";
-import { serializePlace } from "@/lib/serializers";
+import { apiRoute, dataResponse, requireNoQuery, slugSchema, type SlugParams } from "@/lib/api";
+import { getPlace } from "@/lib/server/catalog";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [row] = await db.select().from(places).where(eq(places.slug, slug)).limit(1);
-  if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return NextResponse.json({ data: serializePlace(row) });
+export async function GET(request: Request, { params }: SlugParams) {
+  return apiRoute(async () => {
+    requireNoQuery(request);
+    return dataResponse(await getPlace(slugSchema.parse((await params).slug)));
+  });
 }

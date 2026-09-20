@@ -139,7 +139,13 @@ Dropbox sample imports must never upload demo editions into real accounts.
   `SignedPhotoDto`; `deleteCapturePhoto(auth,path)` returns `Promise<void>`.
   Add explicit types to these exports. Use server credentials only there.
 - Server constructs `{auth.userId}/{requestId}.{jpg|png|webp}`. Signed upload is
-  single-object, no upsert. Client sends binary bytes using Supabase
+  single-object, no upsert. Upload response has `uploaded:false` with token and
+  signedUrl for a new object. If an earlier attempt already uploaded the exact
+  owned path with matching MIME/size, return `uploaded:true` and null token/
+  signedUrl; the client skips upload and retries edition creation. Different
+  MIME/size for an existing request path is a conflict. Keep bytes immutable
+  while retrying a draft; a new photo requires a new requestId.
+  Client sends binary bytes using Supabase
   `uploadToSignedUrl(path,token,bytes,{contentType})`; React Native must use an
   ArrayBuffer, not an assumed browser File/FormData implementation. Persist only
   object path, never signed URL, device URI, sample URI, or arbitrary remote URL.
@@ -206,6 +212,43 @@ No offline private writes claimed as saved. Refresh signed URLs after expiry;
 never cache one as a permanent photo URI.
 
 ## Database perimeter and release setup
+
+### Canonical catalog
+
+`shared/catalog-map.ts` maps all 30 mobile fixture IDs to canonical slugs.
+Resolve the slugs against bootstrap's actual UUIDs; never derive DB UUIDs from
+fixture IDs or migrate the demo collection. Eight map to the existing catalog;
+22 are additive (`db/seed/mobile-extension.json`). Griffith Park remains distinct
+from Old Los Angeles Zoo. Existing 30 place IDs and rows are never overwritten.
+
+`pnpm exec tsx scripts/extend-catalog.ts` is a read-only dry run.
+The final integrator may run it with `--apply` after reviewing the target DB.
+It inserts missing places and the Downtown Firsts set/missing memberships with
+ON CONFLICT DO NOTHING, in one transaction. Repeated runs preserve existing
+rows, edits, memberships, and IDs. It fails if an expected overlapping base
+destination is missing. The legacy seed remains unsuitable for shared data.
+
+Added destinations have `stats.verified=false`, `provenance=prototype-catalog`
+and `rarityStatus=unavailable`; required numeric rarity fields use neutral
+placeholders, not measured statistics. Clients display unavailable values and
+must not present prototype discovery counts, prices, hours or provider IDs as
+verified. Existing web catalog sample rarity values also are not validated live
+observations. All canonical categories are retained in real state; the mobile
+presentation may map nature→park, culture→cultural while adding labels/filters
+for food/hidden_gem. Never silently discard the other web destinations.
+
+Use canonical UUIDs in requests even when a fixture mapping provides bundled
+photography/presentation. User-owned state never uses fixture IDs. Mock planner
+hours/prices/travel/weather remain explicitly labeled simulation estimates.
+
+`node tests/contracts/check-catalog.mjs --build` tests additive seeding twice
+against disposable Postgres 16, verifies no existing rows/IDs or set members
+change, then builds Next.js against that local database. Next.js currently
+prerenders Discover and therefore needs a populated schema during build.
+Root pnpm checks exclude mobile; CI runs npm/Expo checks from `apps/mobile`
+with its own lockfile and Node 24. No hosted secrets are required in CI.
+
+### Release perimeter
 
 Generated migrations preserve existing places/IDs and visits. RLS is enabled on
 all public application tables; anon/authenticated grants are revoked with no
