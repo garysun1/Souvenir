@@ -201,7 +201,7 @@ export function DiscoverContent() {
           )}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {trends.data?.places.map((place) => (
-              <div key={place.id} className="space-y-2">
+              <div key={place.id} className="flex flex-col gap-2">
                 <PlaceCard place={legacyPlace(place)} />
                 <p className="text-xs text-text-secondary">
                   {place.metrics?.trend.status === "ready"
@@ -258,7 +258,7 @@ export function DiscoverContent() {
           <h1 className="font-serif text-[21px] font-extrabold text-brand">Find your next place</h1>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {visiblePlaces.map((place) => (
-              <div key={place.id} className="space-y-2">
+              <div key={place.id} className="flex flex-col gap-2">
                 <PlaceCard place={legacyPlace(place)} />
                 <p className="text-xs text-text-secondary">{placeLocation(place)}</p>
                 <SavePlace placeId={place.id} />

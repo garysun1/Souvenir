@@ -18,6 +18,11 @@ description: Run Souvenir prototype or integrated Supabase browser acceptance in
 - DOM extraction can instantiate image elements, copy their src, then abbreviate src/href strings. These detached image elements can issue literal abbreviated asset requests and 404s while the live page remains correct.
 - Do not infer attribution solely from `...` or visible images. Compare fresh Network events and retain supplied initiator stacks; use Debugger.getScriptSource when necessary to identify an injected extraction script. Failed requests may expose `initiator: other` even when the preceding full-image request exposes a script stack.
 - Preserve historical failures without silently reclassifying every event. Asset attribution does not automatically establish the cause of separate blob/file errors.
+- Hydration warnings can also involve extraction-injected `devinid`,
+  `devin-tagname`, or `devin-hidden` attributes. Preserve the original diff, then
+  repeat fresh route loads with a passive CDP collector and no DOM extraction
+  during hydration. Classify these as tooling effects only when the diff and
+  clean control run support that conclusion.
 - Save logs, screenshots and recordings under persistent `/home/ubuntu` paths, not only `/tmp`. Stop collectors after testing.
 
 ## Devin Secrets Needed
@@ -53,6 +58,10 @@ For integrated account testing: `SUPABASE_DATABASE_URL`, `SUPABASE_SECRET_KEY` (
   organization references differ. A PostgreSQL `28P01` error is invalid database
   authentication, not a missing profile; the API may intentionally return a generic
   readable HTTP 503 while swallowing the underlying exception.
+- A successful catalog count does not prove schema readiness. Compare the hosted
+  migration journal with the checked-out migration files and verify newly needed
+  columns through `information_schema` before creating accounts. Report missing
+  migrations and obtain authorization rather than applying them implicitly.
 - Determine confirmation expectations from actual signup response and the public
   Supabase Auth settings (`mailer_autoconfirm`). Auto-confirmed signup does not
   exercise confirmation-required UI, delivery or deep-link routing. Never change
