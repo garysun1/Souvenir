@@ -83,7 +83,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clearPrivate();
     if (!id) { setAuthReady(true); return; }
     currentUser.current = id; setUserId(id); modeRef.current = 'account'; setMode('account'); setAuthReady(true);
-    const client = new AccountApi(getConfig().apiUrl, getSupabase().auth, id, scope.capture());
+    const client = new AccountApi(getConfig().apiUrl, getSupabase().auth, id, scope.capture(), undefined, reason => {
+      clearPrivate(); setError(reason.message);
+    });
     api.current = client;
     const operation = (async () => {
       try {
