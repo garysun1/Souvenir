@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import * as Linking from 'expo-linking';
 import { AppState as NativeAppState } from 'react-native';
 import type { BootstrapDto, SignedPhotoDto } from '../../../../shared/api-contract';
 import type { Action, AppState } from '@/domain/types';
 import { installCatalog, restoreFixtureCatalog } from '@/fixtures/catalog';
 import { AccountApi, AccountScope } from '@/lib/api';
+import { confirmationRedirect, parseAuthCallback } from '@/lib/authLink';
 import { emptyAccount, installBootstrapCatalog, mapBootstrap } from '@/lib/bootstrap';
 import { getConfig } from '@/lib/env';
 import { accountKey, encodeLocal, restoreLocal } from '@/lib/local';
@@ -129,6 +131,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     return () => { alive = false; unsubscribe?.(); subscription.remove(); scope.change(); };
   }, [activate, publish, refresh, scope]);
+  const completeAuthLink = useCallback(async (url: string) => {
+    const callback = parseAuthCallback(url);
+    if (!callback) return;
+    if (callback.error) { setError(callback.error); return; }
+    try {
+      const auth = getSupabase().auth;
+      const { data, error: linkError } = callback.code
+        ? await auth.exchangeCodeForSession(callback.code)
+        : await auth.setSession({ access_token: callback.accessToken ?? '', refresh_token: callback.refreshToken ?? '' });
+      if (linkError) throw linkError;
+      await AsyncStorage.removeItem(MODE_KEY);
+      await activate(data.session);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'This confirmation link could not be completed. Sign in with your password.');
+    }
+  }, [activate]);
+  useEffect(() => {
+    let alive = true;
+    void Linking.getInitialURL().then(url => { if (alive && url) void completeAuthLink(url); }).catch(() => undefined);
+    const link = Linking.addEventListener('url', ({ url }) => { if (alive) void completeAuthLink(url); });
+    return () => { alive = false; link.remove(); };
+  }, [completeAuthLink]);
   const commit = useCallback((action: Action): Promise<AppState> => {
     const captured = sessionScope;
     const client = api.current;
@@ -176,7 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await activate(data.session);
   }, [activate]);
   const signUp = useCallback(async (email: string, password: string) => {
-    const { data, error } = await getSupabase().auth.signUp({ email: email.trim(), password });
+    const { data, error } = await getSupabase().auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: confirmationRedirect() } });
     if (error) throw error;
     if (data.session) { await AsyncStorage.removeItem(MODE_KEY); await activate(data.session); }
     return !!data.session;
