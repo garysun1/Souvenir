@@ -116,6 +116,7 @@ export function tasteMessages(
 }
 
 function client() {
+  if (env.AI_PROVIDER !== "openai") throw new TasteProviderError("provider_unavailable", false);
   if (!env.OPENAI_API_KEY) throw new TasteProviderError("provider_unavailable", true);
   return new OpenAI({ apiKey: env.OPENAI_API_KEY, timeout: 30_000, maxRetries: 0 });
 }

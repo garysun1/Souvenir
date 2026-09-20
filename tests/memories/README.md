@@ -32,7 +32,7 @@ pnpm exec tsx tests/memories/run-eval.ts
 This default command renders three synthetic PNGs and writes an inventory marked
 `not_run` under ignored `tests/memories/eval-output/`. It never calls a provider.
 
-Only after approval, with `OPENAI_API_KEY` configured on the server:
+Only after approval, with `AI_PROVIDER=openai` and `OPENAI_API_KEY` configured on the server:
 
 ```sh
 pnpm exec tsx tests/memories/run-eval.ts --live
@@ -57,7 +57,8 @@ five items, with two provider calls in flight per request, and no more than thre
 attempts per item. Taste refresh accepts up to 100 selected sources and at most
 five consented photo sources. The default is
 `TASTE_MODEL=gpt-4o-mini-2024-07-18`; the only other accepted model is
-`gpt-4o-2024-08-06`. No mock fallback is used in runtime routes.
+`gpt-4o-2024-08-06`. No mock fallback is used in runtime routes. `AI_PROVIDER=mock`
+disables these provider calls; users can still review imports and edit interests manually.
 
 Refresh the returned version before a new mutation. Reusing an analysis request
 ID retries failed/expired work; a completed replay does not call the provider.

@@ -38,6 +38,7 @@ const result = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.stubEnv("AI_PROVIDER", "openai");
   vi.stubEnv("OPENAI_API_KEY", "synthetic-key-not-a-real-secret");
   vi.stubEnv("TASTE_MODEL", "gpt-4o-mini-2024-07-18");
 });
@@ -78,6 +79,19 @@ describe("grounding and injection boundaries", () => {
 });
 
 describe("real adapter boundary with a stubbed SDK", () => {
+  it("never sends selected content to a live provider in mock mode", async () => {
+    vi.stubEnv("AI_PROVIDER", "mock");
+    await expect(tasteProvider.analyze(sources)).rejects.toMatchObject({
+      code: "provider_unavailable",
+      retryable: false,
+    });
+    await expect(tasteProvider.image("https://signed.example.test/private")).rejects.toMatchObject({
+      code: "provider_unavailable",
+      retryable: false,
+    });
+    expect(sdk.construct).not.toHaveBeenCalled();
+    expect(sdk.create).not.toHaveBeenCalled();
+  });
   it("requests strict structured output with bounded tokens, timeout and no SDK retries", async () => {
     sdk.create.mockResolvedValue({
       choices: [{ finish_reason: "stop", message: { content: JSON.stringify(result) } }],
