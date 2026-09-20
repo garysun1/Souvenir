@@ -32,6 +32,7 @@ import { getPlaces, getSets, requirePlaces } from "@/lib/server/catalog";
 import { cleanupPlaceImageObjects, revokeEditionPlaceImages } from "@/lib/server/place-images";
 import { lockUser } from "@/lib/server/transactions";
 import { ApiError } from "@/lib/server/errors";
+import { placeMetricsSchema } from "@/lib/contracts/api";
 import type { PlaceImageStorage } from "@/lib/server/place-image-storage";
 
 const storage = vi.hoisted(() => ({
@@ -188,7 +189,7 @@ describe("catalog and detail visibility", () => {
     expect((await getSets(db, bob))[0].places).toHaveLength(1);
   });
 
-  it("hydrates authorized facts with unknown metrics/hours and never returns provider or private photo fields", async () => {
+  it("hydrates insufficient activity metrics without disclosing private visits, tips or provider payloads", async () => {
     await db
       .insert(placePreferences)
       .values({ userId: alice, placeId: publicId, tip: "Private legacy preference" });
@@ -219,10 +220,29 @@ describe("catalog and detail visibility", () => {
     expect(result.headers.get("Cache-Control")).toBe("private, no-store");
     const { data } = await result.json();
     expect(data).toMatchObject({
-      metrics: null,
+      metrics: {
+        provenance: "souvenir-activity",
+        sampleStatus: "insufficient",
+        collectors: 0,
+        editions: 0,
+        saves: 0,
+        discoveryFreq: null,
+        frequency: {
+          status: "unavailable",
+          city: null,
+          country: null,
+          visitors90d: 0,
+          cityVisitors90d: 0,
+        },
+        recommendRate: null,
+        sentiment: { status: "insufficient", recommend: 0, depends: 0, skip: 0 },
+        trendingScore: null,
+        trend: { status: "insufficient", collectors7d: 0, weeklyCollectors8w: Array(8).fill(0) },
+      },
       availability: { status: "unknown", openingHours: null },
       social: { friendsBeen: 0, friendsSaved: 0 },
     });
+    expect(placeMetricsSchema.safeParse(data.metrics).success).toBe(true);
     expect(data.images).toHaveLength(1);
     expect(data.sources[0].status).toBe("stale");
     const text = JSON.stringify(data);
