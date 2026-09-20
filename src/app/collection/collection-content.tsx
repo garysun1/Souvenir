@@ -97,7 +97,11 @@ function Collection() {
                           {edition.visitSequence === 1 ? "First visit" : "Return visit"} · Edition{" "}
                           {edition.visitSequence}
                         </span>
-                        <span>{new Date(edition.capturedAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(edition.capturedAt).toLocaleDateString(undefined, {
+                            timeZone: edition.timezone,
+                          })}
+                        </span>
                       </Link>
                     ))}
                   </div>
