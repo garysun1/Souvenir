@@ -1,14 +1,16 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   real,
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -33,6 +35,8 @@ export const editionVariantEnum = pgEnum("edition_variant", [
   "seasonal",
 ]);
 export const friendshipStatusEnum = pgEnum("friendship_status", ["pending", "accepted"]);
+export const sentimentEnum = pgEnum("sentiment", ["recommend", "depends", "skip"]);
+export const rankingStatusEnum = pgEnum("ranking_status", ["settled", "provisional", "unranked"]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -73,6 +77,13 @@ export const editions = pgTable(
       .notNull()
       .references(() => places.id),
     photoUrl: text("photo_url"),
+    photoPath: text("photo_path"),
+    requestId: uuid("request_id").notNull(),
+    visitSequence: integer("visit_sequence").notNull(),
+    timezone: text("timezone").notNull().default("UTC"),
+    origin: text("origin").notNull().default("capture"),
+    importSourceId: text("import_source_id"),
+    outingId: uuid("outing_id").references(() => outings.id, { onDelete: "set null" }),
     capturedAt: timestamp("captured_at", { withTimezone: true }).defaultNow().notNull(),
     note: text("note"),
     companions: text("companions").array().notNull().default([]),
@@ -81,7 +92,13 @@ export const editions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    unique("editions_user_place_variant_unique").on(table.userId, table.placeId, table.variant),
+    unique("editions_user_request_unique").on(table.userId, table.requestId),
+    unique("editions_user_place_sequence_unique").on(
+      table.userId,
+      table.placeId,
+      table.visitSequence,
+    ),
+    unique("editions_user_import_unique").on(table.userId, table.importSourceId),
   ],
 );
 
@@ -108,14 +125,23 @@ export const setPlaces = pgTable(
   (table) => [unique("set_places_set_place_unique").on(table.setId, table.placeId)],
 );
 
-export const wishlists = pgTable("wishlists", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  ownerId: uuid("owner_id")
-    .notNull()
-    .references(() => users.id),
-  name: text("name").notNull(),
-  isShared: boolean("is_shared").notNull().default(false),
-});
+export const wishlists = pgTable(
+  "wishlists",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id),
+    name: text("name").notNull(),
+    isShared: boolean("is_shared").notNull().default(false),
+    isDefault: boolean("is_default").notNull().default(false),
+  },
+  (table) => [
+    uniqueIndex("wishlists_owner_default_unique")
+      .on(table.ownerId)
+      .where(sql`${table.isDefault}`),
+  ],
+);
 
 export const wishlistItems = pgTable(
   "wishlist_items",
@@ -156,6 +182,8 @@ export const outings = pgTable("outings", {
   createdBy: uuid("created_by")
     .notNull()
     .references(() => users.id),
+  requestId: uuid("request_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const outingMembers = pgTable(
@@ -182,9 +210,108 @@ export const rankings = pgTable(
       .references(() => places.id),
     wouldRecommend: boolean("would_recommend").notNull(),
     rankScore: real("rank_score"),
+    sentiment: sentimentEnum("sentiment").notNull(),
+    ranking: rankingStatusEnum("ranking").notNull().default("unranked"),
+    comparedTo: uuid("compared_to").references(() => places.id),
+    tiedWith: uuid("tied_with").references(() => places.id),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [unique("rankings_user_place_unique").on(table.userId, table.placeId)],
+);
+
+export const apiRequests = pgTable(
+  "api_requests",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    requestId: uuid("request_id").notNull(),
+    operation: text("operation").notNull(),
+    requestHash: text("request_hash").notNull(),
+    resourceId: uuid("resource_id"),
+    resourcePath: text("resource_path"),
+    importSourceId: text("import_source_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.requestId] }),
+    unique("api_requests_user_import_unique").on(table.userId, table.importSourceId),
+  ],
+);
+
+export const editionCounters = pgTable(
+  "edition_counters",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => places.id),
+    lastSequence: integer("last_sequence").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.placeId] })],
+);
+
+export const wishlistMembers = pgTable(
+  "wishlist_members",
+  {
+    wishlistId: uuid("wishlist_id")
+      .notNull()
+      .references(() => wishlists.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [primaryKey({ columns: [table.wishlistId, table.userId] })],
+);
+
+export const wishlistSaves = pgTable(
+  "wishlist_saves",
+  {
+    wishlistId: uuid("wishlist_id")
+      .notNull()
+      .references(() => wishlists.id, { onDelete: "cascade" }),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => places.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    completed: boolean("completed").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.wishlistId, table.placeId, table.userId] })],
+);
+
+export const placePreferences = pgTable(
+  "place_preferences",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    placeId: uuid("place_id")
+      .notNull()
+      .references(() => places.id),
+    favorite: boolean("favorite").notNull().default(false),
+    tip: text("tip").notNull().default(""),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.placeId] })],
+);
+
+export const rankingGroups = pgTable(
+  "ranking_groups",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    category: categoryEnum("category").notNull(),
+    sentiment: sentimentEnum("sentiment").notNull(),
+    placeIds: jsonb("place_ids").$type<string[]>().notNull().default([]),
+    provisionalIds: jsonb("provisional_ids").$type<string[]>().notNull().default([]),
+    ties: jsonb("ties").$type<[string, string][]>().notNull().default([]),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.category, table.sentiment] })],
 );
 
 export const placeRelations = relations(places, ({ many }) => ({
