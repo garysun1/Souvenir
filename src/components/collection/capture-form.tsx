@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { companionNames, localDateTime } from "@/lib/web/collection";
 import { errorMessage } from "@/lib/web/api";
+import { canonicalPlaceId } from "@/lib/web/worldwide";
+import { PlacePicker } from "./place-picker";
+import { VisibilitySelect } from "@/components/catalog/place-metadata";
 import {
   capturePhotoPath,
   commitCapture,
@@ -35,7 +38,6 @@ export function CaptureForm({
 function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: string | null }) {
   const { data, client, request, refresh } = useAccount();
   const [draft, setDraft] = useState<CaptureDraft | null>(null);
-  const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [discarding, setDiscarding] = useState(false);
@@ -102,8 +104,8 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
     setBusy(true);
     setError(null);
     try {
-      if (!data!.places.some((place) => place.id === draft.placeId))
-        throw new Error("Choose a place from the shared catalog.");
+      if (!canonicalPlaceId(draft.placeId))
+        throw new Error("Choose a real destination before saving.");
       const confirmed: CaptureDraft = draft.submission
         ? draft
         : {
@@ -123,6 +125,7 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
                 : null,
               origin: "capture",
               outingId: draft.outingId,
+              visibility: draft.visibility ?? "private",
             },
           };
       await writeCaptureDraft(userId, confirmed);
@@ -184,11 +187,6 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
         <Button onClick={() => void startNew()}>Capture another visit</Button>
       </div>
     );
-  const places = data!.places.filter(
-    (place) =>
-      `${place.name} ${place.city}`.toLowerCase().includes(search.toLowerCase()) ||
-      place.id === draft.placeId,
-  );
   const locked = Boolean(draft.submission);
   return (
     <form onSubmit={save} className="mx-auto max-w-xl space-y-5">
@@ -206,30 +204,19 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
         </p>
       )}
       <fieldset disabled={busy || locked} className="space-y-4">
-        <label className="block space-y-2 text-sm font-medium">
-          Find a place
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search the shared catalog"
-          />
-        </label>
-        <label className="block space-y-2 text-sm font-medium">
-          Place
-          <select
-            className="min-h-12 w-full rounded-xl border border-border bg-white px-3"
-            required
-            value={draft.placeId}
-            onChange={(event) => void update({ placeId: event.target.value })}
-          >
-            <option value="">Choose a place</option>
-            {places.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name} · {place.city}
-              </option>
-            ))}
-          </select>
-        </label>
+        <PlacePicker
+          value={draft.placeId}
+          onSelect={(place) => void update({ placeId: place.id })}
+        />
+        <VisibilitySelect
+          value={draft.visibility ?? "private"}
+          onChange={(visibility) => void update({ visibility })}
+          label="Share this visit"
+        />
+        <p className="text-xs text-text-secondary">
+          Shared activity includes the place and visit date. Your moment, companions and original
+          photo stay private.
+        </p>
         <label className="block space-y-2 text-sm font-medium">
           Visit date and time
           <Input
