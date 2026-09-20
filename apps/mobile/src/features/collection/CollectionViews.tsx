@@ -18,7 +18,7 @@ export function BeenList({ state, places }: { state: AppState; places: Place[] }
     const latest = latestEdition(state, place.id);
     const rank = state.rankings.find(item => item.placeIds.includes(place.id));
     const ordinal = rank && !rank.provisionalIds.includes(place.id) && !rank.ties.some(pair => pair.includes(place.id)) ? `#${rank.placeIds.indexOf(place.id) + 1}` : '';
-    return <PlaceRow key={place.id} place={place} subtitle={`${latest ? visitDate(latest.visitedAt) : 'Visit date unavailable'} · ${editions.length} ${editions.length === 1 ? 'edition' : 'editions'}\n${recommendationLabel(state, place.id)}`} trailing={<T variant="label" color={colors.brand}>{ordinal}</T>} />;
+    return <PlaceRow key={place.id} place={place} subtitle={`${latest ? visitDate(latest.visitedAt, latest.timezone) : 'Visit date unavailable'} · ${editions.length} ${editions.length === 1 ? 'edition' : 'editions'}\n${recommendationLabel(state, place.id)}`} trailing={<T variant="label" color={colors.brand}>{ordinal}</T>} />;
   })}</View>;
 }
 
@@ -47,7 +47,7 @@ export function Album({ state, places, allEditions, filters }: { state: AppState
       const latest = latestEdition(state, place.id); const editions = ownEditions(state).filter(edition => edition.placeId === place.id);
       return <Pressable key={place.id} accessibilityRole="button" accessibilityLabel={`View ${place.name}`} onPress={() => router.push({ pathname: '/place/[placeId]', params: { placeId: place.id } })} style={{ width: cardWidth, gap: 7 }}>
         <PlacePhoto placeId={place.id} uri={latest?.photoUri} style={{ width: cardWidth, height: cardWidth * 1.05 }}><View style={styles.badge}><T variant="small" color="#fff">{editions.length ? `${editions.length} ${editions.length === 1 ? 'edition' : 'editions'}` : 'Saved'}</T></View></PlacePhoto>
-        <T variant="place">{place.name}</T><T variant="small" muted>{latest ? visitDate(latest.visitedAt) : categoryLabels[place.category]}</T>
+        <T variant="place">{place.name}</T><T variant="small" muted>{latest ? visitDate(latest.visitedAt, latest.timezone) : categoryLabels[place.category]}</T>
       </Pressable>;
     })}</View>;
   }} />;
@@ -57,7 +57,7 @@ export function SavedList({ state, places, onDone }: { state: AppState; places: 
   return <View>{places.map(place => {
     const lists = wishlistMemberships(state, place.id); const ids = [...new Set(lists.flatMap(list => list.entries.find(entry => entry.placeId === place.id)?.saverIds ?? []))];
     const visited = !!latestEdition(state, place.id); const done = lists.every(list => list.entries.find(entry => entry.placeId === place.id)?.completedBy.includes('you'));
-    return <PlaceRow key={place.id} place={place} subtitle={`${lists.map(list => list.title).join(' · ')}\nSave date unavailable in this demo`} trailing={<View style={{ alignItems: 'flex-end', gap: 5 }}><AvatarStack ids={ids} />{done ? <View style={styles.done}><Icon name="check" size={14} /><T variant="small" color={colors.brand}>Done</T></View> : visited && <Pressable accessibilityRole="button" onPress={() => { void onDone(place.id, lists.map(list => list.id)).catch(() => undefined); }} style={styles.done}><Icon name="check" size={14} /><T variant="small" color={colors.brand}>Mark done</T></Pressable>}</View>} />;
+    return <PlaceRow key={place.id} place={place} subtitle={`${lists.map(list => list.title).join(' · ')}\nSave date unavailable`} trailing={<View style={{ alignItems: 'flex-end', gap: 5 }}><AvatarStack ids={ids} />{done ? <View style={styles.done}><Icon name="check" size={14} /><T variant="small" color={colors.brand}>Done</T></View> : visited && <Pressable accessibilityRole="button" onPress={() => { void onDone(place.id, lists.map(list => list.id)).catch(() => undefined); }} style={styles.done}><Icon name="check" size={14} /><T variant="small" color={colors.brand}>Mark done</T></Pressable>}</View>} />;
   })}</View>;
 }
 
