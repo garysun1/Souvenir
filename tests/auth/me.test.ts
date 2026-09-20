@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   set: vi.fn(),
   where: vi.fn(),
   returning: vi.fn(),
+  getUserStats: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/server", () => ({ requireApiUser: mocks.requireUser }));
@@ -19,6 +20,7 @@ vi.mock("@/lib/auth/profile", () => ({
   }),
 }));
 vi.mock("@/lib/db", () => ({ db: { update: mocks.update } }));
+vi.mock("@/lib/server/stats", () => ({ getUserStats: mocks.getUserStats }));
 import { GET, PATCH } from "@/app/api/me/route";
 
 const userId = "11111111-1111-4111-8111-111111111111";
@@ -46,14 +48,16 @@ beforeEach(() => {
   mocks.set.mockReturnValue({ where: mocks.where });
   mocks.where.mockReturnValue({ returning: mocks.returning });
   mocks.returning.mockResolvedValue([profile]);
+  mocks.getUserStats.mockResolvedValue(null);
 });
 
 it("returns only the verified profile using a private response", async () => {
   const response = await GET(new Request("https://souvenir.example/api/me"));
   expect(response.status).toBe(200);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
-  expect(await response.json()).toMatchObject({ data: { id: userId } });
+  expect(await response.json()).toMatchObject({ data: { id: userId, stats: null } });
   expect(mocks.ensureProfile).toHaveBeenCalledWith(auth);
+  expect(mocks.getUserStats).toHaveBeenCalledWith(userId, userId);
 });
 
 it("requires auth for profile reads and updates", async () => {
