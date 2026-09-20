@@ -1,13 +1,11 @@
 import { AppHeader } from "@/components/ui/app-header";
-import { getCurrentCollection } from "@/lib/data";
 import { CollectionContent } from "./collection-content";
 
-export default async function CollectionPage() {
-  const collection = await getCurrentCollection();
+export default function CollectionPage() {
   return (
     <>
       <AppHeader title="Collection" />
-      <CollectionContent collection={collection} />
+      <CollectionContent />
     </>
   );
 }

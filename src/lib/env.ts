@@ -8,30 +8,126 @@ const optionalUrl = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().url().optional(),
 );
-const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
+const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optionalString,
-  SUPABASE_SECRET_KEY: optionalString,
-  OPENAI_API_KEY: optionalString,
-  ELASTICSEARCH_URL: optionalUrl,
-  ELASTICSEARCH_API_KEY: optionalString,
-  SEARCH_PROVIDER: z.enum(["pg", "es"]).default("pg"),
-  AI_PROVIDER: z.enum(["openai", "mock"]).default("mock"),
-  DEV_USER_ID: optionalString,
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .string()
+      .regex(/^sb_publishable_[A-Za-z0-9_-]+$/)
+      .optional(),
+  ),
 });
 
-export const env = envSchema.parse({
-  DATABASE_URL: process.env.DATABASE_URL,
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-  ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL,
-  ELASTICSEARCH_API_KEY: process.env.ELASTICSEARCH_API_KEY,
-  SEARCH_PROVIDER: process.env.SEARCH_PROVIDER,
-  AI_PROVIDER: process.env.AI_PROVIDER,
-  DEV_USER_ID: process.env.DEV_USER_ID,
-  NODE_ENV: process.env.NODE_ENV,
-});
+export function getPublicEnv(): z.output<typeof publicSchema> {
+  const result = publicSchema.safeParse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
+  if (!result.success) throw new Error("The public Supabase configuration is invalid.");
+  return result.data;
+}
+
+export function getSupabaseConfig(): { url: string; publishableKey: string } {
+  const config = getPublicEnv();
+  if (!config.NEXT_PUBLIC_SUPABASE_URL || !config.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error(
+      "Sign-in is unavailable. Configure the public Supabase URL and publishable key.",
+    );
+  }
+  return {
+    url: config.NEXT_PUBLIC_SUPABASE_URL,
+    publishableKey: config.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  };
+}
+
+function serverValue<S extends z.ZodType>(schema: S, value: unknown, name: string): z.output<S> {
+  if (typeof window !== "undefined") {
+    throw new Error("Server configuration is unavailable in the browser.");
+  }
+  const result = schema.safeParse(value);
+  if (!result.success) throw new Error(`Server configuration is invalid: ${name}.`);
+  return result.data;
+}
+
+const originSchema = z
+  .string()
+  .url()
+  .refine((value) => {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) && url.origin === value;
+  }, "Use an exact HTTP origin without a trailing slash");
+
+export const env = {
+  get DATABASE_URL() {
+    return serverValue(
+      z.string().min(1),
+      process.env.DATABASE_URL ?? process.env.SUPABASE_DATABASE_URL,
+      "DATABASE_URL",
+    );
+  },
+  get NEXT_PUBLIC_SUPABASE_URL() {
+    return getPublicEnv().NEXT_PUBLIC_SUPABASE_URL;
+  },
+  get NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY() {
+    return getPublicEnv().NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  },
+  get SUPABASE_SECRET_KEY() {
+    return serverValue(optionalString, process.env.SUPABASE_SECRET_KEY, "SUPABASE_SECRET_KEY");
+  },
+  get SUPABASE_SERVICE_ROLE_KEY() {
+    return serverValue(
+      optionalString,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      "SUPABASE_SERVICE_ROLE_KEY",
+    );
+  },
+  get APP_ORIGIN() {
+    return serverValue(
+      originSchema,
+      process.env.APP_ORIGIN ??
+        (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000"),
+      "APP_ORIGIN",
+    );
+  },
+  get CORS_ORIGINS(): string[] {
+    const origins =
+      process.env.CORS_ORIGINS?.split(",")
+        .map((value) => value.trim())
+        .filter(Boolean) ?? [];
+    return serverValue(z.array(originSchema), origins, "CORS_ORIGINS");
+  },
+  get OPENAI_API_KEY() {
+    return serverValue(optionalString, process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
+  },
+  get ELASTICSEARCH_URL() {
+    return serverValue(optionalUrl, process.env.ELASTICSEARCH_URL, "ELASTICSEARCH_URL");
+  },
+  get ELASTICSEARCH_API_KEY() {
+    return serverValue(optionalString, process.env.ELASTICSEARCH_API_KEY, "ELASTICSEARCH_API_KEY");
+  },
+  get SEARCH_PROVIDER() {
+    return serverValue(
+      z.enum(["pg", "es"]).default("pg"),
+      process.env.SEARCH_PROVIDER,
+      "SEARCH_PROVIDER",
+    );
+  },
+  get AI_PROVIDER() {
+    return serverValue(
+      z.enum(["openai", "mock"]).default("mock"),
+      process.env.AI_PROVIDER,
+      "AI_PROVIDER",
+    );
+  },
+  get NODE_ENV() {
+    return serverValue(
+      z.enum(["development", "test", "production"]).default("development"),
+      process.env.NODE_ENV,
+      "NODE_ENV",
+    );
+  },
+  get DEV_USER_ID() {
+    return serverValue(optionalString, process.env.DEV_USER_ID, "DEV_USER_ID");
+  },
+};

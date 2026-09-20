@@ -1,15 +1,15 @@
-import { ilike, or } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { places } from "@/lib/db/schema";
-import { serializePlace } from "@/lib/serializers";
+import { z } from "zod";
+import { apiRoute, dataResponse } from "@/lib/api";
+import { getPlaces } from "@/lib/server/catalog";
 
-export async function GET(request: NextRequest) {
-  const q = request.nextUrl.searchParams.get("q")?.trim();
-  const rows = await db
-    .select()
-    .from(places)
-    .where(q ? or(ilike(places.name, `%${q}%`), ilike(places.description, `%${q}%`)) : undefined)
-    .limit(100);
-  return NextResponse.json({ data: rows.map(serializePlace) });
+const querySchema = z.object({ q: z.string().trim().max(200).optional() }).strict();
+
+export async function GET(request: Request) {
+  return apiRoute(async () => {
+    const params = new URL(request.url).searchParams;
+    if (params.getAll("q").length > 1)
+      throw new z.ZodError([{ code: "custom", path: ["q"], message: "Supply one search term" }]);
+    const { q } = querySchema.parse(Object.fromEntries(params));
+    return dataResponse(await getPlaces(q));
+  });
 }
