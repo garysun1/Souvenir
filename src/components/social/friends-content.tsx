@@ -12,6 +12,8 @@ import { useResource } from "@/lib/web/use-resource";
 import { FriendActions } from "./friend-actions";
 import { ActivityFeed } from "./activity-feed";
 import { MutualSaves } from "./mutual-saves";
+import { InvitationInbox } from "@/components/memories/invitation-inbox";
+import { notifyMemoriesChanged } from "@/components/memories/memory-state";
 
 export function FriendsContent() {
   return (
@@ -33,6 +35,7 @@ function Friends() {
     250,
   );
   const refresh = () => {
+    notifyMemoriesChanged();
     friends.retry();
     results.retry();
     setRevision((value) => value + 1);
@@ -49,6 +52,7 @@ function Friends() {
         </Button>
       </div>
       <MutualSaves />
+      <InvitationInbox />
       <ActivityFeed key={revision} />
       <details open={friends.data?.friends.length === 0}>
         <summary className="min-h-11 cursor-pointer py-3 font-serif text-xl font-bold text-brand">
@@ -120,9 +124,9 @@ function Friends() {
                       </Link>
                       {status === "accepted" && (
                         <p className="text-xs text-text-secondary">
-                          Taste overlap:{" "}
+                          Shared visited places:{" "}
                           {friend.tasteOverlap === null
-                            ? "unknown — not enough shared ratings"
+                            ? "unknown — not enough visible visits"
                             : `${Math.round(friend.tasteOverlap * 100)}%`}
                         </p>
                       )}

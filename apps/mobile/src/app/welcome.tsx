@@ -1,11 +1,14 @@
 import { Redirect, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { View } from 'react-native';
+import { Image } from 'expo-image';
+import { Linking, Pressable, View } from 'react-native';
 import { useState } from 'react';
 import { Button, DemoLabel, Field, Icon, Screen, T } from '@/components/ui';
-import { PlacePhoto } from '@/components/cards/PlacePhoto';
+import { placeImages } from '@/fixtures/images';
+import credits from '../../assets/places/credits.json';
 import { useApp } from '@/state/AppProvider';
 import { colors } from '@/design/tokens';
+const welcomeCredit = credits.find(credit => credit.id === 'la-echo-park')!;
 export default function Welcome() {
   const { startDemo, signIn, signUp, signOut, mode, ready } = useApp();
   const [email, setEmail] = useState('');
@@ -25,9 +28,11 @@ export default function Welcome() {
   };
   if (mode === 'account' && ready) return <Redirect href="/discover" />;
   return <Screen padded={false}><View style={{ paddingHorizontal: 26, paddingTop: 18, paddingBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><T variant="wordmark" color={colors.brand}>souvenir</T><DemoLabel label="Los Angeles edition" /></View>
-    <PlacePhoto placeId="la-echo-park" style={{ height: 330, borderRadius: 0 }}>
+    <View style={{ height: 330 }}>
+      <Image source={placeImages['la-echo-park']} contentFit="cover" accessibilityLabel="Echo Park Lake, Los Angeles" style={{ position: 'absolute', width: '100%', height: '100%' }} />
       <LinearGradient colors={['transparent', '#082C3899']} style={{ flex: 1, padding: 26, justifyContent: 'flex-end' }}><View style={{ flexDirection: 'row', gap: 6 }}><Icon name="pin" size={16} color="#fff" /><T variant="small" color="#fff">Echo Park Lake · Los Angeles</T></View></LinearGradient>
-    </PlacePhoto>
+    </View>
+    <Pressable accessibilityRole="link" accessibilityLabel="Open welcome photograph source and license" onPress={() => { void Linking.openURL(welcomeCredit.source).catch(() => undefined); }} style={{ paddingHorizontal: 26, paddingTop: 8 }}><T variant="small" muted>{welcomeCredit.author} · {welcomeCredit.license}</T></Pressable>
     <View style={{ padding: 26, gap: 18 }}><T variant="title" style={{ fontSize: 36, lineHeight: 44 }}>A place becomes{'\n'}a part of you.</T><T muted>Find your next favorite corner. Make a little memory. Keep a souvenir.</T>
       <View style={{ flexDirection: 'row', gap: 22, marginVertical: 5 }}>{(['Discover', 'Experience', 'Collect'] as const).map((label, index) => <View key={label} style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><T variant="small" color={colors.brand}>0{index + 1}</T><T variant="small">{label}</T></View>)}</View>
       {mode !== 'demo' ? <>

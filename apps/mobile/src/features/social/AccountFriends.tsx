@@ -8,6 +8,7 @@ import { Button, Field, Header, Screen, SectionHeading, T } from '@/components/u
 import { useApp } from '@/state/AppProvider';
 import { OutingRow, WishlistCard } from './components';
 import { AccountFeed, AccountFriendDirectory } from './AccountSocial';
+import { MemoryLinks } from '@/features/memories/MemoryUi';
 
 export function AccountFriends() {
   const { state, commit } = useApp();
@@ -20,6 +21,7 @@ export function AccountFriends() {
     requestId.current = randomUUID(); setName(''); setLocked(false);
   };
   return <Screen><Header title="Friends" subtitle="Shared places, separate memories." />
+    <MemoryLinks />
     <SectionHeading title="Places to go together" />
     {state.wishlists.filter(list => list.memberIds.length > 1).map(list => {
       const mutual = mutualDestinations(list, 'you');

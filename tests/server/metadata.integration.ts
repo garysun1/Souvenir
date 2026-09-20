@@ -34,6 +34,8 @@ import { lockUser } from "@/lib/server/transactions";
 import { ApiError } from "@/lib/server/errors";
 import { placeMetricsSchema } from "@/lib/contracts/api";
 import type { PlaceImageStorage } from "@/lib/server/place-image-storage";
+import { nearbyPg, searchPg } from "@/lib/search/pgFallback";
+import manifest from "../../db/seed/catalog-images.json";
 
 const storage = vi.hoisted(() => ({
   promote: vi.fn<PlaceImageStorage["promote"]>(),
@@ -146,6 +148,99 @@ beforeEach(async () => {
 afterAll(closeDb);
 
 describe("catalog and detail visibility", () => {
+  it("returns credited curated photography in catalog, detail, search, nearby, and sets", async () => {
+    const image = manifest.find((item) => item.slug === "griffith-observatory")!;
+    await db
+      .update(places)
+      .set({ slug: image.slug, lat: image.lat, lng: image.lng })
+      .where(eq(places.id, publicId));
+    const [set] = await db
+      .insert(sets)
+      .values({ slug: "photos", name: "Photos", description: "", city: "LA" })
+      .returning();
+    await db.insert(setPlaces).values({ setId: set.id, placeId: publicId, position: 0 });
+    const entries = [
+      (await getPlaces())[0],
+      (await (await catalog(request("GET", undefined, null))).json()).data[0],
+      (await (await detail(request("GET", undefined, null), params(image.slug))).json()).data,
+      (await (await detail(request(), params(image.slug))).json()).data,
+      (await searchPg({ q: "A Public Place", limit: 5, radiusKm: 10 }))[0].place,
+      (await nearbyPg({ lat: image.lat, lng: image.lng, radiusM: 1000, limit: 5 }))[0].place,
+      (await getSets())[0].places[0],
+    ];
+    for (const entry of entries) {
+      expect(entry.heroImageUrl).toBe(image.url);
+      expect(entry.images).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            url: image.url,
+            isHero: true,
+            license: image.license,
+            attribution: image.attribution,
+          }),
+        ]),
+      );
+    }
+    await db
+      .update(places)
+      .set({ stats: { evidence: "synthetic-fixture" } })
+      .where(eq(places.id, publicId));
+    expect((await getPlaces())[0]).toMatchObject({ heroImageUrl: null, images: [] });
+  });
+
+  it("selects only licensed, unexpired heroes from ready image sources", async () => {
+    const [source] = await db
+      .insert(placeSources)
+      .values({
+        placeId: publicId,
+        provider: "wikimedia",
+        providerId: "test-source",
+        retentionPolicy: "licensed",
+        policyUrl: "https://policy.test",
+        policyCheckedAt: new Date(),
+        status: "stale",
+      })
+      .returning();
+    const base = {
+      placeId: publicId,
+      provider: "wikimedia" as const,
+      isHero: false,
+      license: "CC-BY-4.0",
+      attribution: "Photographer",
+      sourcePageUrl: "https://images.test/source",
+    };
+    const validUrl = "https://images.test/approved.jpg";
+    const excluded = await db
+      .insert(placeImages)
+      .values([
+        { ...base, url: "https://images.test/no-license.jpg", license: "" },
+        { ...base, url: "https://images.test/no-credit.jpg", attribution: " " },
+        { ...base, url: "https://images.test/expired.jpg", expiresAt: new Date(0) },
+        { ...base, url: "https://images.test/stale-source.jpg", sourceId: source.id },
+        { ...base, url: "https://user:secret@images.test/credentials.jpg" },
+        { ...base, url: "file:///private.jpg" },
+      ])
+      .returning();
+    for (const image of excluded) {
+      await db.update(placeImages).set({ isHero: true }).where(eq(placeImages.id, image.id));
+      expect((await getPlaces())[0]).toMatchObject({ heroImageUrl: null, images: [] });
+      await db.update(placeImages).set({ isHero: false }).where(eq(placeImages.id, image.id));
+    }
+    await db.insert(placeImages).values([
+      { ...base, url: "https://images.test/non-hero.jpg" },
+      { ...base, url: validUrl, isHero: true },
+    ]);
+    expect((await getPlaces())[0]).toMatchObject({
+      heroImageUrl: validUrl,
+      images: [expect.objectContaining({ url: validUrl })],
+    });
+    const response = (await (await detail(request(), params())).json()).data;
+    expect(response.heroImageUrl).toBe(validUrl);
+    expect(response.images).toHaveLength(2);
+    await db.delete(placeImages).where(eq(placeImages.url, validUrl));
+    expect((await getPlaces())[0]).toMatchObject({ heroImageUrl: null, images: [] });
+  });
+
   it("paginates stable catalog arrays, filters viewer visibility, and preserves unbounded bootstrap helpers", async () => {
     const anon = await (await catalog(request("GET", undefined, null))).json();
     expect(anon.data.map((p: { id: string }) => p.id)).toEqual([publicId]);

@@ -160,7 +160,13 @@ export async function getUserDetail(viewerId: string, targetId: string): Promise
 }
 
 export function socialPlaceDto(row: typeof places.$inferSelect): PlaceDto {
-  return { ...serializePlaceDto(row), stats: null, externalIds: null, heroImageUrl: null };
+  return {
+    ...serializePlaceDto(row),
+    stats: null,
+    externalIds: null,
+    heroImageUrl: null,
+    images: [],
+  };
 }
 
 export async function getLeaderboard(

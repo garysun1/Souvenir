@@ -9,8 +9,10 @@ import type {
 } from "../../shared/api-contract";
 import { signCapturePhoto } from "@/lib/auth/storage";
 import { ApiError } from "@/lib/server/errors";
+import { curatedPlaceImages, type CatalogImagePlace } from "@/lib/places/catalog-images";
 
-export function serializePlace(row: typeof places.$inferSelect): Place {
+export function serializePlace(row: CatalogImagePlace): Place & Pick<PlaceDto, "images"> {
+  const images = row.images ?? curatedPlaceImages(row);
   return {
     id: row.id,
     slug: row.slug,
@@ -29,7 +31,8 @@ export function serializePlace(row: typeof places.$inferSelect): Place {
     fetchedAt: row.fetchedAt,
     visibility: row.visibility,
     description: row.description,
-    heroImageUrl: null,
+    heroImageUrl: images.find((image) => image.isHero)?.url ?? null,
+    images,
     rarityTier: row.rarityTier,
     rarityAppeal: row.rarityAppeal,
     rarityDiscoveryFreq: row.rarityDiscoveryFreq,
@@ -51,7 +54,7 @@ export function serializePlace(row: typeof places.$inferSelect): Place {
   };
 }
 
-export function serializePlaceDto(row: typeof places.$inferSelect): PlaceDto {
+export function serializePlaceDto(row: CatalogImagePlace): PlaceDto {
   return {
     ...serializePlace(row),
     sourceUpdatedAt: row.sourceUpdatedAt?.toISOString() ?? null,

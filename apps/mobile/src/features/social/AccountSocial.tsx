@@ -9,6 +9,8 @@ import { useAccountResource } from '@/lib/useAccountResource';
 import { useAccountMutation } from '@/lib/useAccountMutation';
 import { queryString } from '@/lib/worldwide';
 import { ResourceStatus } from '@/features/discovery/AccountPlaceDetail';
+import { YouTogether } from '@/features/memories/YouTogether';
+import { useMemoryResource } from '@/lib/useMemories';
 
 export function SocialPerson({ user }: { user: SocialProfileDto }) {
   return <Button label={`${user.displayName} · @${user.handle.replace(/^@/, '')}`} variant="ghost" onPress={() => router.push({ pathname: '/friend/[userId]', params: { userId: user.id } })} />;
@@ -74,14 +76,15 @@ function AccountLeaderboard() {
   </View>;
 }
 export function AccountFriendProfile({ userId }: { userId: string }) {
-  const resource = useAccountResource<UserDetailDto>(`/api/users/${encodeURIComponent(userId)}`);
+  const resource = useMemoryResource<UserDetailDto>(`/api/users/${encodeURIComponent(userId)}`);
   const detail = resource.data;
   return <Screen><Header title={detail?.user.displayName ?? 'Profile'} back /><ResourceStatus {...resource} />
     {detail && <>
       <T>@{detail.user.handle.replace(/^@/, '')} · {detail.relationship}</T>
       <FriendshipActions userId={userId} relationship={detail.relationship} onSaved={resource.reload} />
       <SectionHeading title="Activity statistics" /><StatsView stats={detail.stats} />
-      <T>Taste overlap (shared visits): {detail.tasteOverlap === null ? 'unavailable or not visible' : `${Math.round(detail.tasteOverlap * 100)}%`}</T>
+      <T>Shared visited places: {detail.tasteOverlap === null ? 'unavailable or not visible' : `${Math.round(detail.tasteOverlap * 100)}%`}</T>
+      {detail.relationship === 'accepted' && <YouTogether userId={userId} />}
       <SectionHeading title="Set completion" /><SetCompletions completion={detail.setCompletion} />
       <SectionHeading title="Visible visits" />
       {!detail.editions.length && <T muted>{detail.relationship === 'accepted' || detail.relationship === 'self' ? 'No visits shared with you.' : 'Visits are available to accepted friends when shared.'}</T>}
@@ -106,7 +109,7 @@ export function AccountFriendDirectory() {
     {results.data && !results.data.length && <T muted>No accounts found.</T>}
     <SectionHeading title="Friends and requests" /><ResourceStatus {...friends} />
     {friends.data?.friends.map(friend => <View key={friend.user.id} style={{ gap: 6, paddingVertical: 12 }}>
-      <SocialPerson user={friend.user} /><T>{friend.status}{friend.tasteOverlap === null ? '' : ` · ${Math.round(friend.tasteOverlap * 100)}% taste overlap`}</T>
+      <SocialPerson user={friend.user} /><T>{friend.status}{friend.tasteOverlap === null ? '' : ` · ${Math.round(friend.tasteOverlap * 100)}% shared visited places`}</T>
       <FriendshipActions userId={friend.user.id} relationship={friend.status} onSaved={friends.reload} />
     </View>)}
     {friends.data && !friends.data.friends.length && <T muted>No friends or pending requests yet. Search for a real account above.</T>}

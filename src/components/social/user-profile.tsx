@@ -10,6 +10,7 @@ import { useResource } from "@/lib/web/use-resource";
 import { canonicalPlaceId, placePath } from "@/lib/web/worldwide";
 import { FriendActions } from "./friend-actions";
 import { UserStats } from "./user-stats";
+import { TasteTogether } from "@/components/taste/taste-together";
 
 export function UserProfile({ id }: { id: string }) {
   return (
@@ -45,11 +46,14 @@ function Profile({ id }: { id: string }) {
           <UserStats stats={profile.stats} />
           {profile.relationship === "accepted" && (
             <p className="text-sm">
-              Taste overlap:{" "}
+              Shared visited places:{" "}
               {profile.tasteOverlap === null
-                ? "unknown — not enough shared ratings"
+                ? "unknown — not enough visible visits"
                 : `${Math.round(profile.tasteOverlap * 100)}%`}
             </p>
+          )}
+          {profile.relationship === "accepted" && (
+            <TasteTogether key={profile.user.id} userId={profile.user.id} />
           )}
           <section className="space-y-3">
             <h2 className="font-serif text-xl font-bold text-brand">Set completion</h2>

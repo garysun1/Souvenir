@@ -13,6 +13,7 @@ import { errorMessage } from "@/lib/web/api";
 import { canonicalPlaceId } from "@/lib/web/worldwide";
 import { PlacePicker } from "./place-picker";
 import { VisibilitySelect } from "@/components/catalog/place-metadata";
+import { ContributionForm } from "@/components/memories/contribution-form";
 import {
   capturePhotoPath,
   commitCapture,
@@ -215,6 +216,11 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
           Your souvenir is saved.
         </p>
         {edition && <SouvenirCard edition={edition} outingTitle={outing?.plan.title} />}
+        <ContributionForm
+          key={draft.requestId}
+          captureId={draft.requestId}
+          source={{ kind: "edition", id: draft.completedEditionId }}
+        />
         <ErrorNotice message={error} />
         <Link href={`/editions/${draft.completedEditionId}`} className="block text-brand underline">
           View saved edition
@@ -250,7 +256,8 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
       <div>
         <h1 className="font-serif text-2xl font-bold text-brand">Keep the moment</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Choose the real place you visited. Photos and moments stay private to your account.
+          Choose the real place you visited. Your original photo and personal note stay private.
+          Share a selected moment separately after saving.
         </p>
       </div>
       <ErrorNotice message={error} />
@@ -359,6 +366,7 @@ function CaptureEditor({ placeId, outingId }: { placeId: string; outingId: strin
           </label>
         )}
       </fieldset>
+      <ContributionForm key={draft.requestId} captureId={draft.requestId} />
       {duplicateOpen && duplicate && (
         <div role="alert" className="space-y-3 rounded-xl border border-border p-4">
           <p className="text-sm">You already kept a visit here at nearly the same time.</p>

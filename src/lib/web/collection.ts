@@ -6,7 +6,7 @@ import type {
 } from "../../../shared/api-contract";
 import type { Place } from "@/lib/schemas";
 
-export function legacyPlace(place: PlaceDto): Place {
+export function legacyPlace(place: PlaceDto): Place & Pick<PlaceDto, "images"> {
   return {
     ...place,
     sourceUpdatedAt: place.sourceUpdatedAt ? new Date(place.sourceUpdatedAt) : null,

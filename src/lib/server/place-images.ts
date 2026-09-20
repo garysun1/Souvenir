@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, gt, isNull, like, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, lt, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { apiRequests, editions, placeImages, placeSources } from "@/lib/db/schema";
 import { placeImagePromoteSchema } from "@/lib/contracts/api";
@@ -8,6 +8,8 @@ import type { AuthContext, PlaceImageDto, PlaceImagePromote } from "../../../sha
 import { ApiError, notFound } from "./errors";
 import { placeImageStorage, type PlaceImageStorage } from "./place-image-storage";
 import { requireVisiblePlace } from "./place-visibility";
+import { approvedImageConditions } from "./catalog-images";
+import { mergePlaceImages } from "@/lib/places/catalog-images";
 import {
   completeRequest,
   deletedResource,
@@ -34,26 +36,13 @@ export async function getPlaceImages(
     .select({ image: placeImages })
     .from(placeImages)
     .leftJoin(placeSources, eq(placeImages.sourceId, placeSources.id))
-    .where(
-      and(
-        eq(placeImages.placeId, place.id),
-        sql`btrim(${placeImages.license}) <> ''`,
-        sql`btrim(${placeImages.attribution}) <> ''`,
-        sql`${placeImages.url} ~ '^https?://'`,
-        sql`${placeImages.sourcePageUrl} ~ '^https?://'`,
-        or(isNull(placeImages.expiresAt), gt(placeImages.expiresAt, new Date())),
-        or(
-          isNull(placeImages.sourceId),
-          and(
-            eq(placeSources.status, "ready"),
-            or(isNull(placeSources.expiresAt), gt(placeSources.expiresAt, new Date())),
-          ),
-        ),
-      ),
-    )
-    .orderBy(desc(placeImages.isHero), asc(placeImages.id))
+    .where(and(eq(placeImages.placeId, place.id), approvedImageConditions()))
+    .orderBy(desc(placeImages.isHero), desc(placeImages.fetchedAt), asc(placeImages.id))
     .limit(50);
-  return rows.map(({ image }) => serializePlaceImageDto(image));
+  return mergePlaceImages(
+    place,
+    rows.map(({ image }) => serializePlaceImageDto(image)),
+  );
 }
 
 async function requireOwnedCapture(

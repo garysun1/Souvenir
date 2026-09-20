@@ -32,6 +32,7 @@ interface Store {
   accountPage: <T>(path: string) => Promise<{ data: T; nextCursor?: string | null }>;
   mergePlaces: (places: PlaceDto[]) => void;
   accountRevision: number;
+  assertAccountCurrent: () => void;
 }
 const Context = createContext<Store | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -269,7 +270,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     mergeCatalog(incoming.map(mapPlace));
     publish({ ...reference.current });
   }, [publish, sessionScope]);
-  return <Context.Provider value={{ state, commit, error, clearError: () => setError(null), ready, authReady, mode, userId, refreshing, refresh, signIn, signUp, signOut, startDemo, signedPhoto, accountRequest, accountWrite, accountPage, mergePlaces, accountRevision }}>{children}</Context.Provider>;
+  const assertAccountCurrent = useCallback(() => {
+    sessionScope.assertCurrent();
+    if (!api.current) throw new Error('Sign in to continue.');
+  }, [sessionScope]);
+  return <Context.Provider value={{ state, commit, error, clearError: () => setError(null), ready, authReady, mode, userId, refreshing, refresh, signIn, signUp, signOut, startDemo, signedPhoto, accountRequest, accountWrite, accountPage, mergePlaces, accountRevision, assertAccountCurrent }}>{children}</Context.Provider>;
 }
 export function useApp() {
   const store = useContext(Context);

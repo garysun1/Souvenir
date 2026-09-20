@@ -12,6 +12,7 @@ import { CaptureHeader } from '@/features/capture/CaptureHeader';
 import { CaptureUnavailable } from '@/features/capture/Unavailable';
 import { captureStyles } from '@/features/capture/styles';
 import { useCaptureMotion } from '@/features/capture/useCaptureMotion';
+import { ShareMoment } from '@/features/memories/Moments';
 
 export default function RevealCapture() {
   const { state, commit } = useApp();
@@ -77,6 +78,7 @@ function SavedCapture({ editionId }: { editionId: string }) {
     {!!edition.moment && <T style={{ marginTop: 14 }}>{edition.moment}</T>}
     {edition.companions.length > 0 && <T variant="small" muted style={{ marginTop: 8 }}>With {edition.companions.join(', ')}</T>}
     {state.mode === 'account' && <T variant="small" muted style={{ marginTop: 8 }}>Visit: {edition.visibility === 'friends' ? 'Friends' : edition.visibility === 'public' ? 'Public' : 'Only me'} · Photo and moment: Only me</T>}
+    {state.mode === 'account' && <ShareMoment editionId={editionId} />}
     {setMember && <View style={[captureStyles.notice, { marginTop: 16 }]}><T variant="label">Downtown Firsts · {progress} of {downtownSet.placeIds.length}</T><T variant="small" muted>{progress === downtownSet.placeIds.length ? 'Set complete. Every place is counted once.' : 'Unique places move the set forward; return editions do not.'}</T></View>}
     <View style={captureStyles.actionRow}><Button label="Recommend it?" onPress={() => router.push({ pathname: '/recommend/[placeId]', params: { placeId: place.id, editionId } })} /><Button label="Open edition" variant="outline" onPress={() => router.push({ pathname: '/edition/[editionId]', params: { editionId } })} />{setMember && <Button label={progress === downtownSet.placeIds.length ? 'View completed set' : 'Complete Downtown Firsts'} variant="outline" onPress={() => router.push({ pathname: '/sets/[setId]', params: { setId: downtownSet.id } })} />}{next && <Button label={`Capture next stop · ${placeById(next)?.name ?? 'Itinerary stop'}`} variant="outline" onPress={async () => { await commit({ type: 'DRAFT', draft: null }); router.replace({ pathname: '/capture', params: { placeId: next, outingId: edition.outingId! } }); }} />}<Button label="Continue to Collection" variant="ghost" onPress={() => router.replace('/collection')} /></View>
     <DemoLabel label={state.mode === 'account' ? 'Saved to your private account collection' : 'Saved locally on this device'} />

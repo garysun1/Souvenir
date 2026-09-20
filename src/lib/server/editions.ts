@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { apiRequests, editionCounters, editions, places } from "@/lib/db/schema";
-import { deleteCapturePhoto, signCapturePhoto, verifyCapturePhoto } from "@/lib/auth/storage";
+import { signCapturePhoto, verifyCapturePhoto } from "@/lib/auth/storage";
 import { serializeCollectionEntryDto, serializeEditionDto } from "@/lib/serializers";
 import type {
   AuthContext,
@@ -18,6 +18,7 @@ import { revokeEditionPlaceImages } from "./place-images";
 import { ApiError, notFound } from "./errors";
 import { validateEditionOuting } from "./plans";
 import { removePlaceRanking } from "./rankings";
+import { cleanupMemoryPhotos } from "./memory-media-cleanup";
 import {
   completeRequest,
   deletedResource,
@@ -212,6 +213,6 @@ export async function deleteEdition(auth: AuthContext, id: string): Promise<{ de
     await afterEditionChange(tx, auth.userId, row.placeId);
     return row.photoPath;
   });
-  if (path) await deleteCapturePhoto(auth, path);
+  if (path) await cleanupMemoryPhotos(auth, [path]);
   return { deleted: true };
 }

@@ -2,11 +2,12 @@ import { Directory, File, Paths } from 'expo-file-system';
 import { mediaFingerprint, mediaKey } from '@/domain/capture';
 
 const directory = () => new Directory(Paths.document, 'souvenir-media');
-export async function persistMedia(uri: string): Promise<string> {
+export async function persistMedia(uri: string, contentHash?: string): Promise<string> {
   if (uri.startsWith('media:') || uri.startsWith('sample:')) return uri;
   const source = new File(uri);
   const extension = /\.(png|webp|heic|gif)$/i.exec(uri)?.[1].toLowerCase() ?? 'jpg';
-  const key = `${mediaFingerprint(await source.bytes())}.${extension}`;
+  if (contentHash && !/^[a-f0-9]{64}$/.test(contentHash)) throw new Error('Invalid photo checksum.');
+  const key = `${contentHash ?? mediaFingerprint(await source.bytes())}.${extension}`;
   const folder = directory();
   folder.create({ intermediates: true, idempotent: true });
   const target = new File(folder, key);
