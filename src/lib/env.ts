@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isPublicSupabaseKey } from "../../shared/public-supabase-config";
 
 const optionalString = z.preprocess(
   (value) => (value === "" ? undefined : value),
@@ -8,16 +9,22 @@ const optionalUrl = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().url().optional(),
 );
-const publicSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z
-      .string()
-      .regex(/^sb_publishable_[A-Za-z0-9_-]+$/)
-      .optional(),
-  ),
-});
+const publicSchema = z
+  .object({
+    NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().optional(),
+    ),
+  })
+  .refine(
+    (value) =>
+      !value.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      isPublicSupabaseKey(
+        value.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+        value.NEXT_PUBLIC_SUPABASE_URL,
+      ),
+  );
 
 export function getPublicEnv(): z.output<typeof publicSchema> {
   const result = publicSchema.safeParse({
@@ -111,6 +118,48 @@ export const env = {
       z.enum(["pg", "es"]).default("pg"),
       process.env.SEARCH_PROVIDER,
       "SEARCH_PROVIDER",
+    );
+  },
+  get PLACES_PROVIDER() {
+    return serverValue(
+      z.enum(["osm", "mock"]).default("osm"),
+      process.env.PLACES_PROVIDER,
+      "PLACES_PROVIDER",
+    );
+  },
+  get PLACES_DISPOSABLE_DATABASE_URL() {
+    return serverValue(
+      optionalString,
+      process.env.PLACES_DISPOSABLE_DATABASE_URL,
+      "PLACES_DISPOSABLE_DATABASE_URL",
+    );
+  },
+  get PLACES_LAZY_FILL() {
+    return (
+      serverValue(
+        z.enum(["true", "false"]).default("false"),
+        process.env.PLACES_LAZY_FILL,
+        "PLACES_LAZY_FILL",
+      ) === "true"
+    );
+  },
+  get OVERPASS_URL() {
+    return serverValue(optionalUrl, process.env.OVERPASS_URL, "OVERPASS_URL");
+  },
+  get OVERPASS_MANAGED_ENDPOINT() {
+    return (
+      serverValue(
+        z.enum(["true", "false"]).default("false"),
+        process.env.OVERPASS_MANAGED_ENDPOINT,
+        "OVERPASS_MANAGED_ENDPOINT",
+      ) === "true"
+    );
+  },
+  get PLACES_USER_AGENT() {
+    return serverValue(
+      z.string().min(12).max(250).default("Souvenir/0.1 (+https://github.com/garysun1/Souvenir)"),
+      process.env.PLACES_USER_AGENT,
+      "PLACES_USER_AGENT",
     );
   },
   get AI_PROVIDER() {

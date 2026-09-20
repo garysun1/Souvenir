@@ -1,11 +1,23 @@
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Field, Icon, Sheet, T } from '@/components/ui';
+import { Button, Field, Icon, Sheet, T } from '@/components/ui';
 import { categoryLabels, placeById, places } from '@/fixtures/catalog';
 import { searchCapturePlaces } from '@/domain/capture';
 import { captureStyles } from './styles';
+import { useApp } from '@/state/AppProvider';
+import { AccountCatalog } from '@/features/discovery/AccountCatalog';
+import { CreatePlace } from './CreatePlace';
 
 export function PlaceSearchSheet({ visible, onClose, onChoose, candidateIds = [] }: { visible: boolean; onClose: () => void; onChoose: (id: string) => void; candidateIds?: string[] }) {
+  const { mode, userId } = useApp();
+  if (mode === 'account') return <Sheet visible={visible} onClose={onClose} title="Choose the place">{visible && <AccountPlacePicker key={userId} onChoose={id => { onChoose(id); onClose(); }} />}</Sheet>;
+  return <DemoPlaceSearch visible={visible} onClose={onClose} onChoose={onChoose} candidateIds={candidateIds} />;
+}
+function AccountPlacePicker({ onChoose }: { onChoose: (id: string) => void }) {
+  const [create, setCreate] = useState(false);
+  return <>{create ? <CreatePlace onChoose={onChoose} /> : <AccountCatalog onChoose={onChoose} />}<Button label={create ? 'Back to search' : 'Add a place'} variant="outline" onPress={() => setCreate(value => !value)} /></>;
+}
+function DemoPlaceSearch({ visible, onClose, onChoose, candidateIds }: { visible: boolean; onClose: () => void; onChoose: (id: string) => void; candidateIds: string[] }) {
   const [query, setQuery] = useState('');
   const results = useMemo(() => query.trim() ? searchCapturePlaces(query) : candidateIds.map(placeById).filter((place): place is NonNullable<ReturnType<typeof placeById>> => !!place), [candidateIds, query]);
   return <Sheet visible={visible} onClose={onClose} title="Choose the place">

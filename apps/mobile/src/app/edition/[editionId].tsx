@@ -66,7 +66,7 @@ export default function EditionDetail() {
       <Button label="Delete edition" variant="ghost" onPress={() => setDeleting(true)} />
     </View>
     <Sheet visible={editing} onClose={() => setEditing(false)} title="Edit this edition">
-      <DateTimeField value={edit.visitedAt} onChange={visitedAt => setEdit(current => ({ ...current, visitedAt }))} />
+      <DateTimeField value={edit.visitedAt} timezone={edition.timezone} onChange={visitedAt => setEdit(current => ({ ...current, visitedAt }))} />
       {dateError && <T color="#A3383C">{dateError}</T>}
       {state.mode === 'account' ? <Field label="Companion names (comma separated)" value={edit.companions.join(', ')} onChangeText={value => setEdit(current => ({ ...current, companions: value.split(',').map(name => name.trim()) }))} /> : <View><T variant="label">Companions</T><ChipRow>{users.filter(user => user.id !== 'you').map(user => { const selected = edit.companions.includes(user.id); return <Pressable key={user.id} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={() => setEdit(current => ({ ...current, companions: selected ? current.companions.filter(id => id !== user.id) : [...current.companions, user.id] }))} style={captureStyles.avatarChoice}><Avatar userId={user.id} size={42} /><T variant="small">{selected ? '✓ ' : ''}{user.name}</T></Pressable>; })}</ChipRow></View>}
       <Field label="Moment" value={edit.moment} onChangeText={moment => setEdit(current => ({ ...current, moment: moment.slice(0, momentLimit) }))} multiline maxLength={momentLimit} />

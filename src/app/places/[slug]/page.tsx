@@ -8,7 +8,7 @@ export default async function PlacePage({ params }: { params: Promise<{ slug: st
     <>
       <AppHeader title="Place" />
       <PageBody>
-        <PlaceDetail slug={slug} />
+        <PlaceDetail key={slug} slug={slug} />
       </PageBody>
     </>
   );

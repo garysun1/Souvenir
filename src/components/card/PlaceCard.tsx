@@ -5,7 +5,7 @@ import type { Place } from "@/lib/schemas";
 
 export function PlaceCard({ place }: { place: Place }) {
   return (
-    <Link href={`/places/${place.slug}`}>
+    <Link href={`/places/${place.slug}`} className="block flex-1">
       <Card className="h-full overflow-hidden rounded-xl border-0 bg-white shadow-none ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-md">
         {place.heroImageUrl ? (
           <Image

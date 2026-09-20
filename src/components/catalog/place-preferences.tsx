@@ -6,6 +6,7 @@ import type {
   PlacePreferencePut,
   RankingPut,
   Sentiment,
+  Visibility,
 } from "../../../shared/api-contract";
 import { useAccount } from "@/components/account/account-provider";
 import { ErrorNotice } from "@/components/account/account-state";
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/web/api";
 import { rankingInput } from "@/lib/web/ranking";
 
-export function PlacePreferences({ place }: { place: PlaceDto }) {
+export function PlacePreferences({ place, onSaved }: { place: PlaceDto; onSaved?: () => void }) {
   const { data, mutate } = useAccount();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,7 @@ export function PlacePreferences({ place }: { place: PlaceDto }) {
   const [sentiment, setSentiment] = useState<Sentiment>(assessment?.sentiment ?? "recommend");
   const [reference, setReference] = useState("");
   const [position, setPosition] = useState<"before" | "after" | "tie">("before");
+  const [visibility, setVisibility] = useState<Visibility | "">("");
   if (!data) return null;
   const visited = data.collection.some((edition) => edition.placeId === place.id);
   const comparisonIds =
@@ -58,8 +60,12 @@ export function PlacePreferences({ place }: { place: PlaceDto }) {
             reference,
             position,
           );
-      await mutate(`/api/rankings/${place.id}`, { method: "PUT", body });
+      await mutate(`/api/rankings/${place.id}`, {
+        method: "PUT",
+        body: { ...body, ...(visibility ? { visibility } : {}) },
+      });
       setMessage(unranked ? "Recommendation saved without a rank." : "Ranking saved.");
+      onSaved?.();
     } catch (failure) {
       setError(errorMessage(failure));
     } finally {
@@ -72,7 +78,9 @@ export function PlacePreferences({ place }: { place: PlaceDto }) {
   }
   return (
     <section className="space-y-4 rounded-xl border border-border p-4">
-      <h2 className="font-serif text-xl font-bold text-brand">Only you</h2>
+      <h2 className="font-serif text-xl font-bold text-brand">
+        Favorites & private tips · Only you
+      </h2>
       <ErrorNotice message={error} />
       {message && (
         <p role="status" className="text-sm">
@@ -104,6 +112,24 @@ export function PlacePreferences({ place }: { place: PlaceDto }) {
       {visited && (
         <div className="space-y-3 border-t border-divider pt-4">
           <h3 className="font-serif text-lg font-bold">Would you recommend it?</h3>
+          <label className="block space-y-1 text-sm">
+            Visibility for this recommendation
+            <select
+              value={visibility}
+              disabled={busy}
+              onChange={(event) => setVisibility(event.target.value as Visibility | "")}
+              className="min-h-11 w-full rounded-xl border border-border px-3"
+            >
+              <option value="">Keep current (new ratings start private)</option>
+              <option value="private">Only me</option>
+              <option value="friends">Accepted friends</option>
+              <option value="public">Public</option>
+            </select>
+          </label>
+          <p className="text-xs text-text-secondary">
+            Current rating visibility is not returned by the API. This choice changes only your
+            recommendation; your favorite and private tip are never shared.
+          </p>
           {assessment && (
             <p className="text-sm text-text-secondary">
               Saved: {assessment.sentiment} · {assessment.ranking}

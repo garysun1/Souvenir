@@ -1,7 +1,8 @@
-import type { BootstrapDto, Category as ApiCategory, EditionDto, PlanDto } from '../../../../shared/api-contract';
+import type { BootstrapDto, Category as ApiCategory, EditionDto, PlanDto, PlaceDto } from '../../../../shared/api-contract';
 import { mobileFixtureToSlug } from '../../../../shared/catalog-map';
 import type { AppState, Category, Edition, Place, Plan, Preferences } from '@/domain/types';
 import { installCatalog } from '@/fixtures/catalog';
+import { availableImages } from './worldwide';
 
 const categoryMap: Record<ApiCategory, Category> = { nature: 'park', culture: 'cultural', landmark: 'landmark', food: 'food', hidden_gem: 'hidden_gem' };
 export const canonicalCategory: Record<Category, ApiCategory> = { park: 'nature', cultural: 'culture', landmark: 'landmark', food: 'food', hidden_gem: 'hidden_gem' };
@@ -52,16 +53,22 @@ export function mapBootstrap(data: BootstrapDto, userId: string, local = emptyAc
     importedSourceIds: editions.flatMap(edition => edition.importSourceId ? [edition.importSourceId] : []),
   };
 }
-export function installBootstrapCatalog(data: BootstrapDto) {
-  const catalog: Place[] = data.places.map(place => {
+export function mapPlace(place: PlaceDto): Place {
     const fixtureId = Object.entries(mobileFixtureToSlug).find(([, slug]) => slug === place.slug)?.[0];
+    const images = availableImages(place.images ?? []);
+    const hero = images.find(image => image.isHero);
     return {
-      id: place.id, name: place.name, category: mobileCategory(place.category), neighborhood: place.city,
+      id: place.id, name: place.name, category: mobileCategory(place.category), neighborhood: place.city ?? '',
       summary: place.description, latitude: place.lat, longitude: place.lng, tags: [],
       priceCents: NaN, durationMinutes: NaN, openHour: NaN, closeHour: NaN, discoveryCount: NaN, cohort: NaN,
-      sourceIds: [], bookingRequired: false, canonical: true, fixtureId, heroImageUrl: place.heroImageUrl ?? undefined,
+      sourceIds: (place.sources ?? []).map(source => source.id), bookingRequired: false, canonical: true, fixtureId, heroImageUrl: hero?.url,
+      slug: place.slug, city: place.city, country: place.country, region: place.region,
+      timezone: place.timezone, website: place.website, source: place.source,
+      images, sources: place.sources ?? [], metrics: place.metrics,
     };
-  });
+}
+export function installBootstrapCatalog(data: BootstrapDto) {
+  const catalog = data.places.map(mapPlace);
   const memberIds = [...new Set(data.wishlists.flatMap(list => list.memberIds).concat(data.plans.flatMap(plan => plan.memberIds)))];
   installCatalog(catalog, data.sets.map(set => ({ id: set.id, title: set.name, description: set.description, placeIds: set.places.map(place => place.id) })), [
     { id: 'you', name: data.user.displayName, initials: data.user.displayName.slice(0, 1), color: '#D5E3DC', tastes: [] },

@@ -19,20 +19,45 @@ export function serializePlace(row: typeof places.$inferSelect): Place {
     lat: row.lat,
     lng: row.lng,
     city: row.city,
+    country: row.country,
+    region: row.region,
+    timezone: row.timezone,
+    website: row.website,
+    wikidataId: row.wikidataId,
+    source: row.source,
+    sourceUpdatedAt: row.sourceUpdatedAt,
+    fetchedAt: row.fetchedAt,
+    visibility: row.visibility,
     description: row.description,
-    heroImageUrl: row.heroImageUrl,
+    heroImageUrl: null,
     rarityTier: row.rarityTier,
     rarityAppeal: row.rarityAppeal,
     rarityDiscoveryFreq: row.rarityDiscoveryFreq,
     rarityAvailability: row.rarityAvailability,
-    externalIds: row.externalIds ?? null,
-    stats: row.stats ?? null,
+    externalIds: null,
+    stats: {
+      verified: row.stats?.verified === true,
+      provenance:
+        row.stats?.provenance === "synthetic-fixture" || row.stats?.evidence === "synthetic-fixture"
+          ? "synthetic-fixture"
+          : row.stats?.provenance === "prototype-catalog"
+            ? "prototype-catalog"
+            : row.source === "user"
+              ? "user-contributed"
+              : "catalog",
+      rarityStatus: "unavailable",
+    },
     createdAt: row.createdAt,
   };
 }
 
 export function serializePlaceDto(row: typeof places.$inferSelect): PlaceDto {
-  return { ...serializePlace(row), createdAt: row.createdAt.toISOString() };
+  return {
+    ...serializePlace(row),
+    sourceUpdatedAt: row.sourceUpdatedAt?.toISOString() ?? null,
+    fetchedAt: row.fetchedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
 }
 
 export function serializeProfileDto(row: typeof users.$inferSelect): ProfileDto {
@@ -66,6 +91,7 @@ export async function serializeEditionDto(
     outingId: row.outingId,
     photo: row.photoPath ? await signCapturePhoto(auth, row.photoPath) : null,
     createdAt: row.createdAt.toISOString(),
+    visibility: row.visibility,
   };
 }
 

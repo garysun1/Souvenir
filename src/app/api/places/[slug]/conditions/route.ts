@@ -1,11 +1,11 @@
-import { apiRoute, requireNoQuery, slugSchema, type SlugParams } from "@/lib/api";
-import { getPlace } from "@/lib/server/catalog";
-import { ApiError } from "@/lib/server/errors";
+import { dataResponse, withApiUser, type SlugParams } from "@/lib/api";
+import { placeSlugParamsSchema } from "@/lib/contracts/api";
+import { getPlaceConditions } from "@/lib/places/conditions";
 
 export async function GET(request: Request, { params }: SlugParams) {
-  return apiRoute(async () => {
-    requireNoQuery(request);
-    await getPlace(slugSchema.parse((await params).slug));
-    throw new ApiError(503, "service_unavailable", "Live conditions are not connected.");
+  return withApiUser(request, async (auth) => {
+    return dataResponse(
+      await getPlaceConditions(auth, placeSlugParamsSchema.parse(await params).slug),
+    );
   });
 }

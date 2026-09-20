@@ -11,6 +11,12 @@ export interface Place {
   durationMinutes: number; openHour: number; closeHour: number;
   discoveryCount: number; cohort: number; sourceIds: string[]; bookingRequired: boolean;
   canonical?: boolean; fixtureId?: string; heroImageUrl?: string;
+  slug?: string; city?: string | null; country?: string | null; region?: string | null;
+  timezone?: string | null; website?: string | null;
+  source?: import('../../../../shared/worldwide-contract').PlaceSource;
+  images?: import('../../../../shared/worldwide-contract').PlaceImageDto[];
+  sources?: import('../../../../shared/worldwide-contract').PlaceSourceDto[];
+  metrics?: import('../../../../shared/worldwide-contract').PlaceMetricsDto | null;
 }
 export interface User { id: string; name: string; initials: string; color: string; tastes: Category[] }
 export interface Edition {
@@ -24,6 +30,7 @@ export interface CaptureDraft {
   id: string; placeId?: string; photoUri?: string; visitedAt: string; companions: string[];
   moment: string; outingId?: string; status: 'photo' | 'identify' | 'confirm' | 'reveal' | 'saved';
   editionId?: string;
+  timezone?: string;
   submittedEdition?: import('../../../../shared/api-contract').EditionCreate;
 }
 export interface Wishlist { id: string; title: string; memberIds: string[]; entries: { placeId: string; saverIds: string[]; completedBy: string[] }[]; isDefault?: boolean; ownerId?: string; isShared?: boolean }

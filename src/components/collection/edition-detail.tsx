@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import type { EditionPatch } from "../../../shared/api-contract";
+import type { EditionPatch, Visibility } from "../../../shared/api-contract";
 import { AccountRequired, ErrorNotice, RefreshAccount } from "@/components/account/account-state";
 import { useAccount } from "@/components/account/account-provider";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,6 +42,7 @@ function Edition({ id }: { id: string }) {
       const body: EditionPatch = {
         note: String(fields.get("note")).trim() || null,
         companions: companionNames(String(fields.get("companions"))),
+        visibility: String(fields.get("visibility")) as Visibility,
         ...(changedTime
           ? {
               capturedAt: new Date(enteredTime).toISOString(),
@@ -108,6 +109,21 @@ function Edition({ id }: { id: string }) {
       <ErrorNotice message={error} />
       {editing ? (
         <form onSubmit={save} className="space-y-4">
+          <label className="block space-y-2 text-sm">
+            Share this visit
+            <select
+              name="visibility"
+              defaultValue={edition.visibility ?? "private"}
+              className="min-h-11 w-full rounded-xl border border-border px-3"
+            >
+              <option value="private">Only me</option>
+              <option value="friends">Accepted friends</option>
+              <option value="public">Public</option>
+            </select>
+          </label>
+          <p className="text-xs text-text-secondary">
+            Your moment, companions and original photo remain private.
+          </p>
           <label className="block space-y-2 text-sm">
             Visit date/time ({Intl.DateTimeFormat().resolvedOptions().timeZone})
             <Input
