@@ -24,18 +24,27 @@ export const cities = [
   { city: "Sydney", country: "AU", timezone: "Australia/Sydney", lat: -33.8688, lng: 151.2093 },
 ] as const;
 const categories: Category[] = ["nature", "culture", "food", "landmark", "hidden_gem"];
+export const placesPerCity = 250;
 export const fixtures = cities.flatMap((city, c) =>
-  Array.from({ length: 20 }, (_, p) => ({
+  Array.from({ length: placesPerCity }, (_, p) => ({
     ...city,
     key: `${c}-${p}`,
     name: `Synthetic load fixture ${city.city} ${p + 1}`,
     category: categories[p % categories.length],
-    lat: city.lat + (p % 5) * 0.002,
-    lng: city.lng + Math.floor(p / 5) * 0.002,
+    lat: city.lat + (p % 25) * 0.001,
+    lng: city.lng + Math.floor(p / 25) * 0.001,
     description:
       "Synthetic test location. Not a destination recommendation. No documented hours, prices or destination photo.",
   })),
 );
+export function friendPairs(accounts: number): [number, number][] {
+  const active = accounts - 1;
+  const reach = Math.min(15, Math.floor((active - 1) / 2));
+  if (reach === 0) return accounts >= 3 ? [[0, 1]] : [];
+  return Array.from({ length: active }, (_, a) =>
+    Array.from({ length: reach }, (_, offset): [number, number] => [a, (a + offset + 1) % active]),
+  ).flat();
+}
 export const fixtureHash = createHash("sha256").update(JSON.stringify(fixtures)).digest("hex");
 
 export function stableId(seed: string): string {

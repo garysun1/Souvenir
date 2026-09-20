@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
-import { account, emailFor, reconcileAccounts } from "../../scripts/load/accounts";
+import { account, emailFor, provisionLogin, reconcileAccounts } from "../../scripts/load/accounts";
 import { Manifest } from "../../scripts/load/manifest";
 import { fixtureHash, stableId } from "../../scripts/load/fixtures";
 import { SUPABASE_ORIGIN } from "../../scripts/load/safety";
@@ -107,4 +107,39 @@ it("refuses matching email recovery without the run ownership marker", async () 
   });
   await expect(reconcileAccounts(manifest, config)).rejects.toThrow("different run");
   expect(manifest.has("account:0", "account")).toBeUndefined();
+});
+
+it("provisions a recorded local login without persisting or printing the supplied password", async () => {
+  const user = {
+    id: stableId("login-user"),
+    email: emailFor(manifest.options.runId, 0),
+    app_metadata: { load_run_id: manifest.options.runId },
+  };
+  manifest.append({ kind: "account", key: "account:0", index: 0, id: user.id, email: user.email });
+  mocks.getUserById.mockResolvedValue({ data: { user }, error: null });
+  mocks.updateUserById.mockResolvedValue({ error: null });
+  const password = randomUUID();
+  const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+  try {
+    await provisionLogin(manifest, config, 0, password);
+    expect(mocks.updateUserById).toHaveBeenCalledWith(user.id, { password });
+    expect(JSON.stringify(log.mock.calls)).not.toContain(password);
+    expect(readFileSync(resolve(manifest.dir, "journal.jsonl"), "utf8")).not.toContain(password);
+  } finally {
+    log.mockRestore();
+  }
+});
+
+it("refuses provisioning a login when recorded Auth ownership changed", async () => {
+  const id = stableId("foreign-login-user");
+  const email = emailFor(manifest.options.runId, 0);
+  manifest.append({ kind: "account", key: "account:0", index: 0, id, email });
+  mocks.getUserById.mockResolvedValue({
+    data: { user: { id, email, app_metadata: { load_run_id: "another-run" } } },
+    error: null,
+  });
+  await expect(provisionLogin(manifest, config, 0, randomUUID())).rejects.toThrow(
+    "ownership mismatch",
+  );
+  expect(mocks.updateUserById).not.toHaveBeenCalled();
 });

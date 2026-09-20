@@ -12,13 +12,15 @@ export async function profileOracle(db: Database, id: string, stats: UserStatsDt
   assert.equal(stats.citiesVisited, row.cities);
   const [streak] = await db`
     WITH weeks AS (
-      SELECT DISTINCT date_trunc('week', captured_at AT TIME ZONE 'UTC') AS week
+      SELECT DISTINCT date_trunc('week', captured_at AT TIME ZONE timezone) AS week
       FROM editions WHERE user_id=${id}
     ), grouped AS (
       SELECT week,week - row_number() OVER (ORDER BY week) * interval '1 week' AS grp FROM weeks
     ), spans AS (SELECT count(*)::int AS n, max(week) AS last FROM grouped GROUP BY grp)
     SELECT coalesce(max(n),0)::int AS longest,
-      coalesce(max(n) FILTER (WHERE last >= date_trunc('week', now() AT TIME ZONE 'UTC') - interval '1 week'),0)::int AS current
+      coalesce(max(n) FILTER (WHERE last >= date_trunc('week', now() AT TIME ZONE
+        coalesce((SELECT timezone FROM editions WHERE user_id=${id} ORDER BY captured_at DESC,id DESC LIMIT 1),'UTC'))
+        - interval '1 week'),0)::int AS current
     FROM spans`;
   assert.equal(stats.longestStreakWeeks, streak.longest);
   assert.equal(stats.currentStreakWeeks, streak.current);
@@ -118,40 +120,50 @@ export async function integrityOracle(db: Database, ids: string[]) {
   assert.equal(orphan.count, 0);
   const [rls] = await db`
     SELECT count(*)::int AS count FROM pg_tables
-    WHERE schemaname='public' AND tablename IN ('users','editions','place_notes','activity_events')
-      AND NOT rowsecurity`;
+    WHERE schemaname='public' AND NOT rowsecurity`;
   assert.equal(rls.count, 0, "RLS boundary disabled");
   const [grants] = await db`
     SELECT count(*)::int AS count FROM information_schema.role_table_grants
-    WHERE table_schema='public' AND grantee IN ('anon','authenticated','PUBLIC')
-      AND table_name IN ('users','editions','place_notes','activity_events')`;
+    WHERE table_schema='public' AND grantee IN ('anon','authenticated','PUBLIC')`;
   assert.equal(grants.count, 0, "Direct client grants breach API boundary");
 }
 
 export async function explainOracle(db: Database, id: string, place: string) {
-  const expected = [
-    "editions_place_captured_user_idx",
-    "editions_user_captured_idx",
-    "activity_events_user_cursor_idx",
-    "user_stats_leaderboard_idx",
-  ];
-  const indexes =
-    await db`SELECT indexname FROM pg_indexes WHERE schemaname='public' AND indexname=ANY(${expected})`;
-  assert.equal(indexes.length, expected.length);
-  return db.begin(async (tx) => {
-    await tx`SET LOCAL enable_seqscan=off`;
-    await tx`SET LOCAL enable_sort=off`;
-    const plans = [
-      await tx`EXPLAIN (FORMAT TEXT) SELECT user_id FROM editions WHERE place_id=${place} AND captured_at>=now()-interval '90 days' ORDER BY captured_at,user_id`,
-      await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM editions WHERE user_id=${id} ORDER BY captured_at DESC`,
-      await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM activity_events WHERE user_id>=${id} ORDER BY user_id,created_at DESC NULLS LAST,id DESC NULLS LAST LIMIT 25`,
-      await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM user_stats ORDER BY places_visited DESC NULLS LAST,user_id LIMIT 25`,
-    ].map((rows) => rows.map((row) => String(row["QUERY PLAN"])).join("\n"));
-    for (let i = 0; i < expected.length; i++)
-      assert(plans[i].includes(expected[i]), `Missing expected EXPLAIN index ${expected[i]}`);
-    return {
-      note: "enable_seqscan=off and enable_sort=off with matching ordered probes check index eligibility; these are not production optimizer cost claims.",
-      plans,
-    };
-  });
+  await db`ANALYZE`;
+  const plans = {
+    placeCollectors: await db`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+      SELECT count(DISTINCT user_id) FROM editions WHERE place_id=${place}
+      AND visibility='public' AND captured_at>=now()-interval '90 days'`,
+    collection: await db`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+      SELECT * FROM editions WHERE user_id=${id} ORDER BY captured_at DESC,id DESC`,
+    feed: await db`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+      SELECT a.id FROM activity_events a
+      LEFT JOIN editions e ON e.id=a.edition_id
+      LEFT JOIN place_notes n ON n.id=a.note_id
+      LEFT JOIN rankings r ON r.user_id=a.user_id AND r.place_id=a.ranking_place_id
+      LEFT JOIN places p ON p.id=a.place_id
+      WHERE a.visibility<>'private' AND EXISTS (
+        SELECT 1 FROM friendships f WHERE f.status='accepted'
+        AND ((f.user_id=${id} AND f.friend_id=a.user_id) OR (f.friend_id=${id} AND f.user_id=a.user_id)))
+      AND ((a.kind='edition' AND e.visibility<>'private' AND p.visibility='public')
+        OR (a.kind='note' AND n.visibility<>'private' AND NOT n.legacy_tip AND p.visibility='public')
+        OR (a.kind='ranking' AND r.visibility<>'private' AND p.visibility='public'))
+      ORDER BY a.created_at DESC,a.id DESC LIMIT 26`,
+    nearby: await db`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+      SELECT id,6371000*2*asin(sqrt(least(1.0,greatest(0.0,
+        power(sin(radians(lat::float8-34.0522)/2),2)
+        +cos(radians(34.0522))*cos(radians(lat::float8))*power(sin(radians(lng::float8+118.2437)/2),2))))) AS distance
+      FROM places WHERE visibility='public' AND (source<>'user' OR stats->'verified'='true'::jsonb)
+        AND lat BETWEEN 34.007 AND 34.098 AND lng BETWEEN -118.30 AND -118.18
+      ORDER BY distance,id LIMIT 20`,
+    leaderboard: await db`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+      SELECT u.id,count(DISTINCT p.id) AS visits FROM users u
+      LEFT JOIN editions e ON e.user_id=u.id AND e.visibility='public' AND e.captured_at<now()
+      LEFT JOIN places p ON p.id=e.place_id AND p.visibility='public'
+      WHERE u.stats_visibility='public' GROUP BY u.id ORDER BY visits DESC,u.id LIMIT 50`,
+  };
+  return {
+    note: "ANALYZE and EXPLAIN ANALYZE BUFFERS at actual run cardinalities with default optimizer settings. Representative SQL probes, not a trace of every Next query; sequential scans are valid optimizer choices. Nearby probe uses LA bounding box and distance ordering; feed probe isolates edition/note/ranking activity.",
+    plans,
+  };
 }

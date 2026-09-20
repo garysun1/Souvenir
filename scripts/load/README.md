@@ -85,14 +85,14 @@ temporary Next process. Port 3300 must be free. It creates a four-account,
 12-edition run plus an independent two-account sentinel run, using real Auth,
 signed uploads and signed downloads. It exercises API replay/resume, owner
 isolation, direct PostgREST revocation, private Storage, collection SQL parity,
-FK/RLS checks and EXPLAIN index eligibility. Cleanup is repeated, then the
+FK/RLS checks and default-planner EXPLAIN ANALYZE. Cleanup is repeated, then the
 sentinel is verified to detect cleanup crossing run boundaries. All six
 accounts and their recorded objects/data are removed in `finally`. Reports
 remain available. The local Supabase stack stays running until explicit stop.
 
 The committed `fixtures.ts` and `licenses.json` describe authored synthetic
 data and media usage. Fixtures cover Los Angeles, New York, Mexico City,
-Lisbon, Paris, Cairo, Tokyo and Sydney (20 points per city). They are explicitly
+Lisbon, Paris, Cairo, Tokyo and Sydney (250 points per city, 2,000 total). They are explicitly
 synthetic, not provider results or destination recommendations. Coordinates
 are around city centers; they do not claim real venues, prices or hours.
 Heroes remain null. Stock bytes are labeled synthetic private capture photos
@@ -121,12 +121,14 @@ node scripts/load/exec.mjs run --apply \
 Omit `--editions` to produce exactly 35,000 editions for 1000 accounts:
 40% casual (15), 40% regular (40), 20% explorer (65). Accepted `capturedAt`
 values cover historical visits; the manifest fixes their anchor instant.
-Personas also write rankings, saves, notes/tags and pairwise friendships.
+Personas also write rankings, saves and notes/tags. At scale, 999 accounts form
+a deterministic ring with 30 accepted neighbors each (14,985 distinct pairs);
+the last account has no friends for isolation checks.
 All accounts sign in and call `/api/me`. Each capture has its authenticated
 owner's unique object path, even when reusing identical stock bytes.
 
 `--photos pool` uploads a stock capture for every edition. `sparse` uploads
-on visits 0, 20, 40, 60 as applicable (2,000 objects at the default scale);
+on every fifth visit (7,000 of 35,000 editions, exactly 20% at the default scale);
 every account therefore exercises real signed upload. `none` is available
 only for smaller development runs. A 1000-account run requires worldwide
 mode and `pool` or `sparse`. Account counts above 1000, concurrency above 16
@@ -137,6 +139,30 @@ Worldwide mode needs at least three accounts. Use a fresh run ID after
 changing fixture data, account options or photo manifest. Runs with different
 IDs are isolated, but running them simultaneously changes global cohort and
 rank statistics; SQL comparisons intentionally include those eligible users.
+Run local load/verification/cleanup commands serially. In particular, deleting
+catalog fixtures while another run writes editions can invalidate that run's
+in-flight city-stat recomputation and produce foreign-key errors. The per-run
+journal lock does not coordinate different run IDs.
+
+### Small local dataset for browser acceptance
+
+Use a separate run ID with `--accounts 8 --editions 8 --mode worldwide
+--concurrency 2 --photos sparse`. Leave Next and Supabase running after the
+run. The server uses real Auth and signed private media; there is no mock login.
+Provision one recorded account's password from hidden stdin after verification:
+
+```sh
+read -rs -p "Temporary local-only password (16+ characters): " LOCAL_PASSWORD
+printf '%s' "$LOCAL_PASSWORD" | node scripts/load/exec.mjs provision-login \
+  --apply --run-id your-small-run --account 0
+unset LOCAL_PASSWORD
+```
+
+The command verifies the Auth ownership marker and prints only the synthetic
+`example.invalid` email. It stores no password/token, accepts no password CLI
+argument, and cannot target a hosted project. Enter that email and the chosen
+password in the local app login. `resume`/`verify` rotate sampled passwords;
+provision again afterward. Clean the run after the browser session.
 
 ### Required integration endpoints
 
@@ -178,7 +204,7 @@ node scripts/load/exec.mjs resume --apply --recover --run-id worldwide-1000-v1
 # reversibly mutate sampled visibility/friendship state in worldwide mode.
 node scripts/load/exec.mjs verify --apply --run-id worldwide-1000-v1
 
-# Read-only display of the latest persisted report.
+# Render Markdown and display the latest persisted JSON report.
 node scripts/load/exec.mjs report --run-id worldwide-1000-v1
 
 node scripts/load/exec.mjs cleanup --apply --run-id worldwide-1000-v1
@@ -209,17 +235,20 @@ cleanup assertion.
 
 Artifacts live under the root's existing ignored `out/` directory:
 
-| Path                                            | Contents                                         |
-| ----------------------------------------------- | ------------------------------------------------ |
-| `out/load/cache/pool.json`                      | Photo provenance and downloaded-byte hashes      |
-| `out/load/cache/<sha256>.jpg`                   | Actual stock bytes, never committed              |
-| `out/load/runs/<runId>/manifest.json`           | Seed, anchor, bounds and fixture/pool hashes     |
-| `out/load/runs/<runId>/journal.jsonl`           | Resource intents/IDs, no credentials             |
-| `out/load/runs/<runId>/avatar-*.svg`            | Local geometric avatars                          |
-| `out/load/runs/<runId>/report.json`             | Latest API/SQL/latency report                    |
-| `out/load/runs/<runId>/report-<timestamp>.json` | Prior verification snapshots                     |
-| `out/load/runs/<runId>/failure.json`            | Last failed command, if any                      |
-| `out/load/runs/smoke-result.json`               | Last smoke and sentinel run IDs, cleanup outcome |
+| Path                                            | Contents                                                         |
+| ----------------------------------------------- | ---------------------------------------------------------------- |
+| `out/load/cache/pool.json`                      | Photo provenance and downloaded-byte hashes                      |
+| `out/load/cache/<sha256>.jpg`                   | Actual stock bytes, never committed                              |
+| `out/load/runs/<runId>/manifest.json`           | Seed, anchor, bounds and fixture/pool hashes                     |
+| `out/load/runs/<runId>/journal.jsonl`           | Resource intents/IDs, no credentials                             |
+| `out/load/runs/<runId>/avatar-*.svg`            | Local geometric avatars                                          |
+| `out/load/runs/<runId>/report.json`             | Latest API/SQL/latency report                                    |
+| `out/load/runs/<runId>/report.md`               | Human-readable checks, timings, licenses and cleanup             |
+| `out/load/runs/<runId>/report-<timestamp>.json` | Prior verification snapshots                                     |
+| `out/load/runs/<runId>/failure.json`            | Last failed command, if any                                      |
+| `out/load/runs/<runId>/*-latency-*.json`        | Per-process p50/p95/p99 and status counts, including failed runs |
+| `out/load/runs/<runId>/cleanup.json`            | Independent remaining-row/object counts after cleanup            |
+| `out/load/runs/smoke-result.json`               | Last smoke and sentinel run IDs, cleanup outcome                 |
 
 Reports contain counts, check names, statuses, route latency percentiles and
 response-status counts, SQL query plans and sampled indexes. They do not
@@ -231,7 +260,7 @@ no implicit SLO or claim of production capacity.
 SQL oracles check sampled owner edition/place/city/streak counts; public
 place counts, distinct city cohorts, sentiment suppression, eight complete
 UTC-week trends; friends counts; global leaderboard ordering; live feed
-visibility and five cursor pages; non-friend stats/capture isolation;
+visibility and exhaustive cursor pages compared with eligible SQL event IDs; non-friend stats/capture isolation;
 friend convergence and old-cursor privacy after revocation; visibility-change
 metric freshness; FK/event integrity and RLS/revoked grants.
 The entire run's edition count is checked, while profile/metric API parity is
@@ -241,14 +270,19 @@ p95 below 300 ms for detail, feed and nearby. Reports retain the preceding
 verification's latency summary for comparison. This is not an exhaustive
 privacy proof or a provider quality audit.
 
-EXPLAIN uses ordered probes with `enable_seqscan=off` and `enable_sort=off`
-to establish index eligibility, not production cost selection. Small datasets
-can legitimately prefer an older single-column index for an unordered count;
-that is not treated as evidence that the composite index is missing.
-The contracts' descending indexes use `NULLS LAST`; the
-matching feed/leaderboard ordering in the EXPLAIN probes is explicit. The
-per-user cursor probe orders across a user-ID range so PostgreSQL cannot
-substitute the global cursor index for an equality-filtered tiny dataset.
+Worldwide verification also exercises eight IANA timezones, DST and ISO-week
+boundaries, concurrent duplicate edition requests, unknown locality, cohorts
+below five, signed Storage MIME/size rejection, antimeridian nearby searches,
+edition deletion and repeat deletion. Temporary edge fixtures are recorded,
+explicitly synthetic and removed after checking. Upload validation checks
+metadata and bucket limits, not image-content sniffing.
+
+EXPLAIN runs `ANALYZE` then representative collection, public collector, feed,
+nearby and leaderboard probes with `ANALYZE, BUFFERS, FORMAT JSON`. It retains
+the default optimizer settings and actual/estimated cardinalities. These
+probes are documented approximations of endpoint query shapes, not traces of
+every server query. Sequential scans are valid choices; assess their measured
+cost and rows visited against the actual dataset.
 Core mode marks unimplemented worldwide checks blocked and can pass the
 infrastructure smoke. Worldwide mode fails on missing required endpoints or
 failed assertions, including incremental/full recomputation drift.
