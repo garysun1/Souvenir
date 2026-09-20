@@ -23,9 +23,11 @@ type PlaceChoice = Pick<PlaceDto, "id" | "slug" | "name" | "city" | "country" | 
 export function PlacePicker({
   value,
   onSelect,
+  allowNearby = true,
 }: {
   value: string;
   onSelect: (place: PlaceChoice) => void;
+  allowNearby?: boolean;
 }) {
   const { data, request, refresh } = useAccount();
   const [search, setSearch] = useState("");
@@ -135,7 +137,7 @@ export function PlacePicker({
       ) : (
         <>
           <div className="flex flex-wrap gap-2">
-            {["search", "nearby", "custom"].map((item) => (
+            {(allowNearby ? ["search", "nearby", "custom"] : ["search", "custom"]).map((item) => (
               <Button
                 key={item}
                 type="button"
