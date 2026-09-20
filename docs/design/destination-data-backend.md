@@ -277,3 +277,4 @@ Places key only if the flag is wanted for the demo.
   independent edition).
 - Whether to move `place_preferences.tip` to `place_notes` fully in a later
   contracts PR or keep both indefinitely.
+- Phase B/C/D (social metrics, 1000-account seeding, subagent split): see [social-metrics-and-load-seeding.md](./social-metrics-and-load-seeding.md).
