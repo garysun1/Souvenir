@@ -1,0 +1,4747 @@
+{
+  "id": "0340a3b6-6669-471c-adc0-0c1164779716",
+  "prevId": "ee6b51a4-3dba-4f21-97e1-c495161dc149",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.activity_events": {
+      "name": "activity_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "activity_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "edition_id": {
+          "name": "edition_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note_id": {
+          "name": "note_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ranking_place_id": {
+          "name": "ranking_place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "set_id": {
+          "name": "set_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "friend_id": {
+          "name": "friend_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "activity_events_edition_unique": {
+          "name": "activity_events_edition_unique",
+          "columns": [
+            {
+              "expression": "edition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activity_events_note_unique": {
+          "name": "activity_events_note_unique",
+          "columns": [
+            {
+              "expression": "note_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activity_events_user_cursor_idx": {
+          "name": "activity_events_user_cursor_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activity_events_cursor_idx": {
+          "name": "activity_events_cursor_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "activity_events_user_id_users_id_fk": {
+          "name": "activity_events_user_id_users_id_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activity_events_place_id_places_id_fk": {
+          "name": "activity_events_place_id_places_id_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activity_events_set_id_sets_id_fk": {
+          "name": "activity_events_set_id_sets_id_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "sets",
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activity_events_friend_id_users_id_fk": {
+          "name": "activity_events_friend_id_users_id_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "users",
+          "columnsFrom": ["friend_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activity_events_edition_owner_fk": {
+          "name": "activity_events_edition_owner_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "editions",
+          "columnsFrom": ["edition_id", "user_id", "place_id"],
+          "columnsTo": ["id", "user_id", "place_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activity_events_note_owner_fk": {
+          "name": "activity_events_note_owner_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "place_notes",
+          "columnsFrom": ["note_id", "user_id", "place_id"],
+          "columnsTo": ["id", "user_id", "place_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activity_events_ranking_fk": {
+          "name": "activity_events_ranking_fk",
+          "tableFrom": "activity_events",
+          "tableTo": "rankings",
+          "columnsFrom": ["user_id", "ranking_place_id"],
+          "columnsTo": ["user_id", "place_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "activity_events_request_unique": {
+          "name": "activity_events_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "request_id", "kind"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "activity_events_target_valid": {
+          "name": "activity_events_target_valid",
+          "value": "\n    (num_nonnulls(\"activity_events\".\"edition_id\", \"activity_events\".\"note_id\", \"activity_events\".\"ranking_place_id\", \"activity_events\".\"set_id\", \"activity_events\".\"friend_id\") = 1 AND (\n      (\"activity_events\".\"kind\" = 'edition' AND \"activity_events\".\"edition_id\" IS NOT NULL AND \"activity_events\".\"place_id\" IS NOT NULL) OR\n      (\"activity_events\".\"kind\" = 'note' AND \"activity_events\".\"note_id\" IS NOT NULL AND \"activity_events\".\"place_id\" IS NOT NULL) OR\n      (\"activity_events\".\"kind\" = 'ranking' AND \"activity_events\".\"ranking_place_id\" = \"activity_events\".\"place_id\" AND \"activity_events\".\"place_id\" IS NOT NULL) OR\n      (\"activity_events\".\"kind\" = 'set_complete' AND \"activity_events\".\"set_id\" IS NOT NULL AND \"activity_events\".\"place_id\" IS NULL) OR\n      (\"activity_events\".\"kind\" = 'friend' AND \"activity_events\".\"friend_id\" IS NOT NULL AND \"activity_events\".\"place_id\" IS NULL AND \"activity_events\".\"friend_id\" <> \"activity_events\".\"user_id\")\n    )) IS TRUE"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.api_requests": {
+      "name": "api_requests",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation": {
+          "name": "operation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_hash": {
+          "name": "request_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resource_path": {
+          "name": "resource_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "import_source_id": {
+          "name": "import_source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "api_requests_user_id_users_id_fk": {
+          "name": "api_requests_user_id_users_id_fk",
+          "tableFrom": "api_requests",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "api_requests_user_id_request_id_pk": {
+          "name": "api_requests_user_id_request_id_pk",
+          "columns": ["user_id", "request_id"]
+        }
+      },
+      "uniqueConstraints": {
+        "api_requests_user_import_unique": {
+          "name": "api_requests_user_import_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "import_source_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.coverage_cells": {
+      "name": "coverage_cells",
+      "schema": "",
+      "columns": {
+        "geohash": {
+          "name": "geohash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "place_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retry_after": {
+          "name": "retry_after",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_until": {
+          "name": "lease_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_token": {
+          "name": "lease_token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result_count": {
+          "name": "result_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "coverage_cells_retry_idx": {
+          "name": "coverage_cells_retry_idx",
+          "columns": [
+            {
+              "expression": "retry_after",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lease_until",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "coverage_cells_geohash_provider_pk": {
+          "name": "coverage_cells_geohash_provider_pk",
+          "columns": ["geohash", "provider"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "coverage_cells_geohash_valid": {
+          "name": "coverage_cells_geohash_valid",
+          "value": "\"coverage_cells\".\"geohash\" ~ '^[0-9bcdefghjkmnpqrstuvwxyz]{5}$'"
+        },
+        "coverage_cells_status_valid": {
+          "name": "coverage_cells_status_valid",
+          "value": "\"coverage_cells\".\"status\" IN ('pending', 'ready', 'failed')"
+        },
+        "coverage_cells_count_valid": {
+          "name": "coverage_cells_count_valid",
+          "value": "\"coverage_cells\".\"result_count\" IS NULL OR \"coverage_cells\".\"result_count\" >= 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.edition_counters": {
+      "name": "edition_counters",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_sequence": {
+          "name": "last_sequence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "edition_counters_user_id_users_id_fk": {
+          "name": "edition_counters_user_id_users_id_fk",
+          "tableFrom": "edition_counters",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "edition_counters_place_id_places_id_fk": {
+          "name": "edition_counters_place_id_places_id_fk",
+          "tableFrom": "edition_counters",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "edition_counters_user_id_place_id_pk": {
+          "name": "edition_counters_user_id_place_id_pk",
+          "columns": ["user_id", "place_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.editions": {
+      "name": "editions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photo_url": {
+          "name": "photo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "photo_path": {
+          "name": "photo_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visit_sequence": {
+          "name": "visit_sequence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'UTC'"
+        },
+        "origin": {
+          "name": "origin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'capture'"
+        },
+        "import_source_id": {
+          "name": "import_source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outing_id": {
+          "name": "outing_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "captured_at": {
+          "name": "captured_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "companions": {
+          "name": "companions",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "variant": {
+          "name": "variant",
+          "type": "edition_variant",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'standard'"
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "editions_place_captured_user_idx": {
+          "name": "editions_place_captured_user_idx",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "captured_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "editions_user_captured_idx": {
+          "name": "editions_user_captured_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "captured_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "editions_user_id_users_id_fk": {
+          "name": "editions_user_id_users_id_fk",
+          "tableFrom": "editions",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "editions_place_id_places_id_fk": {
+          "name": "editions_place_id_places_id_fk",
+          "tableFrom": "editions",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "editions_outing_id_outings_id_fk": {
+          "name": "editions_outing_id_outings_id_fk",
+          "tableFrom": "editions",
+          "tableTo": "outings",
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "editions_user_request_unique": {
+          "name": "editions_user_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "request_id"]
+        },
+        "editions_user_place_sequence_unique": {
+          "name": "editions_user_place_sequence_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "place_id", "visit_sequence"]
+        },
+        "editions_user_import_unique": {
+          "name": "editions_user_import_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "import_source_id"]
+        },
+        "editions_event_identity_unique": {
+          "name": "editions_event_identity_unique",
+          "nullsNotDistinct": false,
+          "columns": ["id", "user_id", "place_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.friendships": {
+      "name": "friendships",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "friend_id": {
+          "name": "friend_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "friendship_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        }
+      },
+      "indexes": {
+        "friendships_friend_status_idx": {
+          "name": "friendships_friend_status_idx",
+          "columns": [
+            {
+              "expression": "friend_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "friendships_user_status_idx": {
+          "name": "friendships_user_status_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "friendships_user_id_users_id_fk": {
+          "name": "friendships_user_id_users_id_fk",
+          "tableFrom": "friendships",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "friendships_friend_id_users_id_fk": {
+          "name": "friendships_friend_id_users_id_fk",
+          "tableFrom": "friendships",
+          "tableTo": "users",
+          "columnsFrom": ["friend_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "friendships_unique": {
+          "name": "friendships_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "friend_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.import_batches": {
+      "name": "import_batches",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "import_batch_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "import_batches_owner_cursor_idx": {
+          "name": "import_batches_owner_cursor_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "import_batches_owner_id_users_id_fk": {
+          "name": "import_batches_owner_id_users_id_fk",
+          "tableFrom": "import_batches",
+          "tableTo": "users",
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "import_batches_owner_request_unique": {
+          "name": "import_batches_owner_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["owner_id", "request_id"]
+        },
+        "import_batches_id_owner_unique": {
+          "name": "import_batches_id_owner_unique",
+          "nullsNotDistinct": false,
+          "columns": ["id", "owner_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "import_batches_title_valid": {
+          "name": "import_batches_title_valid",
+          "value": "char_length(\"import_batches\".\"title\") BETWEEN 1 AND 120"
+        },
+        "import_batches_version_valid": {
+          "name": "import_batches_version_valid",
+          "value": "\"import_batches\".\"version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.import_items": {
+      "name": "import_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "batch_id": {
+          "name": "batch_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size_bytes": {
+          "name": "size_bytes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photo_path": {
+          "name": "photo_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "import_item_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending_upload'"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "analysis": {
+          "name": "analysis",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "group_key": {
+          "name": "group_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmed_stop": {
+          "name": "confirmed_stop",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duplicate_of_item_id": {
+          "name": "duplicate_of_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "edition_id": {
+          "name": "edition_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error": {
+          "name": "error",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_token": {
+          "name": "lease_token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_expires_at": {
+          "name": "lease_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "import_items_owner_hash_unique": {
+          "name": "import_items_owner_hash_unique",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sha256",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"import_items\".\"state\" <> 'duplicate'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "import_items_batch_idx": {
+          "name": "import_items_batch_idx",
+          "columns": [
+            {
+              "expression": "batch_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "import_items_owner_idx": {
+          "name": "import_items_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "import_items_owner_id_users_id_fk": {
+          "name": "import_items_owner_id_users_id_fk",
+          "tableFrom": "import_items",
+          "tableTo": "users",
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "import_items_edition_id_editions_id_fk": {
+          "name": "import_items_edition_id_editions_id_fk",
+          "tableFrom": "import_items",
+          "tableTo": "editions",
+          "columnsFrom": ["edition_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "import_items_batch_owner_fk": {
+          "name": "import_items_batch_owner_fk",
+          "tableFrom": "import_items",
+          "tableTo": "import_batches",
+          "columnsFrom": ["batch_id", "owner_id"],
+          "columnsTo": ["id", "owner_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "import_items_duplicate_owner_fk": {
+          "name": "import_items_duplicate_owner_fk",
+          "tableFrom": "import_items",
+          "tableTo": "import_items",
+          "columnsFrom": ["duplicate_of_item_id", "owner_id"],
+          "columnsTo": ["id", "owner_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "import_items_owner_request_unique": {
+          "name": "import_items_owner_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["owner_id", "request_id"]
+        },
+        "import_items_id_owner_unique": {
+          "name": "import_items_id_owner_unique",
+          "nullsNotDistinct": false,
+          "columns": ["id", "owner_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "import_items_hash_valid": {
+          "name": "import_items_hash_valid",
+          "value": "\"import_items\".\"sha256\" ~ '^[a-f0-9]{64}$'"
+        },
+        "import_items_file_valid": {
+          "name": "import_items_file_valid",
+          "value": "char_length(\"import_items\".\"file_name\") BETWEEN 1 AND 255 AND \"import_items\".\"size_bytes\" BETWEEN 1 AND 10485760 AND \"import_items\".\"content_type\" IN ('image/jpeg', 'image/png', 'image/webp')"
+        },
+        "import_items_path_valid": {
+          "name": "import_items_path_valid",
+          "value": "\"import_items\".\"photo_path\" IS NULL OR (\"import_items\".\"photo_path\" LIKE \"import_items\".\"owner_id\"::text || '/%' AND char_length(\"import_items\".\"photo_path\") <= 512)"
+        },
+        "import_items_group_valid": {
+          "name": "import_items_group_valid",
+          "value": "\"import_items\".\"group_key\" IS NULL OR char_length(\"import_items\".\"group_key\") BETWEEN 1 AND 80"
+        },
+        "import_items_duplicate_valid": {
+          "name": "import_items_duplicate_valid",
+          "value": "(\"import_items\".\"state\" = 'duplicate') = (\"import_items\".\"duplicate_of_item_id\" IS NOT NULL) AND (\"import_items\".\"duplicate_of_item_id\" IS NULL OR \"import_items\".\"duplicate_of_item_id\" <> \"import_items\".\"id\")"
+        },
+        "import_items_version_valid": {
+          "name": "import_items_version_valid",
+          "value": "\"import_items\".\"version\" > 0 AND \"import_items\".\"attempts\" BETWEEN 0 AND 3"
+        },
+        "import_items_lease_valid": {
+          "name": "import_items_lease_valid",
+          "value": "(\"import_items\".\"lease_token\" IS NULL) = (\"import_items\".\"lease_expires_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.memory_moments": {
+      "name": "memory_moments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "album_id": {
+          "name": "album_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_edition_id": {
+          "name": "source_edition_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_import_item_id": {
+          "name": "source_import_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "captured_at": {
+          "name": "captured_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "group_key": {
+          "name": "group_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "withdrawn_at": {
+          "name": "withdrawn_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "memory_moments_import_item_unique": {
+          "name": "memory_moments_import_item_unique",
+          "columns": [
+            {
+              "expression": "source_import_item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memory_moments_author_cursor_idx": {
+          "name": "memory_moments_author_cursor_idx",
+          "columns": [
+            {
+              "expression": "author_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memory_moments_album_cursor_idx": {
+          "name": "memory_moments_album_cursor_idx",
+          "columns": [
+            {
+              "expression": "album_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "memory_moments_author_id_users_id_fk": {
+          "name": "memory_moments_author_id_users_id_fk",
+          "tableFrom": "memory_moments",
+          "tableTo": "users",
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memory_moments_album_id_trip_albums_id_fk": {
+          "name": "memory_moments_album_id_trip_albums_id_fk",
+          "tableFrom": "memory_moments",
+          "tableTo": "trip_albums",
+          "columnsFrom": ["album_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "memory_moments_place_id_places_id_fk": {
+          "name": "memory_moments_place_id_places_id_fk",
+          "tableFrom": "memory_moments",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "memory_moments_edition_owner_fk": {
+          "name": "memory_moments_edition_owner_fk",
+          "tableFrom": "memory_moments",
+          "tableTo": "editions",
+          "columnsFrom": ["source_edition_id", "author_id", "place_id"],
+          "columnsTo": ["id", "user_id", "place_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memory_moments_import_owner_fk": {
+          "name": "memory_moments_import_owner_fk",
+          "tableFrom": "memory_moments",
+          "tableTo": "import_items",
+          "columnsFrom": ["source_import_item_id", "author_id"],
+          "columnsTo": ["id", "owner_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "memory_moments_author_request_unique": {
+          "name": "memory_moments_author_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["author_id", "request_id"]
+        },
+        "memory_moments_id_author_unique": {
+          "name": "memory_moments_id_author_unique",
+          "nullsNotDistinct": false,
+          "columns": ["id", "author_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "memory_moments_source_valid": {
+          "name": "memory_moments_source_valid",
+          "value": "num_nonnulls(\"memory_moments\".\"source_edition_id\", \"memory_moments\".\"source_import_item_id\") = 1 AND (\"memory_moments\".\"source_edition_id\" IS NULL OR \"memory_moments\".\"place_id\" IS NOT NULL)"
+        },
+        "memory_moments_stop_valid": {
+          "name": "memory_moments_stop_valid",
+          "value": "num_nonnulls(\"memory_moments\".\"place_id\", \"memory_moments\".\"captured_at\", \"memory_moments\".\"timezone\") IN (0, 3)"
+        },
+        "memory_moments_text_valid": {
+          "name": "memory_moments_text_valid",
+          "value": "(\"memory_moments\".\"note\" IS NULL OR char_length(\"memory_moments\".\"note\") <= 2000) AND (\"memory_moments\".\"group_key\" IS NULL OR char_length(\"memory_moments\".\"group_key\") BETWEEN 1 AND 80) AND (\"memory_moments\".\"timezone\" IS NULL OR char_length(\"memory_moments\".\"timezone\") BETWEEN 1 AND 100)"
+        },
+        "memory_moments_version_valid": {
+          "name": "memory_moments_version_valid",
+          "value": "\"memory_moments\".\"version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.moment_person_tags": {
+      "name": "moment_person_tags",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "moment_id": {
+          "name": "moment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sender_id": {
+          "name": "sender_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "memory_invitation_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "moment_person_tags_recipient_state_idx": {
+          "name": "moment_person_tags_recipient_state_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "moment_person_tags_sender_id_users_id_fk": {
+          "name": "moment_person_tags_sender_id_users_id_fk",
+          "tableFrom": "moment_person_tags",
+          "tableTo": "users",
+          "columnsFrom": ["sender_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "moment_person_tags_user_id_users_id_fk": {
+          "name": "moment_person_tags_user_id_users_id_fk",
+          "tableFrom": "moment_person_tags",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "moment_person_tags_author_fk": {
+          "name": "moment_person_tags_author_fk",
+          "tableFrom": "moment_person_tags",
+          "tableTo": "memory_moments",
+          "columnsFrom": ["moment_id", "sender_id"],
+          "columnsTo": ["id", "author_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "moment_person_tags_moment_user_unique": {
+          "name": "moment_person_tags_moment_user_unique",
+          "nullsNotDistinct": false,
+          "columns": ["moment_id", "user_id"]
+        },
+        "moment_person_tags_sender_request_unique": {
+          "name": "moment_person_tags_sender_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["sender_id", "request_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "moment_person_tags_other_user": {
+          "name": "moment_person_tags_other_user",
+          "value": "\"moment_person_tags\".\"sender_id\" <> \"moment_person_tags\".\"user_id\""
+        },
+        "moment_person_tags_version_valid": {
+          "name": "moment_person_tags_version_valid",
+          "value": "\"moment_person_tags\".\"version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.outing_members": {
+      "name": "outing_members",
+      "schema": "",
+      "columns": {
+        "outing_id": {
+          "name": "outing_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "outing_members_outing_id_outings_id_fk": {
+          "name": "outing_members_outing_id_outings_id_fk",
+          "tableFrom": "outing_members",
+          "tableTo": "outings",
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "outing_members_user_id_users_id_fk": {
+          "name": "outing_members_user_id_users_id_fk",
+          "tableFrom": "outing_members",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "outing_members_unique": {
+          "name": "outing_members_unique",
+          "nullsNotDistinct": false,
+          "columns": ["outing_id", "user_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.outings": {
+      "name": "outings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "wishlist_id": {
+          "name": "wishlist_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "planned_for": {
+          "name": "planned_for",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan": {
+          "name": "plan",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "outings_wishlist_id_wishlists_id_fk": {
+          "name": "outings_wishlist_id_wishlists_id_fk",
+          "tableFrom": "outings",
+          "tableTo": "wishlists",
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "outings_created_by_users_id_fk": {
+          "name": "outings_created_by_users_id_fk",
+          "tableFrom": "outings",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.place_images": {
+      "name": "place_images",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provider": {
+          "name": "provider",
+          "type": "place_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "width": {
+          "name": "width",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "license": {
+          "name": "license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "license_url": {
+          "name": "license_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attribution": {
+          "name": "attribution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_page_url": {
+          "name": "source_page_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_hero": {
+          "name": "is_hero",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "uploaded_by": {
+          "name": "uploaded_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storage_path": {
+          "name": "storage_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consented_at": {
+          "name": "consented_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "place_images_place_idx": {
+          "name": "place_images_place_idx",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "place_images_hero_unique": {
+          "name": "place_images_hero_unique",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"place_images\".\"is_hero\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "place_images_place_id_places_id_fk": {
+          "name": "place_images_place_id_places_id_fk",
+          "tableFrom": "place_images",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "place_images_source_id_place_sources_id_fk": {
+          "name": "place_images_source_id_place_sources_id_fk",
+          "tableFrom": "place_images",
+          "tableTo": "place_sources",
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "place_images_uploaded_by_users_id_fk": {
+          "name": "place_images_uploaded_by_users_id_fk",
+          "tableFrom": "place_images",
+          "tableTo": "users",
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "place_images_provider_key_unique": {
+          "name": "place_images_provider_key_unique",
+          "nullsNotDistinct": false,
+          "columns": ["place_id", "provider", "provider_id"]
+        },
+        "place_images_upload_request_unique": {
+          "name": "place_images_upload_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["uploaded_by", "request_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "place_images_dimensions_valid": {
+          "name": "place_images_dimensions_valid",
+          "value": "(\"place_images\".\"width\" IS NULL OR \"place_images\".\"width\" > 0) AND (\"place_images\".\"height\" IS NULL OR \"place_images\".\"height\" > 0)"
+        },
+        "place_images_public_copy_only": {
+          "name": "place_images_public_copy_only",
+          "value": "\"place_images\".\"storage_path\" IS NULL OR \"place_images\".\"storage_path\" LIKE 'place-images/%'"
+        },
+        "place_images_user_consent": {
+          "name": "place_images_user_consent",
+          "value": "\"place_images\".\"provider\" <> 'user' OR (\"place_images\".\"uploaded_by\" IS NOT NULL AND \"place_images\".\"consented_at\" IS NOT NULL)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.place_notes": {
+      "name": "place_notes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "place_note_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "legacy_tip": {
+          "name": "legacy_tip",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "place_notes_legacy_tip_unique": {
+          "name": "place_notes_legacy_tip_unique",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"place_notes\".\"legacy_tip\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "place_notes_place_visibility_idx": {
+          "name": "place_notes_place_visibility_idx",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "visibility",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "place_notes_place_id_places_id_fk": {
+          "name": "place_notes_place_id_places_id_fk",
+          "tableFrom": "place_notes",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "place_notes_user_id_users_id_fk": {
+          "name": "place_notes_user_id_users_id_fk",
+          "tableFrom": "place_notes",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "place_notes_user_request_unique": {
+          "name": "place_notes_user_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "request_id"]
+        },
+        "place_notes_event_identity_unique": {
+          "name": "place_notes_event_identity_unique",
+          "nullsNotDistinct": false,
+          "columns": ["id", "user_id", "place_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "place_notes_body_valid": {
+          "name": "place_notes_body_valid",
+          "value": "length(btrim(\"place_notes\".\"body\")) BETWEEN 1 AND 600"
+        },
+        "place_notes_legacy_tip_private": {
+          "name": "place_notes_legacy_tip_private",
+          "value": "NOT \"place_notes\".\"legacy_tip\" OR (\"place_notes\".\"visibility\" = 'private' AND \"place_notes\".\"kind\" = 'tip')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.place_preferences": {
+      "name": "place_preferences",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "favorite": {
+          "name": "favorite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tip": {
+          "name": "tip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "place_preferences_user_id_users_id_fk": {
+          "name": "place_preferences_user_id_users_id_fk",
+          "tableFrom": "place_preferences",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "place_preferences_place_id_places_id_fk": {
+          "name": "place_preferences_place_id_places_id_fk",
+          "tableFrom": "place_preferences",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "place_preferences_user_id_place_id_pk": {
+          "name": "place_preferences_user_id_place_id_pk",
+          "columns": ["user_id", "place_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.place_sources": {
+      "name": "place_sources",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "place_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_policy": {
+          "name": "retention_policy",
+          "type": "retention_policy",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'metadata_only'"
+        },
+        "retained_fields": {
+          "name": "retained_fields",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "policy_url": {
+          "name": "policy_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "policy_checked_at": {
+          "name": "policy_checked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "license": {
+          "name": "license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "license_url": {
+          "name": "license_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attribution": {
+          "name": "attribution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "sample_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unavailable'"
+        }
+      },
+      "indexes": {
+        "place_sources_place_idx": {
+          "name": "place_sources_place_idx",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "place_sources_expiry_idx": {
+          "name": "place_sources_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "place_sources_place_id_places_id_fk": {
+          "name": "place_sources_place_id_places_id_fk",
+          "tableFrom": "place_sources",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "place_sources_provider_key_unique": {
+          "name": "place_sources_provider_key_unique",
+          "nullsNotDistinct": false,
+          "columns": ["provider", "provider_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "place_sources_retention_valid": {
+          "name": "place_sources_retention_valid",
+          "value": "\n    (\"place_sources\".\"retention_policy\" NOT IN ('metadata_only', 'do_not_store') OR \"place_sources\".\"payload\" IS NULL)\n    AND (\"place_sources\".\"retention_policy\" <> 'expiring' OR \"place_sources\".\"expires_at\" > \"place_sources\".\"fetched_at\")\n    AND (\"place_sources\".\"retention_policy\" <> 'expiring' OR \"place_sources\".\"expires_at\" IS NOT NULL)\n    AND (\"place_sources\".\"payload\" IS NULL OR (\"place_sources\".\"policy_url\" IS NOT NULL AND \"place_sources\".\"policy_checked_at\" IS NOT NULL))\n    AND (\"place_sources\".\"provider\" <> 'google' OR (\"place_sources\".\"payload\" IS NULL AND \"place_sources\".\"retention_policy\" IN ('metadata_only', 'do_not_store')))\n  "
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.place_stats": {
+      "name": "place_stats",
+      "schema": "",
+      "columns": {
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "collectors": {
+          "name": "collectors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "editions": {
+          "name": "editions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "saves": {
+          "name": "saves",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "recommend": {
+          "name": "recommend",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "depends": {
+          "name": "depends",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "skip": {
+          "name": "skip",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "visitors_90d": {
+          "name": "visitors_90d",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "city_visitors_90d": {
+          "name": "city_visitors_90d",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "collectors_7d": {
+          "name": "collectors_7d",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "weekly_collectors_8w": {
+          "name": "weekly_collectors_8w",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "collectors_8w_avg": {
+          "name": "collectors_8w_avg",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discovery_freq": {
+          "name": "discovery_freq",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommend_rate": {
+          "name": "recommend_rate",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trending_score": {
+          "name": "trending_score",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sample_status": {
+          "name": "sample_status",
+          "type": "sample_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unavailable'"
+        },
+        "provenance": {
+          "name": "provenance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'souvenir-activity'"
+        },
+        "definition_version": {
+          "name": "definition_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "window_end": {
+          "name": "window_end",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "baseline_start": {
+          "name": "baseline_start",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "baseline_end": {
+          "name": "baseline_end",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "place_stats_trending_idx": {
+          "name": "place_stats_trending_idx",
+          "columns": [
+            {
+              "expression": "trending_score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "place_stats_place_id_places_id_fk": {
+          "name": "place_stats_place_id_places_id_fk",
+          "tableFrom": "place_stats",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "place_stats_counts_valid": {
+          "name": "place_stats_counts_valid",
+          "value": "\n    \"place_stats\".\"collectors\" >= 0 AND \"place_stats\".\"editions\" >= 0 AND \"place_stats\".\"saves\" >= 0\n    AND \"place_stats\".\"recommend\" >= 0 AND \"place_stats\".\"depends\" >= 0 AND \"place_stats\".\"skip\" >= 0\n    AND \"place_stats\".\"visitors_90d\" >= 0 AND \"place_stats\".\"city_visitors_90d\" >= \"place_stats\".\"visitors_90d\"\n    AND \"place_stats\".\"collectors_7d\" >= 0"
+        },
+        "place_stats_rates_valid": {
+          "name": "place_stats_rates_valid",
+          "value": "\n    (\"place_stats\".\"discovery_freq\" IS NULL OR (\"place_stats\".\"city\" IS NOT NULL AND \"place_stats\".\"country\" IS NOT NULL AND \"place_stats\".\"city_visitors_90d\" >= 5 AND \"place_stats\".\"discovery_freq\" BETWEEN 0 AND 1 AND abs(\"place_stats\".\"discovery_freq\" - \"place_stats\".\"visitors_90d\"::float8 / nullif(\"place_stats\".\"city_visitors_90d\", 0)) < 1e-9))\n    AND (\"place_stats\".\"recommend_rate\" IS NULL OR (\"place_stats\".\"recommend\" + \"place_stats\".\"depends\" + \"place_stats\".\"skip\" >= 5 AND \"place_stats\".\"recommend_rate\" BETWEEN 0 AND 1 AND abs(\"place_stats\".\"recommend_rate\" - \"place_stats\".\"recommend\"::float8 / nullif(\"place_stats\".\"recommend\" + \"place_stats\".\"depends\" + \"place_stats\".\"skip\", 0)) < 1e-9))\n    AND (\"place_stats\".\"trending_score\" IS NULL OR (\"place_stats\".\"collectors_8w_avg\" IS NOT NULL AND \"place_stats\".\"collectors_8w_avg\" > 0 AND \"place_stats\".\"trending_score\" >= 0 AND \"place_stats\".\"trending_score\" < 'Infinity'::float8))"
+        },
+        "place_stats_windows_valid": {
+          "name": "place_stats_windows_valid",
+          "value": "\"place_stats\".\"window_end\" - \"place_stats\".\"window_start\" = interval '90 days' AND \"place_stats\".\"baseline_end\" - \"place_stats\".\"baseline_start\" = interval '56 days' AND \"place_stats\".\"baseline_end\" <= \"place_stats\".\"window_end\" - interval '7 days' AND \"place_stats\".\"baseline_end\" > \"place_stats\".\"window_end\" - interval '14 days' AND date_trunc('week', \"place_stats\".\"baseline_end\" AT TIME ZONE 'UTC') = \"place_stats\".\"baseline_end\" AT TIME ZONE 'UTC'"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.place_suggestions": {
+      "name": "place_suggestions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "field": {
+          "name": "field",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "suggestion_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "place_suggestions_review_idx": {
+          "name": "place_suggestions_review_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "place_suggestions_place_id_places_id_fk": {
+          "name": "place_suggestions_place_id_places_id_fk",
+          "tableFrom": "place_suggestions",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "place_suggestions_user_id_users_id_fk": {
+          "name": "place_suggestions_user_id_users_id_fk",
+          "tableFrom": "place_suggestions",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "place_suggestions_user_request_unique": {
+          "name": "place_suggestions_user_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "request_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "place_suggestions_field_valid": {
+          "name": "place_suggestions_field_valid",
+          "value": "\"place_suggestions\".\"field\" IN ('name', 'hours', 'website', 'coords', 'closed')"
+        },
+        "place_suggestions_value_required": {
+          "name": "place_suggestions_value_required",
+          "value": "\"place_suggestions\".\"field\" = 'website' OR (\"place_suggestions\".\"value\" IS NOT NULL AND jsonb_typeof(\"place_suggestions\".\"value\") <> 'null')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.place_tags": {
+      "name": "place_tags",
+      "schema": "",
+      "columns": {
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tag": {
+          "name": "tag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "place_tags_user_idx": {
+          "name": "place_tags_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "place_tags_place_id_places_id_fk": {
+          "name": "place_tags_place_id_places_id_fk",
+          "tableFrom": "place_tags",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "place_tags_user_id_users_id_fk": {
+          "name": "place_tags_user_id_users_id_fk",
+          "tableFrom": "place_tags",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "place_tags_place_id_user_id_tag_pk": {
+          "name": "place_tags_place_id_user_id_tag_pk",
+          "columns": ["place_id", "user_id", "tag"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "place_tags_slug_valid": {
+          "name": "place_tags_slug_valid",
+          "value": "\"place_tags\".\"tag\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(\"place_tags\".\"tag\") <= 32"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.places": {
+      "name": "places",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lat": {
+          "name": "lat",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lng": {
+          "name": "lng",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "region": {
+          "name": "region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wikidata_id": {
+          "name": "wikidata_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "place_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'curated'"
+        },
+        "source_updated_at": {
+          "name": "source_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geohash": {
+          "name": "geohash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'public'"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hero_image_url": {
+          "name": "hero_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rarity_tier": {
+          "name": "rarity_tier",
+          "type": "rarity_tier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rarity_appeal": {
+          "name": "rarity_appeal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rarity_discovery_freq": {
+          "name": "rarity_discovery_freq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rarity_availability": {
+          "name": "rarity_availability",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_ids": {
+          "name": "external_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stats": {
+          "name": "stats",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "places_geohash_idx": {
+          "name": "places_geohash_idx",
+          "columns": [
+            {
+              "expression": "geohash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "places_coordinates_idx": {
+          "name": "places_coordinates_idx",
+          "columns": [
+            {
+              "expression": "lat",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lng",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "places_locality_idx": {
+          "name": "places_locality_idx",
+          "columns": [
+            {
+              "expression": "country",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "category",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "places_owner_idx": {
+          "name": "places_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "places_wikidata_unique": {
+          "name": "places_wikidata_unique",
+          "columns": [
+            {
+              "expression": "wikidata_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "places_owner_id_users_id_fk": {
+          "name": "places_owner_id_users_id_fk",
+          "tableFrom": "places",
+          "tableTo": "users",
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "places_slug_unique": {
+          "name": "places_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        },
+        "places_owner_request_unique": {
+          "name": "places_owner_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["owner_id", "request_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "places_coordinates_valid": {
+          "name": "places_coordinates_valid",
+          "value": "\"places\".\"lat\" BETWEEN -90 AND 90 AND \"places\".\"lng\" BETWEEN -180 AND 180"
+        },
+        "places_country_valid": {
+          "name": "places_country_valid",
+          "value": "\"places\".\"country\" IS NULL OR \"places\".\"country\" ~ '^[A-Z]{2}$'"
+        },
+        "places_user_owner_required": {
+          "name": "places_user_owner_required",
+          "value": "\"places\".\"source\" <> 'user' OR \"places\".\"owner_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.ranking_groups": {
+      "name": "ranking_groups",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sentiment": {
+          "name": "sentiment",
+          "type": "sentiment",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_ids": {
+          "name": "place_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "provisional_ids": {
+          "name": "provisional_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "ties": {
+          "name": "ties",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ranking_groups_user_id_users_id_fk": {
+          "name": "ranking_groups_user_id_users_id_fk",
+          "tableFrom": "ranking_groups",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "ranking_groups_user_id_category_sentiment_pk": {
+          "name": "ranking_groups_user_id_category_sentiment_pk",
+          "columns": ["user_id", "category", "sentiment"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rankings": {
+      "name": "rankings",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "would_recommend": {
+          "name": "would_recommend",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rank_score": {
+          "name": "rank_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sentiment": {
+          "name": "sentiment",
+          "type": "sentiment",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ranking": {
+          "name": "ranking",
+          "type": "ranking_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unranked'"
+        },
+        "compared_to": {
+          "name": "compared_to",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tied_with": {
+          "name": "tied_with",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "rankings_place_sentiment_idx": {
+          "name": "rankings_place_sentiment_idx",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sentiment",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rankings_user_id_users_id_fk": {
+          "name": "rankings_user_id_users_id_fk",
+          "tableFrom": "rankings",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "rankings_place_id_places_id_fk": {
+          "name": "rankings_place_id_places_id_fk",
+          "tableFrom": "rankings",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "rankings_compared_to_places_id_fk": {
+          "name": "rankings_compared_to_places_id_fk",
+          "tableFrom": "rankings",
+          "tableTo": "places",
+          "columnsFrom": ["compared_to"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "rankings_tied_with_places_id_fk": {
+          "name": "rankings_tied_with_places_id_fk",
+          "tableFrom": "rankings",
+          "tableTo": "places",
+          "columnsFrom": ["tied_with"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "rankings_user_place_unique": {
+          "name": "rankings_user_place_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "place_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.set_places": {
+      "name": "set_places",
+      "schema": "",
+      "columns": {
+        "set_id": {
+          "name": "set_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "set_places_set_id_sets_id_fk": {
+          "name": "set_places_set_id_sets_id_fk",
+          "tableFrom": "set_places",
+          "tableTo": "sets",
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "set_places_place_id_places_id_fk": {
+          "name": "set_places_place_id_places_id_fk",
+          "tableFrom": "set_places",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "set_places_set_place_unique": {
+          "name": "set_places_set_place_unique",
+          "nullsNotDistinct": false,
+          "columns": ["set_id", "place_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sets": {
+      "name": "sets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cover_image_url": {
+          "name": "cover_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sets_slug_unique": {
+          "name": "sets_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.taste_evidence": {
+      "name": "taste_evidence",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_kind": {
+          "name": "source_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interest": {
+          "name": "interest",
+          "type": "taste_interest",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "intent": {
+          "name": "intent",
+          "type": "taste_intent",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "explanation": {
+          "name": "explanation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "analysis_version": {
+          "name": "analysis_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "excluded": {
+          "name": "excluded",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "taste_evidence_owner_source_idx": {
+          "name": "taste_evidence_owner_source_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_kind",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "taste_evidence_user_id_taste_profiles_user_id_fk": {
+          "name": "taste_evidence_user_id_taste_profiles_user_id_fk",
+          "tableFrom": "taste_evidence",
+          "tableTo": "taste_profiles",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["user_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "taste_evidence_source_interest_unique": {
+          "name": "taste_evidence_source_interest_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_id", "source_kind", "source_id", "interest", "intent"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "taste_evidence_source_valid": {
+          "name": "taste_evidence_source_valid",
+          "value": "\"taste_evidence\".\"source_kind\" IN ('edition', 'import_item', 'saved_place', 'favorite', 'recommendation')"
+        },
+        "taste_evidence_confidence_valid": {
+          "name": "taste_evidence_confidence_valid",
+          "value": "\"taste_evidence\".\"confidence\" BETWEEN 0 AND 1"
+        },
+        "taste_evidence_explanation_valid": {
+          "name": "taste_evidence_explanation_valid",
+          "value": "char_length(\"taste_evidence\".\"explanation\") BETWEEN 1 AND 500"
+        },
+        "taste_evidence_version_valid": {
+          "name": "taste_evidence_version_valid",
+          "value": "\"taste_evidence\".\"version\" > 0 AND \"taste_evidence\".\"analysis_version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.taste_profiles": {
+      "name": "taste_profiles",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "draft": {
+          "name": "draft",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "published": {
+          "name": "published",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sharing": {
+          "name": "sharing",
+          "type": "taste_sharing",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "title_override": {
+          "name": "title_override",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "overrides": {
+          "name": "overrides",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "preferences": {
+          "name": "preferences",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{\"pace\":null,\"budget\":null,\"accessibility\":null}'::jsonb"
+        },
+        "selected_sources": {
+          "name": "selected_sources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "excluded_sources": {
+          "name": "excluded_sources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "collage_moment_ids": {
+          "name": "collage_moment_ids",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "analysis_state": {
+          "name": "analysis_state",
+          "type": "taste_analysis_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'idle'"
+        },
+        "analysis_version": {
+          "name": "analysis_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "analysis_request_id": {
+          "name": "analysis_request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_token": {
+          "name": "lease_token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_expires_at": {
+          "name": "lease_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "taste_profiles_user_id_users_id_fk": {
+          "name": "taste_profiles_user_id_users_id_fk",
+          "tableFrom": "taste_profiles",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "taste_profiles_version_valid": {
+          "name": "taste_profiles_version_valid",
+          "value": "\"taste_profiles\".\"version\" > 0 AND \"taste_profiles\".\"analysis_version\" > 0"
+        },
+        "taste_profiles_title_valid": {
+          "name": "taste_profiles_title_valid",
+          "value": "\"taste_profiles\".\"title_override\" IS NULL OR char_length(\"taste_profiles\".\"title_override\") BETWEEN 1 AND 120"
+        },
+        "taste_profiles_collage_bounded": {
+          "name": "taste_profiles_collage_bounded",
+          "value": "cardinality(\"taste_profiles\".\"collage_moment_ids\") <= 6"
+        },
+        "taste_profiles_sources_bounded": {
+          "name": "taste_profiles_sources_bounded",
+          "value": "jsonb_typeof(\"taste_profiles\".\"selected_sources\") = 'array' AND jsonb_array_length(\"taste_profiles\".\"selected_sources\") <= 100 AND jsonb_typeof(\"taste_profiles\".\"excluded_sources\") = 'array' AND jsonb_array_length(\"taste_profiles\".\"excluded_sources\") <= 100"
+        },
+        "taste_profiles_overrides_bounded": {
+          "name": "taste_profiles_overrides_bounded",
+          "value": "jsonb_typeof(\"taste_profiles\".\"overrides\") = 'array' AND jsonb_array_length(\"taste_profiles\".\"overrides\") <= 20"
+        },
+        "taste_profiles_published_required": {
+          "name": "taste_profiles_published_required",
+          "value": "\"taste_profiles\".\"sharing\" = 'private' OR \"taste_profiles\".\"published\" IS NOT NULL"
+        },
+        "taste_profiles_lease_valid": {
+          "name": "taste_profiles_lease_valid",
+          "value": "(\"taste_profiles\".\"lease_token\" IS NULL) = (\"taste_profiles\".\"lease_expires_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.trip_album_members": {
+      "name": "trip_album_members",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "album_id": {
+          "name": "album_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invited_by": {
+          "name": "invited_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'contributor'"
+        },
+        "state": {
+          "name": "state",
+          "type": "memory_invitation_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "trip_album_members_user_state_idx": {
+          "name": "trip_album_members_user_state_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trip_album_members_album_id_trip_albums_id_fk": {
+          "name": "trip_album_members_album_id_trip_albums_id_fk",
+          "tableFrom": "trip_album_members",
+          "tableTo": "trip_albums",
+          "columnsFrom": ["album_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trip_album_members_user_id_users_id_fk": {
+          "name": "trip_album_members_user_id_users_id_fk",
+          "tableFrom": "trip_album_members",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trip_album_members_invited_by_users_id_fk": {
+          "name": "trip_album_members_invited_by_users_id_fk",
+          "tableFrom": "trip_album_members",
+          "tableTo": "users",
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "trip_album_members_album_user_unique": {
+          "name": "trip_album_members_album_user_unique",
+          "nullsNotDistinct": false,
+          "columns": ["album_id", "user_id"]
+        },
+        "trip_album_members_inviter_request_unique": {
+          "name": "trip_album_members_inviter_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["invited_by", "request_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "trip_album_members_role_valid": {
+          "name": "trip_album_members_role_valid",
+          "value": "\"trip_album_members\".\"role\" = 'contributor' AND \"trip_album_members\".\"user_id\" <> \"trip_album_members\".\"invited_by\""
+        },
+        "trip_album_members_version_valid": {
+          "name": "trip_album_members_version_valid",
+          "value": "\"trip_album_members\".\"version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.trip_albums": {
+      "name": "trip_albums",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outing_id": {
+          "name": "outing_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_batch_id": {
+          "name": "source_batch_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "trip_albums_owner_cursor_idx": {
+          "name": "trip_albums_owner_cursor_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trip_albums_owner_id_users_id_fk": {
+          "name": "trip_albums_owner_id_users_id_fk",
+          "tableFrom": "trip_albums",
+          "tableTo": "users",
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trip_albums_outing_id_outings_id_fk": {
+          "name": "trip_albums_outing_id_outings_id_fk",
+          "tableFrom": "trip_albums",
+          "tableTo": "outings",
+          "columnsFrom": ["outing_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "trip_albums_source_batch_id_import_batches_id_fk": {
+          "name": "trip_albums_source_batch_id_import_batches_id_fk",
+          "tableFrom": "trip_albums",
+          "tableTo": "import_batches",
+          "columnsFrom": ["source_batch_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "trip_albums_owner_request_unique": {
+          "name": "trip_albums_owner_request_unique",
+          "nullsNotDistinct": false,
+          "columns": ["owner_id", "request_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "trip_albums_text_valid": {
+          "name": "trip_albums_text_valid",
+          "value": "char_length(\"trip_albums\".\"title\") BETWEEN 1 AND 120 AND (\"trip_albums\".\"description\" IS NULL OR char_length(\"trip_albums\".\"description\") <= 2000)"
+        },
+        "trip_albums_version_valid": {
+          "name": "trip_albums_version_valid",
+          "value": "\"trip_albums\".\"version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.user_stats": {
+      "name": "user_stats",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "places_visited": {
+          "name": "places_visited",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "editions": {
+          "name": "editions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "cities_visited": {
+          "name": "cities_visited",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "current_streak_weeks": {
+          "name": "current_streak_weeks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "longest_streak_weeks": {
+          "name": "longest_streak_weeks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "global_rank": {
+          "name": "global_rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city_ranks": {
+          "name": "city_ranks",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "sample_status": {
+          "name": "sample_status",
+          "type": "sample_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unavailable'"
+        },
+        "provenance": {
+          "name": "provenance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'souvenir-activity'"
+        },
+        "definition_version": {
+          "name": "definition_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "user_stats_leaderboard_idx": {
+          "name": "user_stats_leaderboard_idx",
+          "columns": [
+            {
+              "expression": "places_visited",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_stats_user_id_users_id_fk": {
+          "name": "user_stats_user_id_users_id_fk",
+          "tableFrom": "user_stats",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "user_stats_counts_valid": {
+          "name": "user_stats_counts_valid",
+          "value": "\"user_stats\".\"places_visited\" >= 0 AND \"user_stats\".\"editions\" >= \"user_stats\".\"places_visited\" AND \"user_stats\".\"cities_visited\" >= 0 AND \"user_stats\".\"current_streak_weeks\" >= 0 AND \"user_stats\".\"longest_streak_weeks\" >= \"user_stats\".\"current_streak_weeks\" AND (\"user_stats\".\"global_rank\" IS NULL OR \"user_stats\".\"global_rank\" > 0)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "handle": {
+          "name": "handle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avatar_url": {
+          "name": "avatar_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_city": {
+          "name": "home_city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_country": {
+          "name": "home_country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stats_visibility": {
+          "name": "stats_visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_handle_unique": {
+          "name": "users_handle_unique",
+          "nullsNotDistinct": false,
+          "columns": ["handle"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wishlist_items": {
+      "name": "wishlist_items",
+      "schema": "",
+      "columns": {
+        "wishlist_id": {
+          "name": "wishlist_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "wishlist_items_wishlist_id_wishlists_id_fk": {
+          "name": "wishlist_items_wishlist_id_wishlists_id_fk",
+          "tableFrom": "wishlist_items",
+          "tableTo": "wishlists",
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "wishlist_items_place_id_places_id_fk": {
+          "name": "wishlist_items_place_id_places_id_fk",
+          "tableFrom": "wishlist_items",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "wishlist_items_added_by_users_id_fk": {
+          "name": "wishlist_items_added_by_users_id_fk",
+          "tableFrom": "wishlist_items",
+          "tableTo": "users",
+          "columnsFrom": ["added_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "wishlist_items_unique": {
+          "name": "wishlist_items_unique",
+          "nullsNotDistinct": false,
+          "columns": ["wishlist_id", "place_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wishlist_members": {
+      "name": "wishlist_members",
+      "schema": "",
+      "columns": {
+        "wishlist_id": {
+          "name": "wishlist_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "wishlist_members_wishlist_id_wishlists_id_fk": {
+          "name": "wishlist_members_wishlist_id_wishlists_id_fk",
+          "tableFrom": "wishlist_members",
+          "tableTo": "wishlists",
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "wishlist_members_user_id_users_id_fk": {
+          "name": "wishlist_members_user_id_users_id_fk",
+          "tableFrom": "wishlist_members",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "wishlist_members_wishlist_id_user_id_pk": {
+          "name": "wishlist_members_wishlist_id_user_id_pk",
+          "columns": ["wishlist_id", "user_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wishlist_saves": {
+      "name": "wishlist_saves",
+      "schema": "",
+      "columns": {
+        "wishlist_id": {
+          "name": "wishlist_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed": {
+          "name": "completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "wishlist_saves_place_user_idx": {
+          "name": "wishlist_saves_place_user_idx",
+          "columns": [
+            {
+              "expression": "place_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "wishlist_saves_wishlist_id_wishlists_id_fk": {
+          "name": "wishlist_saves_wishlist_id_wishlists_id_fk",
+          "tableFrom": "wishlist_saves",
+          "tableTo": "wishlists",
+          "columnsFrom": ["wishlist_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "wishlist_saves_place_id_places_id_fk": {
+          "name": "wishlist_saves_place_id_places_id_fk",
+          "tableFrom": "wishlist_saves",
+          "tableTo": "places",
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "wishlist_saves_user_id_users_id_fk": {
+          "name": "wishlist_saves_user_id_users_id_fk",
+          "tableFrom": "wishlist_saves",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "wishlist_saves_wishlist_id_place_id_user_id_pk": {
+          "name": "wishlist_saves_wishlist_id_place_id_user_id_pk",
+          "columns": ["wishlist_id", "place_id", "user_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wishlists": {
+      "name": "wishlists",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_shared": {
+          "name": "is_shared",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "wishlists_owner_default_unique": {
+          "name": "wishlists_owner_default_unique",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"wishlists\".\"is_default\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "wishlists_owner_id_users_id_fk": {
+          "name": "wishlists_owner_id_users_id_fk",
+          "tableFrom": "wishlists",
+          "tableTo": "users",
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.activity_kind": {
+      "name": "activity_kind",
+      "schema": "public",
+      "values": ["edition", "ranking", "note", "set_complete", "friend"]
+    },
+    "public.category": {
+      "name": "category",
+      "schema": "public",
+      "values": ["nature", "culture", "food", "landmark", "hidden_gem"]
+    },
+    "public.edition_variant": {
+      "name": "edition_variant",
+      "schema": "public",
+      "values": ["standard", "revisit", "group", "seasonal"]
+    },
+    "public.friendship_status": {
+      "name": "friendship_status",
+      "schema": "public",
+      "values": ["pending", "accepted"]
+    },
+    "public.import_batch_state": {
+      "name": "import_batch_state",
+      "schema": "public",
+      "values": ["open", "processing", "ready", "committed", "cancelled"]
+    },
+    "public.import_item_state": {
+      "name": "import_item_state",
+      "schema": "public",
+      "values": [
+        "pending_upload",
+        "uploaded",
+        "processing",
+        "ready",
+        "failed",
+        "duplicate",
+        "committed"
+      ]
+    },
+    "public.memory_invitation_state": {
+      "name": "memory_invitation_state",
+      "schema": "public",
+      "values": ["pending", "accepted", "declined", "removed"]
+    },
+    "public.place_note_kind": {
+      "name": "place_note_kind",
+      "schema": "public",
+      "values": ["tip", "warning", "hours", "access", "story"]
+    },
+    "public.place_source": {
+      "name": "place_source",
+      "schema": "public",
+      "values": [
+        "curated",
+        "osm",
+        "wikidata",
+        "wikimedia",
+        "google",
+        "opentripmap",
+        "user",
+        "placeholder"
+      ]
+    },
+    "public.ranking_status": {
+      "name": "ranking_status",
+      "schema": "public",
+      "values": ["settled", "provisional", "unranked"]
+    },
+    "public.rarity_tier": {
+      "name": "rarity_tier",
+      "schema": "public",
+      "values": ["common", "uncommon", "rare", "epic", "legendary"]
+    },
+    "public.retention_policy": {
+      "name": "retention_policy",
+      "schema": "public",
+      "values": ["metadata_only", "do_not_store", "expiring", "licensed"]
+    },
+    "public.sample_status": {
+      "name": "sample_status",
+      "schema": "public",
+      "values": ["unavailable", "insufficient", "ready", "stale"]
+    },
+    "public.sentiment": {
+      "name": "sentiment",
+      "schema": "public",
+      "values": ["recommend", "depends", "skip"]
+    },
+    "public.suggestion_status": {
+      "name": "suggestion_status",
+      "schema": "public",
+      "values": ["pending", "accepted", "rejected"]
+    },
+    "public.taste_analysis_state": {
+      "name": "taste_analysis_state",
+      "schema": "public",
+      "values": ["idle", "processing", "ready", "failed"]
+    },
+    "public.taste_intent": {
+      "name": "taste_intent",
+      "schema": "public",
+      "values": ["enjoyed", "want_to_try"]
+    },
+    "public.taste_interest": {
+      "name": "taste_interest",
+      "schema": "public",
+      "values": [
+        "gardens",
+        "architecture",
+        "museums",
+        "street_food",
+        "waterfronts",
+        "hiking",
+        "beaches",
+        "parks",
+        "art",
+        "history",
+        "cafes",
+        "markets",
+        "live_music",
+        "theater",
+        "local_food",
+        "photography",
+        "scenic_views",
+        "wildlife",
+        "cycling",
+        "bookshops"
+      ]
+    },
+    "public.taste_sharing": {
+      "name": "taste_sharing",
+      "schema": "public",
+      "values": ["private", "friends"]
+    },
+    "public.visibility": {
+      "name": "visibility",
+      "schema": "public",
+      "values": ["private", "friends", "public"]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

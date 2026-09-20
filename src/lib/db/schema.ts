@@ -18,6 +18,17 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { CityRankDto, PlaceCorrectionValue } from "../../../shared/worldwide-contract";
+import type {
+  ConfirmedMemoryStop,
+  ImportMetadata,
+  MemoryAnalysis,
+  TasteDraft,
+  TasteOverride,
+  TastePreferences,
+  TastePublished,
+  TasteSourceRef,
+} from "../../../shared/memories-contract";
+import { TASTE_INTERESTS } from "../../../shared/memories-contract";
 
 export const categoryEnum = pgEnum("category", [
   "nature",
@@ -755,6 +766,370 @@ export const activityEvents = pgTable(
       (${table.kind} = 'friend' AND ${table.friendId} IS NOT NULL AND ${table.placeId} IS NULL AND ${table.friendId} <> ${table.userId})
     )) IS TRUE`,
     ),
+  ],
+).enableRLS();
+
+export const importBatchStateEnum = pgEnum("import_batch_state", [
+  "open",
+  "processing",
+  "ready",
+  "committed",
+  "cancelled",
+]);
+export const importItemStateEnum = pgEnum("import_item_state", [
+  "pending_upload",
+  "uploaded",
+  "processing",
+  "ready",
+  "failed",
+  "duplicate",
+  "committed",
+]);
+export const memoryInvitationStateEnum = pgEnum("memory_invitation_state", [
+  "pending",
+  "accepted",
+  "declined",
+  "removed",
+]);
+export const tasteInterestEnum = pgEnum("taste_interest", TASTE_INTERESTS);
+export const tasteIntentEnum = pgEnum("taste_intent", ["enjoyed", "want_to_try"]);
+export const tasteAnalysisStateEnum = pgEnum("taste_analysis_state", [
+  "idle",
+  "processing",
+  "ready",
+  "failed",
+]);
+export const tasteSharingEnum = pgEnum("taste_sharing", ["private", "friends"]);
+const memoryTimestamps = () => ({
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  version: integer("version").notNull().default(1),
+});
+
+export const importBatches = pgTable(
+  "import_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id").notNull(),
+    title: text("title").notNull(),
+    state: importBatchStateEnum("state").notNull().default("open"),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    unique("import_batches_owner_request_unique").on(table.ownerId, table.requestId),
+    unique("import_batches_id_owner_unique").on(table.id, table.ownerId),
+    index("import_batches_owner_cursor_idx").on(table.ownerId, table.id),
+    check("import_batches_title_valid", sql`char_length(${table.title}) BETWEEN 1 AND 120`),
+    check("import_batches_version_valid", sql`${table.version} > 0`),
+  ],
+).enableRLS();
+
+export const importItems = pgTable(
+  "import_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    batchId: uuid("batch_id").notNull(),
+    requestId: uuid("request_id").notNull(),
+    sha256: text("sha256").notNull(),
+    fileName: text("file_name").notNull(),
+    contentType: text("content_type").$type<"image/jpeg" | "image/png" | "image/webp">().notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    photoPath: text("photo_path"),
+    state: importItemStateEnum("state").notNull().default("pending_upload"),
+    metadata: jsonb("metadata").$type<ImportMetadata>().notNull(),
+    analysis: jsonb("analysis").$type<MemoryAnalysis>(),
+    groupKey: text("group_key"),
+    confirmedStop: jsonb("confirmed_stop").$type<ConfirmedMemoryStop>(),
+    duplicateOfItemId: uuid("duplicate_of_item_id"),
+    editionId: uuid("edition_id").references(() => editions.id, { onDelete: "set null" }),
+    error: jsonb("error").$type<{ code: string; message: string; retryable: boolean }>(),
+    leaseToken: uuid("lease_token"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+    attempts: integer("attempts").notNull().default(0),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.batchId, table.ownerId],
+      foreignColumns: [importBatches.id, importBatches.ownerId],
+      name: "import_items_batch_owner_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.duplicateOfItemId, table.ownerId],
+      foreignColumns: [table.id, table.ownerId],
+      name: "import_items_duplicate_owner_fk",
+    }),
+    unique("import_items_owner_request_unique").on(table.ownerId, table.requestId),
+    unique("import_items_id_owner_unique").on(table.id, table.ownerId),
+    uniqueIndex("import_items_owner_hash_unique")
+      .on(table.ownerId, table.sha256)
+      .where(sql`${table.state} <> 'duplicate'`),
+    index("import_items_batch_idx").on(table.batchId, table.id),
+    index("import_items_owner_idx").on(table.ownerId, table.id),
+    check("import_items_hash_valid", sql`${table.sha256} ~ '^[a-f0-9]{64}$'`),
+    check(
+      "import_items_file_valid",
+      sql`char_length(${table.fileName}) BETWEEN 1 AND 255 AND ${table.sizeBytes} BETWEEN 1 AND 10485760 AND ${table.contentType} IN ('image/jpeg', 'image/png', 'image/webp')`,
+    ),
+    check(
+      "import_items_path_valid",
+      sql`${table.photoPath} IS NULL OR (${table.photoPath} LIKE ${table.ownerId}::text || '/%' AND char_length(${table.photoPath}) <= 512)`,
+    ),
+    check(
+      "import_items_group_valid",
+      sql`${table.groupKey} IS NULL OR char_length(${table.groupKey}) BETWEEN 1 AND 80`,
+    ),
+    check(
+      "import_items_duplicate_valid",
+      sql`(${table.state} = 'duplicate') = (${table.duplicateOfItemId} IS NOT NULL) AND (${table.duplicateOfItemId} IS NULL OR ${table.duplicateOfItemId} <> ${table.id})`,
+    ),
+    check(
+      "import_items_version_valid",
+      sql`${table.version} > 0 AND ${table.attempts} BETWEEN 0 AND 3`,
+    ),
+    check(
+      "import_items_lease_valid",
+      sql`(${table.leaseToken} IS NULL) = (${table.leaseExpiresAt} IS NULL)`,
+    ),
+  ],
+).enableRLS();
+
+export const tasteProfiles = pgTable(
+  "taste_profiles",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    draft: jsonb("draft").$type<TasteDraft>(),
+    published: jsonb("published").$type<TastePublished>(),
+    sharing: tasteSharingEnum("sharing").notNull().default("private"),
+    titleOverride: text("title_override"),
+    overrides: jsonb("overrides").$type<TasteOverride[]>().notNull().default([]),
+    preferences: jsonb("preferences")
+      .$type<TastePreferences>()
+      .notNull()
+      .default({ pace: null, budget: null, accessibility: null }),
+    selectedSources: jsonb("selected_sources").$type<TasteSourceRef[]>().notNull().default([]),
+    excludedSources: jsonb("excluded_sources").$type<TasteSourceRef[]>().notNull().default([]),
+    collageMomentIds: uuid("collage_moment_ids").array().notNull().default([]),
+    analysisState: tasteAnalysisStateEnum("analysis_state").notNull().default("idle"),
+    analysisVersion: integer("analysis_version").notNull().default(1),
+    analysisRequestId: uuid("analysis_request_id"),
+    leaseToken: uuid("lease_token"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    check(
+      "taste_profiles_version_valid",
+      sql`${table.version} > 0 AND ${table.analysisVersion} > 0`,
+    ),
+    check(
+      "taste_profiles_title_valid",
+      sql`${table.titleOverride} IS NULL OR char_length(${table.titleOverride}) BETWEEN 1 AND 120`,
+    ),
+    check("taste_profiles_collage_bounded", sql`cardinality(${table.collageMomentIds}) <= 6`),
+    check(
+      "taste_profiles_sources_bounded",
+      sql`jsonb_typeof(${table.selectedSources}) = 'array' AND jsonb_array_length(${table.selectedSources}) <= 100 AND jsonb_typeof(${table.excludedSources}) = 'array' AND jsonb_array_length(${table.excludedSources}) <= 100`,
+    ),
+    check(
+      "taste_profiles_overrides_bounded",
+      sql`jsonb_typeof(${table.overrides}) = 'array' AND jsonb_array_length(${table.overrides}) <= 20`,
+    ),
+    check(
+      "taste_profiles_published_required",
+      sql`${table.sharing} = 'private' OR ${table.published} IS NOT NULL`,
+    ),
+    check(
+      "taste_profiles_lease_valid",
+      sql`(${table.leaseToken} IS NULL) = (${table.leaseExpiresAt} IS NULL)`,
+    ),
+  ],
+).enableRLS();
+
+export const tasteEvidence = pgTable(
+  "taste_evidence",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => tasteProfiles.userId, { onDelete: "cascade" }),
+    sourceKind: text("source_kind").$type<TasteSourceRef["kind"]>().notNull(),
+    sourceId: uuid("source_id").notNull(),
+    interest: tasteInterestEnum("interest").notNull(),
+    intent: tasteIntentEnum("intent").notNull(),
+    confidence: real("confidence").notNull(),
+    explanation: text("explanation").notNull(),
+    analysisVersion: integer("analysis_version").notNull(),
+    excluded: boolean("excluded").notNull().default(false),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    unique("taste_evidence_source_interest_unique").on(
+      table.userId,
+      table.sourceKind,
+      table.sourceId,
+      table.interest,
+      table.intent,
+    ),
+    index("taste_evidence_owner_source_idx").on(table.userId, table.sourceKind, table.sourceId),
+    check(
+      "taste_evidence_source_valid",
+      sql`${table.sourceKind} IN ('edition', 'import_item', 'saved_place', 'favorite', 'recommendation')`,
+    ),
+    check("taste_evidence_confidence_valid", sql`${table.confidence} BETWEEN 0 AND 1`),
+    check(
+      "taste_evidence_explanation_valid",
+      sql`char_length(${table.explanation}) BETWEEN 1 AND 500`,
+    ),
+    check(
+      "taste_evidence_version_valid",
+      sql`${table.version} > 0 AND ${table.analysisVersion} > 0`,
+    ),
+  ],
+).enableRLS();
+
+export const tripAlbums = pgTable(
+  "trip_albums",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    outingId: uuid("outing_id").references(() => outings.id, { onDelete: "set null" }),
+    sourceBatchId: uuid("source_batch_id").references(() => importBatches.id, {
+      onDelete: "set null",
+    }),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    unique("trip_albums_owner_request_unique").on(table.ownerId, table.requestId),
+    index("trip_albums_owner_cursor_idx").on(table.ownerId, table.id),
+    check(
+      "trip_albums_text_valid",
+      sql`char_length(${table.title}) BETWEEN 1 AND 120 AND (${table.description} IS NULL OR char_length(${table.description}) <= 2000)`,
+    ),
+    check("trip_albums_version_valid", sql`${table.version} > 0`),
+  ],
+).enableRLS();
+
+export const tripAlbumMembers = pgTable(
+  "trip_album_members",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    albumId: uuid("album_id")
+      .notNull()
+      .references(() => tripAlbums.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    invitedBy: uuid("invited_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id").notNull(),
+    role: text("role").$type<"contributor">().notNull().default("contributor"),
+    state: memoryInvitationStateEnum("state").notNull().default("pending"),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    unique("trip_album_members_album_user_unique").on(table.albumId, table.userId),
+    unique("trip_album_members_inviter_request_unique").on(table.invitedBy, table.requestId),
+    index("trip_album_members_user_state_idx").on(table.userId, table.state, table.id),
+    check(
+      "trip_album_members_role_valid",
+      sql`${table.role} = 'contributor' AND ${table.userId} <> ${table.invitedBy}`,
+    ),
+    check("trip_album_members_version_valid", sql`${table.version} > 0`),
+  ],
+).enableRLS();
+
+export const memoryMoments = pgTable(
+  "memory_moments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id").notNull(),
+    albumId: uuid("album_id").references(() => tripAlbums.id, { onDelete: "set null" }),
+    sourceEditionId: uuid("source_edition_id"),
+    sourceImportItemId: uuid("source_import_item_id"),
+    placeId: uuid("place_id").references(() => places.id),
+    capturedAt: timestamp("captured_at", { withTimezone: true }),
+    timezone: text("timezone"),
+    groupKey: text("group_key"),
+    note: text("note"),
+    withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.sourceEditionId, table.authorId, table.placeId],
+      foreignColumns: [editions.id, editions.userId, editions.placeId],
+      name: "memory_moments_edition_owner_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.sourceImportItemId, table.authorId],
+      foreignColumns: [importItems.id, importItems.ownerId],
+      name: "memory_moments_import_owner_fk",
+    }).onDelete("cascade"),
+    unique("memory_moments_author_request_unique").on(table.authorId, table.requestId),
+    unique("memory_moments_id_author_unique").on(table.id, table.authorId),
+    uniqueIndex("memory_moments_import_item_unique").on(table.sourceImportItemId),
+    index("memory_moments_author_cursor_idx").on(table.authorId, table.id),
+    index("memory_moments_album_cursor_idx").on(table.albumId, table.id),
+    check(
+      "memory_moments_source_valid",
+      sql`num_nonnulls(${table.sourceEditionId}, ${table.sourceImportItemId}) = 1 AND (${table.sourceEditionId} IS NULL OR ${table.placeId} IS NOT NULL)`,
+    ),
+    check(
+      "memory_moments_stop_valid",
+      sql`num_nonnulls(${table.placeId}, ${table.capturedAt}, ${table.timezone}) IN (0, 3)`,
+    ),
+    check(
+      "memory_moments_text_valid",
+      sql`(${table.note} IS NULL OR char_length(${table.note}) <= 2000) AND (${table.groupKey} IS NULL OR char_length(${table.groupKey}) BETWEEN 1 AND 80) AND (${table.timezone} IS NULL OR char_length(${table.timezone}) BETWEEN 1 AND 100)`,
+    ),
+    check("memory_moments_version_valid", sql`${table.version} > 0`),
+  ],
+).enableRLS();
+
+export const momentPersonTags = pgTable(
+  "moment_person_tags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    momentId: uuid("moment_id").notNull(),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id").notNull(),
+    state: memoryInvitationStateEnum("state").notNull().default("pending"),
+    ...memoryTimestamps(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.momentId, table.senderId],
+      foreignColumns: [memoryMoments.id, memoryMoments.authorId],
+      name: "moment_person_tags_author_fk",
+    }).onDelete("cascade"),
+    unique("moment_person_tags_moment_user_unique").on(table.momentId, table.userId),
+    unique("moment_person_tags_sender_request_unique").on(table.senderId, table.requestId),
+    index("moment_person_tags_recipient_state_idx").on(table.userId, table.state, table.id),
+    check("moment_person_tags_other_user", sql`${table.senderId} <> ${table.userId}`),
+    check("moment_person_tags_version_valid", sql`${table.version} > 0`),
   ],
 ).enableRLS();
 
