@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server";
-import { parseJsonBody } from "@/lib/api";
-import { wishlistCreateRequestSchema } from "@/lib/schemas";
+import { createdResponse, dataResponse, parseJsonBody, withApiUser } from "@/lib/api";
+import { wishlistCreateSchema } from "@/lib/contracts/api";
+import { createWishlist, getWishlists } from "@/lib/server/wishlists";
 
-export async function GET() {
-  return NextResponse.json({ error: "not_implemented", owner: "Social" }, { status: 501 });
+export async function GET(request: Request) {
+  return withApiUser(request, async (auth) => dataResponse(await getWishlists(auth.userId)));
 }
 export async function POST(request: Request) {
-  const parsed = await parseJsonBody(request, wishlistCreateRequestSchema);
-  if ("response" in parsed) return parsed.response;
-  return NextResponse.json({ error: "not_implemented", owner: "Social" }, { status: 501 });
+  return withApiUser(request, async (auth) => {
+    const parsed = await parseJsonBody(request, wishlistCreateSchema);
+    if ("response" in parsed) return parsed.response;
+    return createdResponse(await createWishlist(auth.userId, parsed.data));
+  });
 }

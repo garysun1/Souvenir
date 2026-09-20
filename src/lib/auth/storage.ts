@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 import { photoUploadSchema, uuidSchema } from "@/lib/contracts/api";
+import { ApiError } from "@/lib/server/errors";
 import type {
   AuthContext,
   ErrorCode,
@@ -16,13 +17,9 @@ const readLifetime = 300;
 const extensions = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
 type ContentType = keyof typeof extensions;
 
-export class CaptureStorageError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly code: ErrorCode,
-    message: string,
-  ) {
-    super(message);
+export class CaptureStorageError extends ApiError {
+  constructor(status: number, code: ErrorCode, message: string) {
+    super(status, code, message);
     this.name = "CaptureStorageError";
   }
 }
@@ -158,6 +155,14 @@ export async function validateCapturePhoto(
       "The uploaded photo has an invalid size or image type.",
     );
   }
+}
+
+export async function verifyCapturePhoto(
+  auth: AuthContext,
+  requestId: string,
+  path: string,
+): Promise<void> {
+  return validateCapturePhoto(auth, path, requestId);
 }
 
 export async function signCapturePhoto(auth: AuthContext, path: string): Promise<SignedPhotoDto> {
