@@ -7,18 +7,19 @@ import { localDate, parseBudgetCents, parseMinute, validCalendarDate } from '@/d
 import type { Plan } from '@/domain/types';
 import { placeById, places } from '@/fixtures/catalog';
 import { useApp } from '@/state/AppProvider';
+import { suggestedStops } from '../../../../../shared/journey';
 
 export function AccountPlanner({ context }: { context: { placeIds?: string; wishlistId?: string; planId?: string } }) {
   const { state, commit } = useApp();
   const base = state.plans.find(plan => plan.id === context.planId);
   const list = state.wishlists.find(item => item.id === (base?.wishlistId ?? context.wishlistId));
-  const [title, setTitle] = useState(base?.title ?? 'An afternoon out');
+  const [title, setTitle] = useState(base?.title ?? list?.title ?? 'An afternoon out');
   const [date, setDate] = useState(base?.constraints.date ?? localDate(new Date().toISOString()));
   const [time, setTime] = useState('14:00');
   const [duration, setDuration] = useState('60');
   const [travel, setTravel] = useState('15');
   const [cost, setCost] = useState('0');
-  const [selected, setSelected] = useState<string[]>(base?.stops.map(stop => stop.placeId) ?? context.placeIds?.split(',').filter(id => !!placeById(id)) ?? []);
+  const [selected, setSelected] = useState<string[]>(base?.stops.map(stop => stop.placeId) ?? [...new Set(context.placeIds?.split(',') ?? (list ? suggestedStops(list, 'you', 30) : []))].filter(id => !!placeById(id)).slice(0, 30));
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
   const pending = useRef<Plan | undefined>(undefined);
@@ -27,6 +28,7 @@ export function AccountPlanner({ context }: { context: { placeIds?: string; wish
   const save = async () => {
     setMessage('');
     try {
+      if (context.wishlistId && !list) throw new Error('This shared list is unavailable. Open a list you belong to before planning together.');
       if (!pending.current) {
         const start = parseMinute(time); const visit = Number(duration); const transit = Number(travel); const cents = parseBudgetCents(cost);
         if (!title.trim() || !validCalendarDate(date) || start === null || !selected.length || selected.length > 30 || !Number.isInteger(visit) || visit < 1 || !Number.isInteger(transit) || transit < 0 || cents === null) throw new Error('Choose places, a valid date/time and nonnegative estimates. Visit time must be at least one minute.');
@@ -56,7 +58,7 @@ export function AccountPlanner({ context }: { context: { placeIds?: string; wish
       {list && <T>Members of {list.title} can see this saved plan.</T>}
       <Field label="Plan title" value={title} onChangeText={setTitle} editable={!locked} maxLength={200} />
       <Field label="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} editable={!locked} />
-      <Field label="Start time in Los Angeles (HH:MM)" value={time} onChangeText={setTime} editable={!locked} />
+      <Field label="Start time at your destinations (HH:MM)" value={time} onChangeText={setTime} editable={!locked} />
       <Field label="Estimated minutes at each stop" value={duration} onChangeText={setDuration} editable={!locked} keyboardType="numeric" />
       <Field label="Estimated walking minutes before each stop" value={travel} onChangeText={setTravel} editable={!locked} keyboardType="numeric" />
       <Field label="Your estimated dollars per stop (not verified admission)" value={cost} onChangeText={setCost} editable={!locked} keyboardType="decimal-pad" />

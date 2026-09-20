@@ -8,7 +8,7 @@ const categoryMap: Record<ApiCategory, Category> = { nature: 'park', culture: 'c
 export const canonicalCategory: Record<Category, ApiCategory> = { park: 'nature', cultural: 'culture', landmark: 'landmark', food: 'food', hidden_gem: 'hidden_gem' };
 export const mobileCategory = (category: ApiCategory) => categoryMap[category];
 export const defaultPreferences = (): Preferences => ({
-  onboardingComplete: true, tastes: [], collectionView: 'list', collectionSection: 'been',
+  onboardingComplete: true, tastes: [], collectionView: 'album', collectionSection: 'been',
   offline: false, reducedMotion: false, sourceStatus: 'unavailable', identifyFailure: false,
   name: '', handle: '', bio: '',
 });
@@ -22,7 +22,7 @@ export function mapEdition(edition: EditionDto, userId: string): Edition {
     photoUri: edition.photo?.url, photoPath: edition.photo?.path, photoExpiresAt: edition.photo?.expiresAt,
     visitedAt: edition.capturedAt, timezone: edition.timezone, companions: edition.companions,
     moment: edition.note ?? '', sequence: edition.visitSequence, variant: edition.variant, origin: edition.origin === 'legacy' ? 'seed' : edition.origin,
-    outingId: edition.outingId ?? undefined, importSourceId: edition.importSourceId ?? undefined,
+    outingId: edition.outingId ?? undefined, importSourceId: edition.importSourceId ?? undefined, visibility: edition.visibility ?? 'private',
   };
 }
 export function mapPlan(plan: PlanDto, userId: string): Plan {

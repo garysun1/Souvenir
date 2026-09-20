@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { mutualDestinations } from "../../../shared/journey";
 import type { WishlistCreate, WishlistDto } from "../../../shared/api-contract";
 import { AccountRequired, ErrorNotice, RefreshAccount } from "./account-state";
 import { useAccount } from "./account-provider";
@@ -48,7 +50,7 @@ function Lists() {
   }
   const lists = data!.wishlists.filter((list) => list.isShared);
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div id="shared-lists" className="mx-auto max-w-3xl scroll-mt-24 space-y-6">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-brand">Shared lists</h1>
         <RefreshAccount />
@@ -139,6 +141,30 @@ function SharedList({ list }: { list: WishlistDto }) {
         saved by everyone
       </p>
       <ErrorNotice message={error} />
+      {list.entries.length > 0 && (
+        <div className="flex flex-wrap gap-4">
+          <Link
+            href={`/plan?wishlistId=${list.id}`}
+            className="inline-flex min-h-11 items-center rounded-full bg-brand px-4 text-sm text-white"
+          >
+            Plan an outing
+          </Link>
+          {mutualDestinations(list, snapshot.user.id).length > 0 && (
+            <Link
+              href={`/plan?wishlistId=${list.id}&placeIds=${mutualDestinations(
+                list,
+                snapshot.user.id,
+              )
+                .map((entry) => entry.placeId)
+                .slice(0, 6)
+                .join(",")}`}
+              className="py-3 text-sm text-brand underline"
+            >
+              Plan places you both saved
+            </Link>
+          )}
+        </div>
+      )}
       <details>
         <summary className="cursor-pointer py-3 text-sm font-medium">Members</summary>
         <ul className="space-y-3">

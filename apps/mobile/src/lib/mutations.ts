@@ -14,7 +14,7 @@ export function editionInput(state: AppState, action: Extract<Action, { type: 'A
     requestId: edition.requestId, placeId: edition.placeId, capturedAt: edition.visitedAt,
     timezone: edition.timezone, note: edition.moment, companions: edition.companions,
     variant: edition.companions.length ? 'group' : state.editions.some(item => item.placeId === edition.placeId) ? 'revisit' : 'standard',
-    photoPath: photoPath ?? null, origin: 'capture', outingId: edition.outingId ?? null,
+    photoPath: photoPath ?? null, origin: 'capture', outingId: edition.outingId ?? null, visibility: edition.visibility ?? 'private',
   };
 }
 export function planContent(plan: Plan, userId: string): PlanContent {

@@ -1,3 +1,5 @@
+import type { Visibility } from '../../../../shared/api-contract';
+
 export type Category = 'park' | 'cultural' | 'landmark' | 'food' | 'hidden_gem';
 export type Sentiment = 'recommend' | 'depends' | 'skip';
 export type SourceStatus = 'sample' | 'unavailable' | 'stale';
@@ -25,12 +27,14 @@ export interface Edition {
   origin: 'capture' | 'import' | 'seed'; outingId?: string; importSourceId?: string;
   photoPath?: string; photoExpiresAt?: string;
   variant?: 'standard' | 'revisit' | 'group' | 'seasonal';
+  visibility?: Visibility;
 }
 export interface CaptureDraft {
   id: string; placeId?: string; photoUri?: string; visitedAt: string; companions: string[];
   moment: string; outingId?: string; status: 'photo' | 'identify' | 'confirm' | 'reveal' | 'saved';
   editionId?: string;
   timezone?: string;
+  visibility?: Visibility;
   submittedEdition?: import('../../../../shared/api-contract').EditionCreate;
 }
 export interface Wishlist { id: string; title: string; memberIds: string[]; entries: { placeId: string; saverIds: string[]; completedBy: string[] }[]; isDefault?: boolean; ownerId?: string; isShared?: boolean }

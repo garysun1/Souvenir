@@ -14,20 +14,28 @@ import { Input } from "@/components/ui/input";
 import { errorMessage } from "@/lib/web/api";
 import { minuteLabel, samplePlan } from "@/lib/web/plans";
 import { localDateTime } from "@/lib/web/collection";
+import { suggestedStops } from "../../../shared/journey";
 
-export function PlanContent() {
+type PlanContext = { placeIds?: string; wishlistId?: string; planId?: string };
+
+export function PlanContent({ context = {} }: { context?: PlanContext }) {
   return (
     <AccountRequired>
-      <Plans />
+      <Plans context={context} />
     </AccountRequired>
   );
 }
 
-function Plans() {
+function Plans({ context }: { context: PlanContext }) {
   const { data, mutate } = useAccount();
-  const [creating, setCreating] = useState(false);
+  const list = data!.wishlists.find((item) => item.id === context.wishlistId);
+  const [creating, setCreating] = useState(Boolean(context.placeIds || context.wishlistId));
   const [pending, setPending] = useState<PlanCreate | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
+    [...new Set(context.placeIds?.split(",") ?? (list ? suggestedStops(list, data!.user.id) : []))]
+      .filter((id) => data!.places.some((place) => place.id === id))
+      .slice(0, 6),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const snapshot = data!;
@@ -37,6 +45,7 @@ function Plans() {
     setBusy(true);
     setError(null);
     try {
+      if (context.wishlistId && !list) throw new Error("This shared list is unavailable.");
       const fields = new FormData(event.currentTarget);
       const body =
         pending ??
@@ -47,6 +56,7 @@ function Plans() {
           String(fields.get("date")),
           selectedIds,
           snapshot.places,
+          list,
         );
       setPending(body);
       await mutate("/api/outings", { method: "POST", body });
@@ -68,10 +78,21 @@ function Plans() {
       <p className="text-sm text-text-secondary">
         Accepted plans sync with mobile. Completing visits updates each plan&apos;s status.
       </p>
-      {!creating && <Button onClick={() => setCreating(true)}>Draft a sample itinerary</Button>}
+      {context.wishlistId && !list && (
+        <ErrorNotice message="That list is unavailable. Open a list you belong to before planning together." />
+      )}
+      {!creating && <Button onClick={() => setCreating(true)}>Plan an outing</Button>}
       {creating && (
         <form onSubmit={accept} className="space-y-4 rounded-xl border border-border p-4">
-          <h2 className="font-serif text-xl font-bold">Sample itinerary · Simulation</h2>
+          <h2 className="font-serif text-xl font-bold">
+            {list ? `Plan from ${list.name}` : "Your next outing"}
+          </h2>
+          {list && (
+            <p className="text-sm">
+              {list.memberIds.length} list members will have access to this plan. Choose a date
+              together; your personal memories remain private.
+            </p>
+          )}
           <p className="text-sm text-text-secondary">
             45 minutes per stop, with 15 minutes between stops, starting at 14:00. Route, travel
             time, costs, hours, weather and bookings are not verified.
@@ -86,7 +107,13 @@ function Plans() {
           <fieldset disabled={busy || Boolean(pending)} className="space-y-3">
             <label className="block space-y-2 text-sm">
               Title
-              <Input name="title" required maxLength={200} placeholder="An afternoon out" />
+              <Input
+                name="title"
+                required
+                maxLength={200}
+                placeholder="An afternoon out"
+                defaultValue={list?.name ?? ""}
+              />
             </label>
             <label className="block space-y-2 text-sm">
               Date
@@ -120,8 +147,15 @@ function Plans() {
             </div>
           </fieldset>
           <div className="flex flex-wrap gap-2">
-            <Button type="submit" disabled={busy || !selectedIds.length}>
-              {busy ? "Accepting…" : pending ? "Retry accepting plan" : "Accept sample plan"}
+            <Button
+              type="submit"
+              disabled={busy || !selectedIds.length || Boolean(context.wishlistId && !list)}
+            >
+              {busy
+                ? "Saving…"
+                : pending
+                  ? "Retry saving plan"
+                  : "Save outing with estimated schedule"}
             </Button>
             <Button
               variant="ghost"
@@ -193,7 +227,10 @@ function SavedPlan({ plan }: { plan: PlanDto }) {
     }
   }
   return (
-    <section className="space-y-4 rounded-xl border border-border p-4">
+    <section
+      id={`plan-${plan.id}`}
+      className="scroll-mt-24 space-y-4 rounded-xl border border-border p-4"
+    >
       <h2 className="font-serif text-xl font-bold text-brand">{plan.plan.title}</h2>
       <p className="text-sm capitalize">
         {plan.plan.constraints.date} · {plan.status} ·{" "}
