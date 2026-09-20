@@ -6,5 +6,10 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}"],
   },
-  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "server-only": path.resolve(__dirname, "./node_modules/server-only/empty.js"),
+    },
+  },
 });
