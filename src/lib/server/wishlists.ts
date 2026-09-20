@@ -9,7 +9,8 @@ import {
   wishlistSaves,
 } from "@/lib/db/schema";
 import type { WishlistCreate, WishlistDto, WishlistItemPut } from "../../../shared/api-contract";
-import { requirePlaces } from "./catalog";
+import { requireSocialPlaces } from "./social-access";
+import { recomputeStats } from "./stats";
 import { ApiError, invalidRequest, notFound } from "./errors";
 import {
   completeRequest,
@@ -158,7 +159,7 @@ export async function putWishlistItem(
   return db.transaction(async (tx) => {
     await lockUser(tx, userId);
     const list = await requireWishlist(tx, userId, id, true);
-    await requirePlaces(tx, [input.placeId]);
+    await requireSocialPlaces(userId, [input.placeId], tx);
     if (!input.saved) {
       if (input.completed) invalidRequest("An unsaved place cannot be completed.");
       await tx
@@ -178,12 +179,14 @@ export async function putWishlistItem(
           placeId: input.placeId,
           userId,
           completed: input.completed ?? false,
+          visibility: input.visibility ?? "private",
         })
         .onConflictDoUpdate({
           target: [wishlistSaves.wishlistId, wishlistSaves.placeId, wishlistSaves.userId],
-          set: input.completed === undefined ? { userId } : { completed: input.completed },
+          set: { userId, completed: input.completed, visibility: input.visibility },
         });
     }
+    await recomputeStats({ placeIds: [input.placeId], expandLocalities: false }, tx);
     return serializeWishlist(tx, list);
   });
 }
@@ -224,9 +227,10 @@ export async function removeWishlistMember(
     const list = await requireWishlist(tx, userId, id, true);
     requireOwner(list, userId);
     if (memberId === list.ownerId) invalidRequest("The owner must remain a member.");
-    await tx
+    const removed = await tx
       .delete(wishlistSaves)
-      .where(and(eq(wishlistSaves.wishlistId, id), eq(wishlistSaves.userId, memberId)));
+      .where(and(eq(wishlistSaves.wishlistId, id), eq(wishlistSaves.userId, memberId)))
+      .returning({ id: wishlistSaves.placeId });
     await tx
       .delete(wishlistMembers)
       .where(and(eq(wishlistMembers.wishlistId, id), eq(wishlistMembers.userId, memberId)));
@@ -241,6 +245,7 @@ export async function removeWishlistMember(
           ),
         ),
       );
+    await recomputeStats({ placeIds: removed.map((row) => row.id), expandLocalities: false }, tx);
     return serializeWishlist(tx, list);
   });
 }

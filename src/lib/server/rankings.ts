@@ -8,7 +8,9 @@ import type {
   RankingGroupDto,
   RankingPut,
 } from "../../../shared/api-contract";
-import { requirePlaces } from "./catalog";
+import { requireSocialPlaces } from "./social-access";
+import { syncRankingActivity } from "./activity";
+import { recomputeStats } from "./stats";
 import { invalidRequest } from "./errors";
 import { lockUser, type Database, type Transaction } from "./transactions";
 
@@ -136,7 +138,7 @@ export async function putRanking(userId: string, placeId: string, input: Ranking
       ...(input.comparedTo ? [input.comparedTo] : []),
       ...(input.tiedWith ? [input.tiedWith] : []),
     ];
-    await requirePlaces(tx, ids);
+    await requireSocialPlaces(userId, ids, tx);
     await requireOwnVisits(tx, userId, ids);
     const [place] = await tx.select().from(places).where(eq(places.id, placeId));
     const current = await getRankings(userId, tx);
@@ -206,6 +208,7 @@ export async function putRanking(userId: string, placeId: string, input: Ranking
         comparedTo: input.comparedTo ?? null,
         tiedWith: input.tiedWith ?? null,
         rankScore: null,
+        visibility: input.visibility ?? "private",
       })
       .onConflictDoUpdate({
         target: [rankings.userId, rankings.placeId],
@@ -217,6 +220,7 @@ export async function putRanking(userId: string, placeId: string, input: Ranking
           tiedWith: input.tiedWith ?? null,
           rankScore: null,
           updatedAt: new Date(),
+          visibility: input.visibility,
         },
       });
     if (group) {
@@ -232,6 +236,8 @@ export async function putRanking(userId: string, placeId: string, input: Ranking
       }
       await saveGroup(tx, userId, group);
     }
+    await syncRankingActivity(tx, userId, placeId);
+    await recomputeStats({ placeIds: [placeId], expandLocalities: false }, tx);
     return getRankings(userId, tx);
   });
 }
@@ -258,7 +264,7 @@ export async function putPlacePreference(
 ): Promise<PlacePreferenceDto> {
   return db.transaction(async (tx) => {
     await lockUser(tx, userId);
-    await requirePlaces(tx, [placeId]);
+    await requireSocialPlaces(userId, [placeId], tx);
     const [row] = await tx
       .insert(placePreferences)
       .values({ userId, placeId, ...input })
