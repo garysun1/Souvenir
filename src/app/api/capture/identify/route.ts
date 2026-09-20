@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
-import { parseJsonBody } from "@/lib/api";
-import { getAiProvider } from "@/lib/ai";
+import { dataResponse, parseJsonBody, withApiUser } from "@/lib/api";
+import { mockProvider } from "@/lib/ai/mock";
 import { identifyRequestSchema } from "@/lib/schemas";
 
 export async function POST(request: Request) {
-  const parsed = await parseJsonBody(request, identifyRequestSchema);
-  if ("response" in parsed) return parsed.response;
-  return NextResponse.json({ data: await getAiProvider().identifyPlace(parsed.data) });
+  return withApiUser(request, async () => {
+    const parsed = await parseJsonBody(request, identifyRequestSchema.strict());
+    if ("response" in parsed) return parsed.response;
+    return dataResponse({
+      ...(await mockProvider.identifyPlace()),
+      provenance: "simulation",
+      message: "Sample suggestions only. Choose your place from the catalog.",
+    });
+  });
 }

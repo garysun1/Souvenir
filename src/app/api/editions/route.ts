@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
-import { parseJsonBody } from "@/lib/api";
-import { editionCreateRequestSchema } from "@/lib/schemas";
+import { createdResponse, parseJsonBody, withApiUser } from "@/lib/api";
+import { editionCreateSchema } from "@/lib/contracts/api";
+import { createEdition } from "@/lib/server/editions";
 
 export async function POST(request: Request) {
-  const parsed = await parseJsonBody(request, editionCreateRequestSchema);
-  if ("response" in parsed) return parsed.response;
-  return NextResponse.json(
-    { error: "not_implemented", owner: "Capture & Reveal" },
-    { status: 501 },
-  );
+  return withApiUser(request, async (auth) => {
+    const parsed = await parseJsonBody(request, editionCreateSchema);
+    if ("response" in parsed) return parsed.response;
+    return createdResponse(await createEdition(auth, parsed.data));
+  });
 }
