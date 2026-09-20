@@ -8,6 +8,7 @@ import { downtownSet, placeById } from '@/fixtures/catalog';
 import { useApp } from '@/state/AppProvider';
 import { collectedPlaceIds, ownEditions, setProgress } from '@/state/selectors';
 import { AccountSets } from '@/features/collection/AccountSets';
+import { AccountProfileStats } from '@/features/social/AccountSocial';
 
 export default function Profile() {
   const { state, commit } = useApp();
@@ -28,9 +29,9 @@ export default function Profile() {
       <T muted style={{ textAlign: 'center', maxWidth: 290 }}>{state.preferences.bio}</T>
       <Button label="Edit profile" variant="outline" icon="edit" onPress={() => setEditing(true)} style={{ minHeight: 42 }} />
     </View>
-    <View style={{ flexDirection: 'row', marginVertical: 22, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.divider, paddingVertical: 17 }}>
+    {state.mode === 'account' ? <AccountProfileStats /> : <View style={{ flexDirection: 'row', marginVertical: 22, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.divider, paddingVertical: 17 }}>
       {[['Places', collected.length], ['Editions', editions.length], ['Recommended', assessed]].map(([label, value], index) => <View key={label} style={{ flex: 1, alignItems: 'center', gap: 4, borderLeftWidth: index ? 1 : 0, borderColor: colors.divider }}><T variant="heading">{value}</T><T variant="small" muted>{label}</T></View>)}
-    </View>
+    </View>}
     <DemoLabel label={state.mode === 'account' ? 'Your private account collection' : `${state.mode === 'sample' ? 'Sample collection' : 'Your collection'} · Stored locally`} />
     <SectionHeading title="Recent memories" action={editions.length ? 'See collection' : undefined} onPress={() => router.push('/collection')} />
     {editions.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
@@ -45,14 +46,14 @@ export default function Profile() {
     <ProfileRow icon="edit" title="Private tips" subtitle={`${Object.values(state.tips).filter(Boolean).length} notes only you can see`} onPress={() => router.push('/profile/tips')} />
     <ProfileRow icon="clock" title="Saved plans" subtitle={`${state.plans.length} accepted afternoons`} onPress={() => router.push('/plans')} />
     <Divider />
-    <SectionHeading title="Bring your past along" />
+    {state.mode !== 'account' && <><SectionHeading title="Bring your past along" />
     <View style={{ borderRadius: 16, backgroundColor: colors.surface, padding: 18, gap: 10 }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><Icon name="upload" /><T variant="heading" style={{ flex: 1 }}>Photo import</T></View><T muted>Review a local Dropbox-style sample and turn old travel photos into personal editions.</T><Button label="Try the sample import" variant="outline" onPress={() => router.push('/import/dropbox')} /></View>
     <SectionHeading title="A glimpse ahead" />
     <View style={{ gap: 10 }}>
       <ProfileRow icon="image" title="Pocket diorama" subtitle="Preview one memory in depth" onPress={() => editions.length ? router.push({ pathname: '/previews/diorama/[editionId]', params: { editionId: editions[0].id } }) : router.push('/capture')} />
       <ProfileRow icon="globe" title="New city editions" subtitle="See how the collection could travel" onPress={() => router.push('/previews/cities')} />
       <ProfileRow icon="share" title="Visit handoff" subtitle="Explore a clearly labeled booking preview" onPress={() => router.push({ pathname: '/previews/booking/[planId]', params: { planId: state.plans[0]?.id ?? 'preview' } })} />
-    </View>
+    </View></>}
     <Sheet visible={editing} title="Your profile" onClose={() => setEditing(false)}>
       <Field label="Name" value={name} onChangeText={setName} maxLength={40} />
       {state.mode === 'account' ? <><T selectable>Account handle: {state.preferences.handle}</T><Field label="Home city" value={homeCity} onChangeText={setHomeCity} maxLength={100} /></> : <Field label="Handle" value={handle} onChangeText={setHandle} autoCapitalize="none" maxLength={28} />}

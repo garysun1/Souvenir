@@ -5,7 +5,7 @@ export interface TokenProvider {
   refreshSession(): Promise<SessionResult>;
 }
 export class ApiError extends Error {
-  constructor(message: string, public status = 0, public code = 'network_error') { super(message); }
+  constructor(message: string, public status = 0, public code = 'network_error', public details?: unknown) { super(message); }
 }
 export class AccountScope {
   private controller = new AbortController();
@@ -28,6 +28,9 @@ export class AccountApi {
   ) {}
   assertCurrent() { this.scope.assertCurrent(); }
   async request<T>(path: string, method = 'GET', input?: unknown): Promise<T> {
+    return (await this.page<T>(path, method, input)).data;
+  }
+  async page<T>(path: string, method = 'GET', input?: unknown): Promise<{ data: T; nextCursor?: string | null }> {
     const body = input === undefined ? undefined : JSON.stringify(input);
     for (let attempt = 0; attempt < 2; attempt++) {
       this.assertCurrent();
@@ -59,9 +62,10 @@ export class AccountApi {
       if (!response.ok || !payload || typeof payload !== 'object' || !('data' in payload) || 'error' in payload) {
         const message = payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string' ? payload.message : 'The request failed. Please retry.';
         const code = payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string' ? payload.error : 'invalid_response';
-        throw new ApiError(response.status === 401 ? 'Your session expired. Sign in again to continue.' : message, response.status, code);
+        const details = payload && typeof payload === 'object' && 'details' in payload ? payload.details : undefined;
+        throw new ApiError(response.status === 401 ? 'Your session expired. Sign in again to continue.' : message, response.status, code, details);
       }
-      return payload.data as T;
+      return { data: payload.data as T, nextCursor: 'nextCursor' in payload && typeof payload.nextCursor === 'string' ? payload.nextCursor : null };
     }
     throw new ApiError('Sign in again to continue.', 401, 'unauthorized');
   }

@@ -21,8 +21,9 @@ export default function IdentifyCapture() {
   useEffect(() => {
     if (!draft || draft.status !== 'identify') return;
     if (state.mode === 'account') {
-      void commit({ type: 'DRAFT', draft: { ...draft, status: 'confirm' } }).then(() => router.replace('/capture/confirm')).catch(() => setMessage('Could not open the draft. Retry while connected.'));
-      return;
+      let active = true;
+      void commit({ type: 'DRAFT', draft: { ...draft, status: 'confirm' } }).then(() => { if (active) router.replace('/capture/confirm'); }).catch(() => { if (active) setMessage('Could not open the draft. Retry while connected.'); });
+      return () => { active = false; };
     }
     const sequence = ++request.current;
     const controller = new AbortController();
@@ -43,7 +44,7 @@ export default function IdentifyCapture() {
   return <Screen>
     <CaptureHeader title="Finding a place" onPause={() => { ++request.current; setMessage('Identification paused. Retry when you are ready, or choose a place manually.'); }} />
     <View><PlacePhoto placeId={draft.placeId ?? ''} uri={draft.photoUri} style={captureStyles.photoRounded} />{!reducedMotion && <Animated.View pointerEvents="none" style={[captureStyles.scanLine, { transform: [{ translateY: scan.interpolate({ inputRange: [0, 1], outputRange: [24, 250] }) }] }]} />}</View>
-    <View style={{ alignItems: 'center', gap: 10, paddingVertical: 24 }}><T variant="heading">Finding a place</T><T muted style={{ textAlign: 'center' }}>Comparing your capture with deterministic fixture context. No pixels are sent anywhere.</T><DemoLabel label="Demo identification" /></View>
+    <View style={{ alignItems: 'center', gap: 10, paddingVertical: 24 }}><T variant="heading">{state.mode === 'account' ? 'Preparing your visit' : 'Finding a place'}</T><T muted style={{ textAlign: 'center' }}>{state.mode === 'account' ? 'Choose and confirm the destination on the next screen. Your photo is private.' : 'Comparing your capture with deterministic fixture context. No pixels are sent anywhere.'}</T>{state.mode !== 'account' && <DemoLabel label="Demo identification" />}</View>
     {message && <View style={captureStyles.notice}><T>{message}</T><Button label="Try identification again" variant="outline" onPress={() => { setMessage(undefined); setAttempt(value => value + 1); }} /></View>}
     <Button label="Choose place manually" variant="ghost" onPress={async () => { ++request.current; await commit({ type: 'DRAFT', draft: { ...draft, placeId: undefined, status: 'confirm' } }); router.replace('/capture/confirm'); }} />
   </Screen>;

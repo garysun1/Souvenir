@@ -3,6 +3,9 @@ import type { AppState, CaptureDraft, Edition } from '@/domain/types';
 import { placeById, places, users } from '@/fixtures/catalog';
 
 export const CAPTURE_TIMEZONE = 'America/Los_Angeles';
+export function validTimezone(value: string) {
+  try { new Intl.DateTimeFormat('en', { timeZone: value }).format(); return !!value; } catch { return false; }
+}
 export const samplePhoto = (placeId: string) => `sample:${placeId}`;
 export const samplePlaceId = (uri?: string) => uri?.startsWith('sample:') ? uri.slice(7) : undefined;
 export const newCaptureId = () => randomUUID();
@@ -44,10 +47,13 @@ export function validateVisit(visitedAt: string, clock: string, moment = '', max
 export function captureToEdition(draft: CaptureDraft, clock: string): Omit<Edition, 'sequence'> {
   const error = validateVisit(draft.visitedAt, clock, draft.moment);
   if (error) throw new Error(error);
-  if (!draft.placeId || !placeById(draft.placeId)) throw new Error('Choose a catalog destination.');
-  return { id: `edition-${draft.id}`, requestId: draft.id, ownerId: 'you', placeId: draft.placeId,
-    photoUri: draft.photoUri, visitedAt: draft.visitedAt, timezone: CAPTURE_TIMEZONE,
-    companions: [...new Set(draft.companions.map(name => name.trim()).filter(name => placeById(draft.placeId!)?.canonical ? !!name : users.some(user => user.id === name && name !== 'you')))],
+  const place = draft.placeId ? placeById(draft.placeId) : undefined;
+  if (!place) throw new Error('Choose a catalog destination.');
+  const timezone = draft.timezone ?? (place.canonical ? place.timezone ?? 'UTC' : CAPTURE_TIMEZONE);
+  if (!validTimezone(timezone)) throw new Error('Confirm a valid visit timezone.');
+  return { id: `edition-${draft.id}`, requestId: draft.id, ownerId: 'you', placeId: place.id,
+    photoUri: draft.photoUri, visitedAt: draft.visitedAt, timezone,
+    companions: [...new Set(draft.companions.map(name => name.trim()).filter(name => place.canonical ? !!name : users.some(user => user.id === name && name !== 'you')))],
     moment: draft.moment.trim(), outingId: draft.outingId, origin: 'capture' };
 }
 
@@ -63,23 +69,24 @@ export function nextOutingStop(state: AppState, outingId?: string) {
   return outing?.placeIds.find(placeId => !state.editions.some(edition => edition.ownerId === 'you' && edition.outingId === outingId && edition.placeId === placeId));
 }
 
-export function localVisitInput(iso: string): string {
+export function localVisitInput(iso: string, timezone = CAPTURE_TIMEZONE): string {
   if (!Number.isFinite(Date.parse(iso))) return '';
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: CAPTURE_TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(iso));
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(iso));
   const part = (name: string) => parts.find(p => p.type === name)?.value;
   return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
 }
 
-/** Resolve an LA wall-clock time independently of the device zone; reject DST gaps. */
-export function parseLocalVisit(value: string): string | undefined {
+/** Resolve wall time in the selected zone, rejecting daylight-saving gaps. */
+export function parseLocalVisit(value: string, timezone = CAPTURE_TIMEZONE): string | undefined {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return undefined;
   const nominal = Date.parse(`${value}:00Z`);
   if (!Number.isFinite(nominal)) return undefined;
-  for (const offset of [7, 8]) {
-    const iso = new Date(nominal + offset * 3600000).toISOString();
-    if (localVisitInput(iso) === value) return iso;
-  }
-  return undefined;
+  if (!validTimezone(timezone)) return undefined;
+  const offsets = [-36, -12, 0, 12, 36].map(hours => {
+    const instant = nominal + hours * 3600000;
+    return Date.parse(`${localVisitInput(new Date(instant).toISOString(), timezone)}:00Z`) - instant;
+  });
+  return [...new Set(offsets)].map(offset => new Date(nominal - offset).toISOString()).sort().find(iso => localVisitInput(iso, timezone) === value);
 }
 
 /** Optional EXIF metadata is only an editable suggestion, never an identification claim. */

@@ -9,8 +9,15 @@ import { categoryLabels, placeById, users } from '@/fixtures/catalog';
 import { useApp } from '@/state/AppProvider';
 import { money, visitDate } from '@/state/selectors';
 import { PlaceSignal } from '@/features/discovery/PlaceSignals';
+import { AccountPlaceDetail } from '@/features/discovery/AccountPlaceDetail';
 
 export default function PlaceDetail() {
+  const { mode } = useApp();
+  const { placeId } = useLocalSearchParams<{ placeId: string }>();
+  if (mode === 'account') return <AccountPlaceDetail key={placeId} placeId={placeId} />;
+  return <DemoPlaceDetail />;
+}
+function DemoPlaceDetail() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const place = typeof placeId === 'string' ? placeById(placeId) : undefined;
   const { state, commit, error } = useApp();

@@ -3,12 +3,12 @@ import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import * as Linking from 'expo-linking';
 import { AppState as NativeAppState } from 'react-native';
-import type { BootstrapDto, SignedPhotoDto } from '../../../../shared/api-contract';
+import type { BootstrapDto, SignedPhotoDto, PlaceDto } from '../../../../shared/api-contract';
 import type { Action, AppState } from '@/domain/types';
-import { installCatalog, restoreFixtureCatalog } from '@/fixtures/catalog';
+import { installCatalog, mergeCatalog, restoreFixtureCatalog } from '@/fixtures/catalog';
 import { AccountApi, AccountScope } from '@/lib/api';
 import { confirmationRedirect, parseAuthCallback } from '@/lib/authLink';
-import { emptyAccount, installBootstrapCatalog, mapBootstrap } from '@/lib/bootstrap';
+import { emptyAccount, installBootstrapCatalog, mapBootstrap, mapPlace } from '@/lib/bootstrap';
 import { getConfig } from '@/lib/env';
 import { accountKey, encodeLocal, restoreLocal } from '@/lib/local';
 import { mutateAccount } from '@/lib/mutations';
@@ -27,6 +27,11 @@ interface Store {
   signUp: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>; startDemo: (mode: 'sample' | 'empty') => Promise<void>;
   signedPhoto: (editionId: string) => Promise<SignedPhotoDto>;
+  accountRequest: <T>(path: string, method?: string, input?: unknown) => Promise<T>;
+  accountWrite: <T>(path: string, method: string, input?: unknown) => Promise<T>;
+  accountPage: <T>(path: string) => Promise<{ data: T; nextCursor?: string | null }>;
+  mergePlaces: (places: PlaceDto[]) => void;
+  accountRevision: number;
 }
 const Context = createContext<Store | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -44,6 +49,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accountRevision, setAccountRevision] = useState(0);
   const publish = useCallback((next: AppState) => { reference.current = next; setState(next); }, []);
   const clearPrivate = useCallback(() => {
     scope.change(); setSessionScope(scope.capture()); api.current = undefined; currentUser.current = undefined; setUserId(undefined);
@@ -54,7 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const data = await client.request<BootstrapDto>('/api/bootstrap');
     client.assertCurrent();
     const next = mapBootstrap(data, client.userId, reference.current);
-    installBootstrapCatalog(data); publish(next); setReady(true); setError(null);
+    installBootstrapCatalog(data); publish(next); setAccountRevision(value => value + 1); setReady(true); setError(null);
     await AsyncStorage.setItem(accountKey(client.userId), encodeLocal(next));
     client.assertCurrent();
   }, [publish]);
@@ -166,7 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!client || modeRef.current !== 'account') throw new Error('Sign in before saving to your account.');
       if (action.type === 'DRAFT') {
         if (reference.current.captureDraft?.submittedEdition && action.draft?.id === reference.current.captureDraft.id &&
-          (action.draft.moment !== reference.current.captureDraft.moment || action.draft.placeId !== reference.current.captureDraft.placeId || action.draft.photoUri !== reference.current.captureDraft.photoUri || action.draft.visitedAt !== reference.current.captureDraft.visitedAt || JSON.stringify(action.draft.companions) !== JSON.stringify(reference.current.captureDraft.companions))) {
+          (action.draft.moment !== reference.current.captureDraft.moment || action.draft.placeId !== reference.current.captureDraft.placeId || action.draft.photoUri !== reference.current.captureDraft.photoUri || action.draft.visitedAt !== reference.current.captureDraft.visitedAt || action.draft.timezone !== reference.current.captureDraft.timezone || JSON.stringify(action.draft.companions) !== JSON.stringify(reference.current.captureDraft.companions))) {
           throw new Error('This capture has already been submitted. Retry saving it before editing the saved edition.');
         }
       } else {
@@ -230,7 +236,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!client) throw new Error('Sign in to view this private photo.');
     return client.request<SignedPhotoDto>(`/api/editions/${editionId}/photo`);
   }, [sessionScope]);
-  return <Context.Provider value={{ state, commit, error, clearError: () => setError(null), ready, authReady, mode, userId, refreshing, refresh, signIn, signUp, signOut, startDemo, signedPhoto }}>{children}</Context.Provider>;
+  const accountRequest = useCallback(async <T,>(path: string, method = 'GET', input?: unknown): Promise<T> => {
+    sessionScope.assertCurrent();
+    const client = api.current;
+    if (!client) throw new Error('Sign in to continue.');
+    return client.request<T>(path, method, input);
+  }, [sessionScope]);
+  const accountPage = useCallback(async <T,>(path: string) => {
+    sessionScope.assertCurrent();
+    const client = api.current;
+    if (!client) throw new Error('Sign in to continue.');
+    return client.page<T>(path);
+  }, [sessionScope]);
+  const accountWrite = useCallback(<T,>(path: string, method: string, input?: unknown): Promise<T> => {
+    const client = api.current;
+    const operation = queue.current.catch(() => undefined).then(async () => {
+      sessionScope.assertCurrent();
+      if (!client) throw new Error('Sign in to continue.');
+      const result = await client.request<T>(path, method, input);
+      await load(client);
+      client.assertCurrent();
+      return result;
+    });
+    queue.current = operation.catch(() => undefined);
+    return operation;
+  }, [load, sessionScope]);
+  const mergePlaces = useCallback((incoming: PlaceDto[]) => {
+    sessionScope.assertCurrent();
+    if (!api.current) throw new Error('Sign in to continue.');
+    mergeCatalog(incoming.map(mapPlace));
+    publish({ ...reference.current });
+  }, [publish, sessionScope]);
+  return <Context.Provider value={{ state, commit, error, clearError: () => setError(null), ready, authReady, mode, userId, refreshing, refresh, signIn, signUp, signOut, startDemo, signedPhoto, accountRequest, accountWrite, accountPage, mergePlaces, accountRevision }}>{children}</Context.Provider>;
 }
 export function useApp() {
   const store = useContext(Context);

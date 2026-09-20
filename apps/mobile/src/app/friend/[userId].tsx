@@ -9,6 +9,7 @@ import { categoryLabels, placeById, users } from '@/fixtures/catalog';
 import { openOuting, PersonalEditionTile, SocialUnavailable, styles, WishlistCard } from '@/features/social/components';
 import { useApp } from '@/state/AppProvider';
 import { visitDate } from '@/state/selectors';
+import { AccountFriendProfile } from '@/features/social/AccountSocial';
 
 const bios: Record<string, string> = {
   maya: 'Art afternoons, garden detours, and one more gallery.',
@@ -17,6 +18,12 @@ const bios: Record<string, string> = {
 };
 
 export default function FriendProfile() {
+  const { mode } = useApp();
+  const { userId } = useLocalSearchParams<{ userId: string }>();
+  if (mode === 'account') return <AccountFriendProfile key={userId} userId={userId} />;
+  return <DemoFriendProfile />;
+}
+function DemoFriendProfile() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { state } = useApp();
   const [tab, setTab] = useState<'collection' | 'saved'>('collection');
