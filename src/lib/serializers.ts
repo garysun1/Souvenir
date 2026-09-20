@@ -29,13 +29,24 @@ export function serializePlace(row: typeof places.$inferSelect): Place {
     fetchedAt: row.fetchedAt,
     visibility: row.visibility,
     description: row.description,
-    heroImageUrl: row.heroImageUrl,
+    heroImageUrl: null,
     rarityTier: row.rarityTier,
     rarityAppeal: row.rarityAppeal,
     rarityDiscoveryFreq: row.rarityDiscoveryFreq,
     rarityAvailability: row.rarityAvailability,
-    externalIds: row.externalIds ?? null,
-    stats: row.stats ?? null,
+    externalIds: null,
+    stats: {
+      verified: row.stats?.verified === true,
+      provenance:
+        row.stats?.provenance === "synthetic-fixture" || row.stats?.evidence === "synthetic-fixture"
+          ? "synthetic-fixture"
+          : row.stats?.provenance === "prototype-catalog"
+            ? "prototype-catalog"
+            : row.source === "user"
+              ? "user-contributed"
+              : "catalog",
+      rarityStatus: "unavailable",
+    },
     createdAt: row.createdAt,
   };
 }

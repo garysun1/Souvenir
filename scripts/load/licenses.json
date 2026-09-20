@@ -1,0 +1,23 @@
+{
+  "fixtureData": {
+    "license": "CC0-1.0",
+    "attribution": "Souvenir load harness contributors",
+    "description": "Authored synthetic points around eight city centers; not real destinations or provider data.",
+    "heroPolicy": "All fixture heroes are null. Stock capture photos must never become destination heroes."
+  },
+  "avatars": {
+    "license": "CC0-1.0",
+    "attribution": "Souvenir load harness contributors",
+    "description": "Locally generated geometric SVG identicons; no external avatar service."
+  },
+  "photos": {
+    "provider": "Lorem Picsum / Unsplash",
+    "documentation": "https://picsum.photos/",
+    "license": "Unsplash License",
+    "licenseUrl": "https://unsplash.com/license",
+    "sourceIds": ["0", "10", "20", "30", "40", "50", "60", "70"],
+    "usage": "Private local synthetic test visits only. No stock resale, competing stock service, destination hero promotion, or claim of documentary accuracy.",
+    "reproducibility": "Fetch explicit source IDs, record photographer/source page and SHA-256 of actual bytes. The remote bytes may change; hash mismatch requires a new run.",
+    "checkedAt": "2026-09-20"
+  }
+}

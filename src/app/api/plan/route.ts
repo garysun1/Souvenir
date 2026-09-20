@@ -7,7 +7,7 @@ import { requirePlaces } from "@/lib/server/catalog";
 import { db } from "@/lib/db";
 
 export async function POST(request: Request) {
-  return withApiUser(request, async () => {
+  return withApiUser(request, async (auth) => {
     const parsed = await parseJsonBody(
       request,
       planRequestSchema
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         .strict(),
     );
     if ("response" in parsed) return parsed.response;
-    await requirePlaces(db, parsed.data.placeIds);
+    await requirePlaces(db, parsed.data.placeIds, auth.userId);
     return dataResponse({
       ...(await mockProvider.planOuting(parsed.data)),
       provenance: "simulation",

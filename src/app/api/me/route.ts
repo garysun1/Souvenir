@@ -7,6 +7,7 @@ import { parseJsonBody } from "@/lib/api";
 import { profilePatchSchema } from "@/lib/contracts/api";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
+import { getUserStats } from "@/lib/server/stats";
 
 export async function GET(request: Request) {
   const result = await requireApiUser(request);
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   try {
     const profile = await ensureUserProfile(result.auth);
     return NextResponse.json(
-      { data: profile },
+      { data: { ...profile, stats: await getUserStats(result.auth.userId, result.auth.userId) } },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {

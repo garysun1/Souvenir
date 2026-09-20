@@ -3,13 +3,16 @@ import { db } from "@/lib/db";
 import {
   outingMembers,
   outings,
+  places,
   users,
   wishlistMembers,
   wishlists,
   wishlistSaves,
 } from "@/lib/db/schema";
 import type { WishlistCreate, WishlistDto, WishlistItemPut } from "../../../shared/api-contract";
-import { requirePlaces } from "./catalog";
+import { requireSocialPlaces } from "./social-access";
+import { placeVisibleTo } from "./place-visibility";
+import { recomputeStats } from "./stats";
 import { ApiError, invalidRequest, notFound } from "./errors";
 import {
   completeRequest,
@@ -53,6 +56,7 @@ export async function ensureDefaultWishlist(tx: Transaction, userId: string): Pr
 async function serializeWishlist(
   database: Database,
   list: typeof wishlists.$inferSelect,
+  viewerId: string,
 ): Promise<WishlistDto> {
   const members = await database
     .select({ userId: wishlistMembers.userId })
@@ -62,6 +66,7 @@ async function serializeWishlist(
   const saves = await database
     .select()
     .from(wishlistSaves)
+    .innerJoin(places, eq(places.id, wishlistSaves.placeId))
     .innerJoin(
       wishlistMembers,
       and(
@@ -69,7 +74,7 @@ async function serializeWishlist(
         eq(wishlistMembers.userId, wishlistSaves.userId),
       ),
     )
-    .where(eq(wishlistSaves.wishlistId, list.id))
+    .where(and(eq(wishlistSaves.wishlistId, list.id), placeVisibleTo(viewerId)))
     .orderBy(asc(wishlistSaves.createdAt), asc(wishlistSaves.userId));
   const entries = new Map<string, WishlistDto["entries"][number]>();
   for (const { wishlist_saves: save } of saves) {
@@ -94,7 +99,7 @@ export async function getWishlist(
   id: string,
   database: Database = db,
 ): Promise<WishlistDto> {
-  return serializeWishlist(database, await requireWishlist(database, userId, id));
+  return serializeWishlist(database, await requireWishlist(database, userId, id), userId);
 }
 
 export async function getWishlists(
@@ -110,7 +115,7 @@ export async function getWishlists(
   return Promise.all(
     rows
       .filter(({ list }) => list.ownerId === userId || list.isShared)
-      .map(({ list }) => serializeWishlist(database, list)),
+      .map(({ list }) => serializeWishlist(database, list, userId)),
   );
 }
 
@@ -134,7 +139,7 @@ export async function createWishlist(
         .from(wishlists)
         .where(and(eq(wishlists.id, request.resourceId), eq(wishlists.ownerId, userId)));
       if (!existing) deletedResource();
-      return { data: await serializeWishlist(tx, existing), created: false };
+      return { data: await serializeWishlist(tx, existing, userId), created: false };
     }
     const [list] = await tx
       .insert(wishlists)
@@ -146,7 +151,7 @@ export async function createWishlist(
       .returning();
     await tx.insert(wishlistMembers).values({ wishlistId: list.id, userId });
     await completeRequest(tx, userId, input.requestId, list.id);
-    return { data: await serializeWishlist(tx, list), created: true };
+    return { data: await serializeWishlist(tx, list, userId), created: true };
   });
 }
 
@@ -158,7 +163,7 @@ export async function putWishlistItem(
   return db.transaction(async (tx) => {
     await lockUser(tx, userId);
     const list = await requireWishlist(tx, userId, id, true);
-    await requirePlaces(tx, [input.placeId]);
+    await requireSocialPlaces(userId, [input.placeId], tx);
     if (!input.saved) {
       if (input.completed) invalidRequest("An unsaved place cannot be completed.");
       await tx
@@ -178,13 +183,15 @@ export async function putWishlistItem(
           placeId: input.placeId,
           userId,
           completed: input.completed ?? false,
+          visibility: input.visibility ?? "private",
         })
         .onConflictDoUpdate({
           target: [wishlistSaves.wishlistId, wishlistSaves.placeId, wishlistSaves.userId],
-          set: input.completed === undefined ? { userId } : { completed: input.completed },
+          set: { userId, completed: input.completed, visibility: input.visibility },
         });
     }
-    return serializeWishlist(tx, list);
+    await recomputeStats({ placeIds: [input.placeId], expandLocalities: false }, tx);
+    return serializeWishlist(tx, list, userId);
   });
 }
 
@@ -210,7 +217,7 @@ export async function addWishlistMember(
       .insert(wishlistMembers)
       .values({ wishlistId: id, userId: member.id })
       .onConflictDoNothing();
-    return serializeWishlist(tx, list);
+    return serializeWishlist(tx, list, userId);
   });
 }
 
@@ -224,9 +231,10 @@ export async function removeWishlistMember(
     const list = await requireWishlist(tx, userId, id, true);
     requireOwner(list, userId);
     if (memberId === list.ownerId) invalidRequest("The owner must remain a member.");
-    await tx
+    const removed = await tx
       .delete(wishlistSaves)
-      .where(and(eq(wishlistSaves.wishlistId, id), eq(wishlistSaves.userId, memberId)));
+      .where(and(eq(wishlistSaves.wishlistId, id), eq(wishlistSaves.userId, memberId)))
+      .returning({ id: wishlistSaves.placeId });
     await tx
       .delete(wishlistMembers)
       .where(and(eq(wishlistMembers.wishlistId, id), eq(wishlistMembers.userId, memberId)));
@@ -241,7 +249,8 @@ export async function removeWishlistMember(
           ),
         ),
       );
-    return serializeWishlist(tx, list);
+    await recomputeStats({ placeIds: removed.map((row) => row.id), expandLocalities: false }, tx);
+    return serializeWishlist(tx, list, userId);
   });
 }
 
