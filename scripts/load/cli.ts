@@ -2,7 +2,7 @@ import { parseArgs } from "node:util";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { startStack, stopStack, prepare, app } from "./local";
+import { startStack, stopStack, prepare, app, appEnvironment, status } from "./local";
 import { requireApply, runId, cleanEnvironment, ROOT, RUNS } from "./safety";
 import { Manifest, optionsSchema } from "./manifest";
 import { buildPool, hash, loadPool } from "./photos";
@@ -28,7 +28,19 @@ async function main() {
     },
   });
   const command = positionals[0];
-  if (["start", "stop", "prepare", "run", "resume", "verify", "cleanup", "smoke"].includes(command))
+  if (
+    [
+      "start",
+      "stop",
+      "prepare",
+      "run",
+      "resume",
+      "verify",
+      "cleanup",
+      "cleanup-images",
+      "smoke",
+    ].includes(command)
+  )
     requireApply(values.apply === true);
   switch (command) {
     case "start":
@@ -40,6 +52,25 @@ async function main() {
     case "prepare":
       await prepare();
       break;
+    case "cleanup-images": {
+      const config = status();
+      execFileSync(
+        process.execPath,
+        [
+          "--conditions=react-server",
+          "--import",
+          "tsx",
+          resolve(ROOT, "scripts/cleanup-place-images.ts"),
+          "--apply",
+        ],
+        {
+          cwd: ROOT,
+          env: { ...appEnvironment(config), PLACES_DISPOSABLE_DATABASE_URL: config.DB_URL },
+          stdio: "inherit",
+        },
+      );
+      break;
+    }
     case "build":
       app("build");
       break;
@@ -130,7 +161,7 @@ async function main() {
     }
     default:
       throw new Error(
-        "Expected start|stop|prepare|build|serve|photos|smoke|run|resume|verify|report|cleanup|check|service",
+        "Expected start|stop|prepare|build|serve|photos|smoke|run|resume|verify|report|cleanup|cleanup-images|check|service",
       );
   }
 }

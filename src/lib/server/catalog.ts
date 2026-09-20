@@ -10,21 +10,7 @@ import { longitudeBounds, placeVisibleTo, requireVisiblePlace } from "./place-vi
 import type { Database } from "./transactions";
 
 export function serializeCatalogPlace(row: typeof places.$inferSelect): PlaceDto {
-  return {
-    ...serializePlaceDto(row),
-    heroImageUrl: null,
-    externalIds: null,
-    stats: {
-      verified: row.stats?.verified === true,
-      provenance:
-        row.source === "user"
-          ? "user-contributed"
-          : row.stats?.provenance === "prototype-catalog"
-            ? "prototype-catalog"
-            : "catalog",
-      rarityStatus: "unavailable",
-    },
-  };
+  return serializePlaceDto(row);
 }
 
 export async function getPlaces(

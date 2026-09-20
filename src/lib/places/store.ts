@@ -7,6 +7,7 @@ import type { DocumentedAvailabilityDto, PlaceSourceDto } from "../../../shared/
 import { findDuplicateCandidates } from "./dedupe";
 import { normalizePlace, normalizeSource } from "./normalize";
 import { providerPlaceSchema, type ProviderPlace } from "./types";
+import { afterPlaceChange } from "@/lib/server/activity";
 
 export interface IngestResult {
   inserted: number;
@@ -103,6 +104,35 @@ async function ingestInTransaction(
         );
       if (currentSource?.placeId !== placeId)
         throw new Error("Provider identity changed; review the source mapping before retrying.");
+    }
+    if (savedSources.length && linked?.place.source === record.provider) {
+      const current = linked.place;
+      if (!current.fetchedAt || current.fetchedAt < new Date(record.fetchedAt)) {
+        await tx
+          .update(places)
+          .set({
+            name: normalized.name,
+            category: normalized.category,
+            lat: normalized.lat,
+            lng: normalized.lng,
+            city: normalized.city,
+            country: normalized.country,
+            region: normalized.region,
+            timezone: normalized.timezone,
+            website: normalized.website,
+            wikidataId: normalized.wikidataId,
+            geohash: normalized.geohash,
+            description: normalized.description,
+            sourceUpdatedAt: normalized.sourceUpdatedAt,
+            fetchedAt: normalized.fetchedAt,
+            externalIds: { ...current.externalIds, ...normalized.externalIds },
+            stats: normalized.stats,
+          })
+          .where(eq(places.id, placeId));
+        if (current.city !== normalized.city || current.country !== normalized.country) {
+          await afterPlaceChange(tx, placeId, current);
+        }
+      }
     }
     result.placeIds.push(placeId);
   }

@@ -9,7 +9,11 @@ if (!url || process.env.DATABASE_URL !== url || new URL(url).hostname !== "127.0
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/server/persistence.integration.ts", "tests/server/metadata.integration.ts"],
+    include: [
+      "tests/server/persistence.integration.ts",
+      "tests/server/metadata.integration.ts",
+      "tests/server/worldwide.integration.ts",
+    ],
     fileParallelism: false,
     testTimeout: 20_000,
     hookTimeout: 20_000,

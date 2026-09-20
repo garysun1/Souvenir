@@ -1,6 +1,7 @@
-import { and, asc, countDistinct, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { editions, placeSources, wishlistSaves } from "@/lib/db/schema";
+import { placeSources } from "@/lib/db/schema";
+import { getDocumentedAvailability } from "@/lib/places/store";
 import { serializePlaceSourceDto } from "@/lib/contracts/serializers";
 import type {
   DocumentedAvailabilityDto,
@@ -11,7 +12,8 @@ import type {
 import { serializeCatalogPlace } from "./catalog";
 import { getPlaceImages } from "./place-images";
 import { getPlaceNotes, getPlaceTags } from "./place-metadata";
-import { acceptedFriendOf, requireVisiblePlace, visibleTo } from "./place-visibility";
+import { requireVisiblePlace } from "./place-visibility";
+import { getPlaceMetrics, getPlaceSocial } from "./stats";
 
 export interface PlaceDetailReaders {
   metrics?: (placeId: string) => Promise<PlaceMetricsDto | null>;
@@ -38,43 +40,16 @@ export async function getPlaceDetail(
   readers: PlaceDetailReaders = {},
 ): Promise<PlaceDetailDto> {
   const place = await requireVisiblePlace(db, slug, userId);
-  const [notes, myNotes, tags, images, sources, been, saved, metrics, availability] =
-    await Promise.all([
-      getPlaceNotes(userId, slug),
-      getPlaceNotes(userId, slug, db, true),
-      getPlaceTags(userId, slug),
-      getPlaceImages(userId, slug),
-      getPlaceSources(userId, slug),
-      db
-        .select({ count: countDistinct(editions.userId) })
-        .from(editions)
-        .where(
-          and(
-            eq(editions.placeId, place.id),
-            acceptedFriendOf(editions.userId, userId),
-            visibleTo(editions.visibility, editions.userId, userId),
-          ),
-        ),
-      db
-        .select({ count: countDistinct(wishlistSaves.userId) })
-        .from(wishlistSaves)
-        .where(
-          and(
-            eq(wishlistSaves.placeId, place.id),
-            acceptedFriendOf(wishlistSaves.userId, userId),
-            visibleTo(wishlistSaves.visibility, wishlistSaves.userId, userId),
-          ),
-        ),
-      readers.metrics?.(place.id) ?? Promise.resolve(null),
-      readers.availability?.(place.id) ??
-        Promise.resolve<DocumentedAvailabilityDto>({
-          status: "unknown",
-          openingHours: null,
-          timezone: place.timezone,
-          sourceId: null,
-          fetchedAt: null,
-        }),
-    ]);
+  const [notes, myNotes, tags, images, sources, social, metrics, availability] = await Promise.all([
+    getPlaceNotes(userId, slug),
+    getPlaceNotes(userId, slug, db, true),
+    getPlaceTags(userId, slug),
+    getPlaceImages(userId, slug),
+    getPlaceSources(userId, slug),
+    getPlaceSocial(userId, place.id),
+    readers.metrics?.(place.id) ?? getPlaceMetrics(userId, place.id),
+    readers.availability?.(place.id) ?? getDocumentedAvailability(place.id),
+  ]);
   return {
     ...serializeCatalogPlace(place),
     ...tags,
@@ -85,6 +60,6 @@ export async function getPlaceDetail(
     metrics,
     availability,
     heroImageUrl: images.find((image) => image.isHero)?.url ?? null,
-    social: { friendsBeen: been[0].count, friendsSaved: saved[0].count },
+    social,
   };
 }

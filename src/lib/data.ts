@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { editions, places, setPlaces, sets, users } from "@/lib/db/schema";
 import { getCurrentUserId } from "@/lib/auth/server";
@@ -10,10 +10,16 @@ import { getPlans } from "@/lib/server/plans";
 import { getPlacePreferences, getRankings } from "@/lib/server/rankings";
 import { ensureDefaultWishlist, getWishlists } from "@/lib/server/wishlists";
 import { lockUser } from "@/lib/server/transactions";
+import { placeVisibleTo } from "@/lib/server/place-visibility";
 import type { BootstrapDto } from "../../shared/api-contract";
 
 export async function getFeaturedPlaces(limit = 6): Promise<Place[]> {
-  const rows = await db.select().from(places).limit(limit);
+  const rows = await db
+    .select()
+    .from(places)
+    .where(placeVisibleTo())
+    .orderBy(asc(places.id))
+    .limit(limit);
   return rows.map(serializePlace);
 }
 
@@ -25,7 +31,7 @@ export async function getCollectionSets(): Promise<CollectionSet[]> {
         .select({ place: places })
         .from(setPlaces)
         .innerJoin(places, eq(setPlaces.placeId, places.id))
-        .where(eq(setPlaces.setId, set.id))
+        .where(and(eq(setPlaces.setId, set.id), placeVisibleTo()))
         .orderBy(asc(setPlaces.position));
       return {
         id: set.id,
@@ -47,7 +53,7 @@ export async function getCurrentCollection() {
     .select({ edition: editions, place: places })
     .from(editions)
     .innerJoin(places, eq(editions.placeId, places.id))
-    .where(eq(editions.userId, userId));
+    .where(and(eq(editions.userId, userId), placeVisibleTo(userId)));
   return Promise.all(
     rows.map(async ({ edition, place }) => ({
       ...edition,
@@ -66,8 +72,8 @@ export async function getBootstrap(userId: string): Promise<BootstrapDto> {
     const [user] = await tx.select().from(users).where(eq(users.id, userId));
     const [catalog, collectionSets, collection, lists, rankingState, preferences, plans] =
       await Promise.all([
-        getPlaces(undefined, tx),
-        getSets(tx),
+        getPlaces(undefined, tx, userId),
+        getSets(tx, userId),
         getCollection({ userId, email: null, mode: "cookie" }, tx),
         getWishlists(userId, tx),
         getRankings(userId, tx),

@@ -144,13 +144,13 @@ export async function getNearbyPlaces(
   const results = coverage === "ready" ? await nearbyPg(query, database) : initial;
   return {
     places: results,
-    provenance: results.some(
-      (item) => !initial.some((previous) => previous.place.id === item.place.id),
-    )
-      ? initial.length
-        ? "mixed"
-        : "provider"
-      : "catalog",
+    provenance:
+      provider.name !== "curated" &&
+      results.some((item) => !initial.some((previous) => previous.place.id === item.place.id))
+        ? initial.length
+          ? "mixed"
+          : "provider"
+        : "catalog",
     coverage,
   };
 }

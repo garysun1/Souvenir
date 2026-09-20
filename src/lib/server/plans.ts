@@ -1,6 +1,13 @@
 import { and, asc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { editions, outingMembers, outings, wishlistMembers, wishlists } from "@/lib/db/schema";
+import {
+  editions,
+  outingMembers,
+  outings,
+  places,
+  wishlistMembers,
+  wishlists,
+} from "@/lib/db/schema";
 import { planContentSchema } from "@/lib/contracts/api";
 import type { PlanContent, PlanCreate, PlanDto } from "../../../shared/api-contract";
 import { requirePlaces } from "./catalog";
@@ -15,6 +22,7 @@ import {
   type Transaction,
 } from "./transactions";
 import { requireWishlist } from "./wishlists";
+import { placeVisibleTo } from "./place-visibility";
 
 export async function requirePlan(database: Database, userId: string, id: string) {
   const [row] = await database.select().from(outings).where(eq(outings.id, id));
@@ -27,6 +35,7 @@ export async function requirePlan(database: Database, userId: string, id: string
     if (!member) notFound("This plan is unavailable.");
     if (row.wishlistId) await requireWishlist(database, userId, row.wishlistId);
   }
+  if (!(await canReadPlaces(database, row, userId))) notFound("This plan is unavailable.");
   return row;
 }
 
@@ -34,6 +43,27 @@ function parsePlan(row: typeof outings.$inferSelect): PlanContent {
   const parsed = planContentSchema.safeParse(row.plan);
   if (!parsed.success) throw new ApiError(500, "internal_error", "This saved plan needs repair.");
   return parsed.data;
+}
+
+async function canReadPlaces(
+  database: Database,
+  row: typeof outings.$inferSelect,
+  viewerId: string,
+) {
+  const plan = parsePlan(row);
+  const ids = [
+    ...new Set([
+      ...plan.stops.map((stop) => stop.placeId),
+      ...plan.constraints.preferredPlaceIds,
+      ...plan.constraints.excludedPlaceIds,
+    ]),
+  ];
+  if (!ids.length) return true;
+  const visible = await database
+    .select({ id: places.id })
+    .from(places)
+    .where(and(inArray(places.id, ids), placeVisibleTo(viewerId)));
+  return visible.length === ids.length;
 }
 
 async function serializePlan(
@@ -80,7 +110,10 @@ export async function getPlans(userId: string, database: Database = db): Promise
       ),
     )
     .orderBy(asc(outings.createdAt), asc(outings.id));
-  return Promise.all(rows.map((row) => serializePlan(database, row)));
+  const visibility = await Promise.all(rows.map((row) => canReadPlaces(database, row, userId)));
+  return Promise.all(
+    rows.filter((_, index) => visibility[index]).map((row) => serializePlan(database, row)),
+  );
 }
 
 async function validatePlan(
@@ -103,11 +136,17 @@ async function validatePlan(
   } else if (participants.length !== 1 || participants[0] !== userId) {
     invalidRequest("Personal plans can only include yourself.");
   }
-  await requirePlaces(tx, [
-    ...input.stops.map((stop) => stop.placeId),
-    ...input.constraints.excludedPlaceIds,
-    ...input.constraints.preferredPlaceIds,
-  ]);
+  for (const participantId of participants) {
+    await requirePlaces(
+      tx,
+      [
+        ...input.stops.map((stop) => stop.placeId),
+        ...input.constraints.excludedPlaceIds,
+        ...input.constraints.preferredPlaceIds,
+      ],
+      participantId,
+    );
+  }
   if (input.stops.some((stop) => input.constraints.excludedPlaceIds.includes(stop.placeId))) {
     invalidRequest("The plan contains an excluded place.");
   }

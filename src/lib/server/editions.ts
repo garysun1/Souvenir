@@ -13,6 +13,8 @@ import type {
 } from "../../../shared/api-contract";
 import { requireSocialPlaces } from "./social-access";
 import { afterEditionChange, syncEditionActivity } from "./activity";
+import { placeVisibleTo } from "./place-visibility";
+import { revokeEditionPlaceImages } from "./place-images";
 import { ApiError, notFound } from "./errors";
 import { validateEditionOuting } from "./plans";
 import { removePlaceRanking } from "./rankings";
@@ -33,7 +35,7 @@ export async function getCollection(
     .select({ edition: editions, place: places })
     .from(editions)
     .innerJoin(places, eq(editions.placeId, places.id))
-    .where(eq(editions.userId, auth.userId))
+    .where(and(eq(editions.userId, auth.userId), placeVisibleTo(auth.userId)))
     .orderBy(desc(editions.capturedAt), desc(editions.id));
   return Promise.all(rows.map((row) => serializeCollectionEntryDto(auth, row)));
 }
@@ -43,7 +45,7 @@ export async function getEdition(auth: AuthContext, id: string): Promise<Collect
     .select({ edition: editions, place: places })
     .from(editions)
     .innerJoin(places, eq(editions.placeId, places.id))
-    .where(and(eq(editions.id, id), eq(editions.userId, auth.userId)));
+    .where(and(eq(editions.id, id), eq(editions.userId, auth.userId), placeVisibleTo(auth.userId)));
   if (!row) notFound("This edition is unavailable.");
   return serializeCollectionEntryDto(auth, row);
 }
@@ -206,6 +208,7 @@ export async function deleteEdition(auth: AuthContext, id: string): Promise<{ de
       .where(and(eq(editions.userId, auth.userId), eq(editions.placeId, row.placeId)))
       .limit(1);
     if (!remaining) await removePlaceRanking(tx, auth.userId, row.placeId);
+    await revokeEditionPlaceImages(tx, auth.userId, row.id);
     await afterEditionChange(tx, auth.userId, row.placeId);
     return row.photoPath;
   });

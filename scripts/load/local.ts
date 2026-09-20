@@ -186,7 +186,28 @@ export async function prepare() {
     } else {
       assert.equal(bucket.data.public, false, "Existing captures bucket must be private");
     }
-    console.log("Local migrations and private captures bucket ready.");
+    const images = await admin.storage.getBucket("place-images");
+    if (!images.data) {
+      assert(
+        images.error &&
+          "status" in images.error &&
+          [400, 404].includes(Number(images.error.status)),
+        "Place image bucket lookup failed",
+      );
+      const created = await admin.storage.createBucket("place-images", {
+        public: true,
+        fileSizeLimit: 10 * 1024 * 1024,
+        allowedMimeTypes: ["image/webp"],
+      });
+      assert(!created.error, "Public derivative bucket creation failed");
+    } else {
+      assert.equal(
+        images.data.public,
+        true,
+        "Place image derivatives require a separate public bucket",
+      );
+    }
+    console.log("Local migrations, private captures and public derivative buckets ready.");
   } finally {
     await db.end();
   }

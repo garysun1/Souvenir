@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import type {
   CollectionEntryDto,
@@ -13,12 +14,12 @@ import type {
 } from "../../shared/api-contract";
 import { account, reconcileAccounts } from "./accounts";
 import { ApiClient, ApiFailure, latencyReport } from "./api";
-import { database, status, type Database } from "./local";
+import { appEnvironment, database, status, type Database } from "./local";
 import { type Manifest } from "./manifest";
 import { explainOracle, integrityOracle, metricsOracle, profileOracle } from "./oracle";
 import { fixtureId, fixtureSlug } from "./run";
 import { persona } from "./fixtures";
-import { SUPABASE_ORIGIN, guardedFetch } from "./safety";
+import { ROOT, SUPABASE_ORIGIN, guardedFetch } from "./safety";
 
 type Check = { name: string; status: "passed" | "failed" | "blocked"; detail?: string };
 async function denied(client: ApiClient, method: string, path: string, body?: object) {
@@ -316,12 +317,30 @@ export async function report(manifest: Manifest) {
           "Core infrastructure smoke intentionally excludes pending worldwide service implementations.",
       });
     }
-    checks.push({
-      name: "incremental/full recomputation drift",
-      status: "blocked",
-      detail:
-        "No recomputation endpoint is declared in the current contract. Integrator must supply the service/CLI entrypoint; ordinary metrics are compared to full SQL ground truth.",
-    });
+    if (manifest.options.mode === "worldwide") {
+      await check("incremental/full recomputation drift", async () => {
+        const snapshot = async () => ({
+          places:
+            await db`SELECT place_id, to_jsonb(s) - ARRAY['computed_at','window_start','window_end','baseline_start','baseline_end'] AS counts
+            FROM place_stats s WHERE place_id IN (
+              SELECT id FROM places WHERE slug LIKE ${`load-${manifest.options.runId}-%`}
+            ) ORDER BY place_id`,
+          users: await db`SELECT user_id, to_jsonb(s) - 'computed_at' AS counts
+            FROM user_stats s WHERE user_id=ANY(${ids}::uuid[]) ORDER BY user_id`,
+        });
+        const before = await snapshot();
+        assert(
+          before.places.length > 0 && before.users.length > 0,
+          "Missing incremental projections",
+        );
+        execFileSync(
+          process.execPath,
+          ["--import", "tsx", resolve(ROOT, "scripts/recompute-stats.ts")],
+          { cwd: ROOT, env: appEnvironment(status()), stdio: "pipe" },
+        );
+        assert.deepEqual(await snapshot(), before);
+      });
+    }
   } finally {
     await db.end();
     const result = {
@@ -358,10 +377,5 @@ export async function report(manifest: Manifest) {
   }
   assert(!checks.some((item) => item.status === "failed"), "Load report has failed checks");
   if (manifest.options.mode === "worldwide")
-    assert(
-      !checks.some(
-        (item) => item.status === "blocked" && item.name !== "incremental/full recomputation drift",
-      ),
-      "Worldwide endpoints remain blocked",
-    );
+    assert(!checks.some((item) => item.status === "blocked"), "Worldwide endpoints remain blocked");
 }

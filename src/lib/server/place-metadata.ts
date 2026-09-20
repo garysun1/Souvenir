@@ -1,14 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import {
-  activityEvents,
-  apiRequests,
-  placeNotes,
-  places,
-  placeSuggestions,
-  placeTags,
-} from "@/lib/db/schema";
+import { apiRequests, placeNotes, places, placeSuggestions, placeTags } from "@/lib/db/schema";
 import {
   placeCreateSchema,
   placeNoteCreateSchema,
@@ -29,6 +22,7 @@ import type {
 } from "../../../shared/api-contract";
 import { serializeCatalogPlace } from "./catalog";
 import { ApiError, invalidRequest, notFound } from "./errors";
+import { syncNoteActivity } from "./activity";
 import { placeVisibleTo, requireVisiblePlace, visibleTo } from "./place-visibility";
 import {
   completeRequest,
@@ -189,14 +183,7 @@ export async function createPlaceNote(
       .insert(placeNotes)
       .values({ ...normalized, placeId: place.id, userId })
       .returning();
-    await tx.insert(activityEvents).values({
-      userId,
-      placeId: place.id,
-      kind: "note",
-      noteId: row.id,
-      visibility: row.visibility,
-      requestId: row.requestId,
-    });
+    await syncNoteActivity(tx, userId, row.id);
     await completeRequest(tx, userId, parsed.requestId, row.id, `place-notes/${place.id}`);
     return { data: serializePlaceNote(row), created: true };
   });
@@ -231,10 +218,7 @@ export async function patchPlaceNote(
       .set({ ...parsed, updatedAt: new Date() })
       .where(predicate)
       .returning();
-    await tx
-      .update(activityEvents)
-      .set({ visibility: row.visibility })
-      .where(eq(activityEvents.noteId, row.id));
+    await syncNoteActivity(tx, userId, row.id);
     return serializePlaceNote(row);
   });
 }
