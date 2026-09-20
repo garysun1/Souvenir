@@ -380,7 +380,7 @@ try {
 } catch (error) {
   process.exitCode = 1;
   console.error(
-    `FAIL: ${stage}; ${error instanceof Error ? error.message.replace(/Bearer\\s+\\S+/g, "Bearer [redacted]") : "unknown error"}`,
+    `FAIL: ${stage}; ${error instanceof Error ? error.message.replace(/Bearer\s+\S+/g, "Bearer [redacted]") : "unknown error"}`,
   );
 } finally {
   try {
