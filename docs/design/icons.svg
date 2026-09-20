@@ -1,0 +1,441 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 1412" width="840" height="1412" font-family="Inter, system-ui, sans-serif">
+  <rect width="840" height="1412" fill="#F5F5F7"/>
+  <g transform="translate(48 36) scale(0.14)">
+
+  <rect width="512" height="512" rx="112" fill="#144F5D"/>
+  <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="146" y="106" width="220" height="300" rx="30"/>
+    <path d="M256 314c-40-42-60-70-60-96a60 60 0 1 1 120 0c0 26-20 54-60 96Z"/>
+    <circle cx="256" cy="216" r="20"/>
+    <path d="M200 360h112"/>
+  </g>
+
+
+  </g>
+  <text x="140" y="66" font-family="Georgia, 'Playfair Display', serif" font-size="30" font-weight="800" fill="#144F5D">souvenir</text>
+  <text x="140" y="90" font-size="13" fill="#626262">Icon set · 24px grid · 1.5px stroke · round caps · single brand color #144F5D</text>
+  <text x="140" y="108" font-size="13" fill="#626262">App mark: a collectible place card with a pin. Sentiment fills only for recommendations.</text>
+<text x="48" y="150" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Navigation</text>
+<g transform="translate(48 174)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M14.6 9.4 13 13l-3.6 1.6L11 11Z"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Discover</text>
+</g>
+<g transform="translate(144 174)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="8" y="3" width="12" height="15" rx="2"/>
+  <path d="M4 8v11a2 2 0 0 0 2 2h11"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Collection</text>
+</g>
+<g transform="translate(240 174)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="3" y="7" width="18" height="13" rx="2.5"/>
+  <circle cx="12" cy="13.5" r="3.5"/>
+  <path d="M9 7l1.3-2.3h3.4L15 7"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Capture</text>
+</g>
+<g transform="translate(336 174)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="9" cy="8" r="3.5"/>
+  <path d="M3 20a6 6 0 0 1 12 0"/>
+  <path d="M15 5.2a3.5 3.5 0 0 1 0 5.6"/>
+  <path d="M21 20a6 6 0 0 0-4-5.7"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Friends</text>
+</g>
+<g transform="translate(432 174)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="8" r="4"/>
+  <path d="M5 20a7 7 0 0 1 14 0"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Profile</text>
+</g>
+<g transform="translate(528 174)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M12 5v14M5 12h14"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Capture action</text>
+</g>
+<text x="48" y="316" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Places &amp; memories</text>
+<g transform="translate(48 340)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M12 21c-4.6-4.7-7-8.3-7-11a7 7 0 0 1 14 0c0 2.7-2.4 6.3-7 11Z"/>
+  <circle cx="12" cy="10" r="2.5"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Place</text>
+</g>
+<g transform="translate(144 340)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="5" y="3" width="14" height="18" rx="2"/>
+  <path d="M12 8l1 2.6 2.6 1-2.6 1L12 15.2l-1-2.6-2.6-1 2.6-1Z"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Edition</text>
+</g>
+<g transform="translate(240 340)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="3.5" y="8" width="17" height="12" rx="2"/>
+  <path d="M7 8V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Themed set</text>
+</g>
+<g transform="translate(336 340)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2Z"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Reveal</text>
+</g>
+<g transform="translate(432 340)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="3" y="5" width="18" height="14" rx="2"/>
+  <circle cx="8.5" cy="9.5" r="1.5"/>
+  <path d="M21 15.5l-5-5-9 8.5"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Photo</text>
+</g>
+<g transform="translate(528 340)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M4 12a8 8 0 1 0 2.3-5.7"/>
+  <path d="M4 4v4.5h4.5"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Return visit</text>
+</g>
+<text x="48" y="482" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Recommendation</text>
+<g transform="translate(48 506)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M8 12.5l2.5 2.5L16 9.5"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Recommend</text>
+</g>
+<g transform="translate(144 506)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M8 12.5c1.3-1.6 2.7-1.6 4 0s2.7 1.6 4 0"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">It depends</text>
+</g>
+<g transform="translate(240 506)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M8 12h8"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Would skip</text>
+</g>
+<text x="48" y="648" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Rarity signals</text>
+<g transform="translate(48 672)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M12 20s-7-4.5-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.5 12 20 12 20Z"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Appeal</text>
+</g>
+<g transform="translate(144 672)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M3 12h4l2.5-6 4 12L16 12h5"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Frequency</text>
+</g>
+<g transform="translate(240 672)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M12 7v5l3 2"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Window</text>
+</g>
+<text x="48" y="814" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Social &amp; planning</text>
+<g transform="translate(48 838)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M7 3h10v18l-5-3.6L7 21Z"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Want to go</text>
+</g>
+<g transform="translate(144 838)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M9 3h10v18l-5-3.6L9 21Z"/>
+  <path d="M5 6v13"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Shared list</text>
+</g>
+<g transform="translate(240 838)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="6" cy="18" r="2.5"/>
+  <circle cx="18" cy="6" r="2.5"/>
+  <path d="M8 16.2C11 14 13 11 16.2 8"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Outing</text>
+</g>
+<g transform="translate(336 838)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="3.5" y="5" width="17" height="15" rx="2"/>
+  <path d="M3.5 10h17M8 3v4M16 3v4"/>
+  <circle cx="12" cy="15" r="1.25" fill="currentColor" stroke="none"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Plan</text>
+</g>
+<g transform="translate(432 838)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="9" cy="12" r="6"/>
+  <circle cx="15" cy="12" r="6"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Overlap</text>
+</g>
+<g transform="translate(528 838)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M7 16.5a4.25 4.25 0 0 1-.5-8.5 6 6 0 0 1 11.6 1.6A3.5 3.5 0 0 1 17.5 16.5"/>
+  <path d="M12 11.5V21m-3-3 3 3 3-3"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Import</text>
+</g>
+<text x="48" y="980" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Utility</text>
+<g transform="translate(48 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5Z"/>
+  <path d="M9 4v13.5M15 6.5V20"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Map view</text>
+</g>
+<g transform="translate(144 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M9 6h12M9 12h12M9 18h12"/>
+  <path d="M4 6h.01M4 12h.01M4 18h.01"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">List view</text>
+</g>
+<g transform="translate(240 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/>
+  <rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/>
+  <rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/>
+  <rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Album view</text>
+</g>
+<g transform="translate(336 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="10.5" cy="10.5" r="6.5"/>
+  <path d="M20 20l-4.8-4.8"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Search</text>
+</g>
+<g transform="translate(432 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M4 7h10M18 7h2M4 17h4M12 17h8"/>
+  <circle cx="16" cy="7" r="2"/>
+  <circle cx="10" cy="17" r="2"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Filters</text>
+</g>
+<g transform="translate(528 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Share</text>
+</g>
+<g transform="translate(624 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <circle cx="12" cy="12" r="3"/>
+  <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Settings</text>
+</g>
+<g transform="translate(720 1004)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M5 12.5l4.5 4.5L19 7"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Check</text>
+</g>
+<g transform="translate(48 1110)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M6 6l12 12M18 6 6 18"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Close</text>
+</g>
+<g transform="translate(144 1110)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M14 5l-7 7 7 7M7 12h14"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Back</text>
+</g>
+<g transform="translate(240 1110)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M9 5l7 7-7 7"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">Chevron</text>
+</g>
+<g transform="translate(336 1110)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20)" fill="none" stroke="#144F5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="scale(1.3333)">
+  <path d="M5 12h.01M12 12h.01M19 12h.01"/>
+    </g>
+  </g>
+  <text x="36" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#626262">More</text>
+</g>
+<text x="48" y="1252" font-family="Georgia, 'Playfair Display', serif" font-size="20" font-weight="700" fill="#144F5D">Usage: sentiment fills, active tab, capture button</text>
+<g transform="translate(48 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <circle cx="36" cy="36" r="18" fill="#66B28C" fill-opacity="0.35" stroke="#66B28C" stroke-width="2"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="none" stroke="#212121" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M8 12.5l2.5 2.5L16 9.5"/>
+  </g>
+</g>
+<g transform="translate(144 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <circle cx="36" cy="36" r="18" fill="#F7E1A5" fill-opacity="0.35" stroke="#F7E1A5" stroke-width="2"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="none" stroke="#212121" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M8 12.5c1.3-1.6 2.7-1.6 4 0s2.7 1.6 4 0"/>
+  </g>
+</g>
+<g transform="translate(240 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <circle cx="36" cy="36" r="18" fill="#F0B4B4" fill-opacity="0.35" stroke="#F0B4B4" stroke-width="2"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="none" stroke="#212121" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M8 12h8"/>
+  </g>
+</g>
+<g transform="translate(336 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="#144F5D" fill-opacity="0.12" stroke="#144F5D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M14.6 9.4 13 13l-3.6 1.6L11 11Z"/>
+  </g>
+</g>
+<g transform="translate(432 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="#144F5D" fill-opacity="0.12" stroke="#144F5D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="8" y="3" width="12" height="15" rx="2"/>
+  <path d="M4 8v11a2 2 0 0 0 2 2h11"/>
+  </g>
+</g>
+<g transform="translate(528 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="#144F5D" fill-opacity="0.12" stroke="#144F5D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="9" cy="8" r="3.5"/>
+  <path d="M3 20a6 6 0 0 1 12 0"/>
+  <path d="M15 5.2a3.5 3.5 0 0 1 0 5.6"/>
+  <path d="M21 20a6 6 0 0 0-4-5.7"/>
+  </g>
+</g>
+<g transform="translate(624 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="#144F5D" fill-opacity="0.12" stroke="#144F5D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="8" r="4"/>
+  <path d="M5 20a7 7 0 0 1 14 0"/>
+  </g>
+</g>
+<g transform="translate(720 1276)">
+  <rect width="72" height="72" rx="12" fill="#ffffff" stroke="#EDEDED"/>
+  <circle cx="36" cy="36" r="24" fill="#144F5D"/>
+  <g transform="translate(20 20) scale(1.3333)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+  <path d="M12 5v14M5 12h14"/>
+  </g>
+</g>
+</svg>
