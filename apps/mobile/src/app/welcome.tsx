@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { View } from 'react-native';
 import { useState } from 'react';
@@ -7,7 +7,7 @@ import { PlacePhoto } from '@/components/cards/PlacePhoto';
 import { useApp } from '@/state/AppProvider';
 import { colors } from '@/design/tokens';
 export default function Welcome() {
-  const { startDemo, signIn, signUp, signOut, mode } = useApp();
+  const { startDemo, signIn, signUp, signOut, mode, ready } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -23,6 +23,7 @@ export default function Welcome() {
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Authentication failed. Please retry.'); }
     finally { setBusy(false); }
   };
+  if (mode === 'account' && ready) return <Redirect href="/discover" />;
   return <Screen padded={false}><View style={{ paddingHorizontal: 26, paddingTop: 18, paddingBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><T variant="wordmark" color={colors.brand}>souvenir</T><DemoLabel label="Los Angeles edition" /></View>
     <PlacePhoto placeId="la-echo-park" style={{ height: 330, borderRadius: 0 }}>
       <LinearGradient colors={['transparent', '#082C3899']} style={{ flex: 1, padding: 26, justifyContent: 'flex-end' }}><View style={{ flexDirection: 'row', gap: 6 }}><Icon name="pin" size={16} color="#fff" /><T variant="small" color="#fff">Echo Park Lake · Los Angeles</T></View></LinearGradient>

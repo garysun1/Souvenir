@@ -40,7 +40,7 @@ export function Album({ state, places, allEditions, filters }: { state: AppState
       const place = placeById(edition.placeId);
       return place && <Pressable key={edition.id} accessibilityRole="button" accessibilityLabel={`Open ${place.name}, edition ${edition.sequence}`} onPress={() => router.push({ pathname: '/edition/[editionId]', params: { editionId: edition.id } })} style={{ width: cardWidth, gap: 7 }}>
         <PlacePhoto placeId={place.id} uri={edition.photoUri} style={{ width: cardWidth, height: cardWidth * 1.05 }}><View style={styles.badge}><T variant="small" color="#fff">Edition {String(edition.sequence).padStart(2, '0')}</T></View></PlacePhoto>
-        <T variant="place">{place.name}</T><T variant="small" muted>{visitDate(edition.visitedAt)}</T>
+        <T variant="place">{place.name}</T><T variant="small" muted>{visitDate(edition.visitedAt, edition.timezone)}</T>
       </Pressable>;
     })}</View>;
     return <View style={styles.grid}>{item.places.map(place => {

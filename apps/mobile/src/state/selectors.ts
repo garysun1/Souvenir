@@ -7,4 +7,4 @@ export const setProgress = (state: AppState) => downtownSet.placeIds.filter(id =
 export const overlapIds = (list: Wishlist) => list.entries.filter(entry => list.memberIds.every(id => entry.saverIds.includes(id))).map(entry => entry.placeId);
 export const latestEdition = (state: AppState, placeId: string) => ownEditions(state).filter(edition => edition.placeId === placeId).sort((a, b) => b.visitedAt.localeCompare(a.visitedAt))[0];
 export const money = (cents: number) => !Number.isFinite(cents) ? 'Cost unknown' : cents === 0 ? 'Free' : `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`;
-export const visitDate = (date: string) => new Date(date).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', year: 'numeric' });
+export const visitDate = (date: string, timeZone = 'America/Los_Angeles') => new Date(date).toLocaleDateString('en-US', { timeZone, month: 'short', day: 'numeric', year: 'numeric' });

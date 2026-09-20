@@ -49,7 +49,7 @@ export default function FriendProfile() {
       if (!place) return null;
       const edition = summary.editions.find(item => item.placeId === placeId);
       return <View key={placeId}>
-        <PlaceRow place={place} subtitle={tab === 'collection' && edition ? `Edition ${String(edition.sequence).padStart(2, '0')} · ${visitDate(edition.visitedAt)}` : `${user.name} saved this to a shared list`} />
+        <PlaceRow place={place} subtitle={tab === 'collection' && edition ? `Edition ${String(edition.sequence).padStart(2, '0')} · ${visitDate(edition.visitedAt, edition.timezone)}` : `${user.name} saved this to a shared list`} />
         {tab === 'collection' && !!edition?.moment && <T variant="small" muted style={{ paddingTop: 8, paddingBottom: 14 }}>“{edition.moment}”</T>}
       </View>;
     }) : <EmptyState title={tab === 'collection' ? 'No public visits yet' : 'No shared saves yet'} message={`There are no ${tab === 'collection' ? 'visits' : 'saves'} from ${user.name} visible here. You can still make a plan together.`} action={`Plan with ${user.name}`} onPress={() => router.push({ pathname: '/planner', params: { participantIds: `you,${user.id}` } })} />}

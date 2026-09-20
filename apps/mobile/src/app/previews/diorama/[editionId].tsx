@@ -22,7 +22,7 @@ export default function DioramaPreview() {
       {depth && <View style={{ position: 'absolute', width: '72%', height: 265, borderRadius: 18, backgroundColor: colors.brand, opacity: 0.11, transform: [{ translateY: 24 }, { scale: 0.93 }, { rotateZ: '-3deg' }] }} />}
       <View style={{ width: depth ? '82%' : '100%', height: depth ? 300 : 330, transform: depth ? [{ perspective: 800 }, { rotateX: '4deg' }, { rotateY: '-3deg' }] : undefined }}>
         <PlacePhoto placeId={place.id} uri={edition.photoUri} style={{ height: '100%', borderRadius: 20 }}>
-          {depth && <View style={{ flex: 1, justifyContent: 'space-between', padding: 18, backgroundColor: '#071E273D' }}><View style={{ alignSelf: 'flex-end', width: 50, height: 50, borderRadius: 25, backgroundColor: '#FFFFFFDD', alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" /></View><View style={{ backgroundColor: '#FFFFFFEC', borderRadius: 13, padding: 14, gap: 4 }}><T variant="place">{place.name}</T><T variant="small" muted>{visitDate(edition.visitedAt)} · Edition {edition.sequence}</T></View></View>}
+          {depth && <View style={{ flex: 1, justifyContent: 'space-between', padding: 18, backgroundColor: '#071E273D' }}><View style={{ alignSelf: 'flex-end', width: 50, height: 50, borderRadius: 25, backgroundColor: '#FFFFFFDD', alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" /></View><View style={{ backgroundColor: '#FFFFFFEC', borderRadius: 13, padding: 14, gap: 4 }}><T variant="place">{place.name}</T><T variant="small" muted>{visitDate(edition.visitedAt, edition.timezone)} · Edition {edition.sequence}</T></View></View>}
         </PlacePhoto>
       </View>
     </View>

@@ -83,7 +83,7 @@ export function PersonalEditionTile({ edition, ownerId, placeId }: { edition?: E
     <View style={styles.row}><Avatar userId={ownerId} size={28} /><T variant="label">{name}</T></View>
     {edition ? <>
       <PlacePhoto placeId={placeId} uri={edition.photoUri} style={{ height: 144 }} />
-      <T variant="small" color={colors.brand}>Edition {String(edition.sequence).padStart(2, '0')} · {visitDate(edition.visitedAt)}</T>
+      <T variant="small" color={colors.brand}>Edition {String(edition.sequence).padStart(2, '0')} · {visitDate(edition.visitedAt, edition.timezone)}</T>
       <T variant="small">{edition.moment || 'A moment kept, without a note.'}</T>
       {ownerId === 'you' ? <Button variant="ghost" label="View edition" onPress={() => router.push({ pathname: '/edition/[editionId]', params: { editionId: edition.id } })} /> : <DemoLabel label={`${name}’s sample memory`} small />}
     </> : <View style={styles.waiting}><Icon name="clock" /><T variant="small" muted style={{ textAlign: 'center' }}>{ownerId === 'you' ? 'Your visit is not captured yet' : `Waiting for ${name}’s visit`}</T></View>}
