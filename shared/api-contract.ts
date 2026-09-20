@@ -1,3 +1,13 @@
+import type {
+  PlaceImageDto,
+  PlaceMetricsDto,
+  PlaceSource,
+  PlaceSourceDto,
+  UserStatsDto,
+  Visibility,
+} from "./worldwide-contract";
+export * from "./worldwide-contract";
+
 export type UUID = string;
 export type Instant = string;
 export type Category = "nature" | "culture" | "food" | "landmark" | "hidden_gem";
@@ -29,6 +39,9 @@ export interface ProfileDto {
   avatarUrl: string | null;
   homeCity: string | null;
   createdAt: Instant;
+  homeCountry?: string | null;
+  statsVisibility?: Visibility;
+  stats?: UserStatsDto | null;
 }
 export interface PlaceDto {
   id: UUID;
@@ -37,7 +50,7 @@ export interface PlaceDto {
   category: Category;
   lat: number;
   lng: number;
-  city: string;
+  city: string | null;
   description: string;
   heroImageUrl: string | null;
   rarityTier: "common" | "uncommon" | "rare" | "epic" | "legendary";
@@ -46,6 +59,18 @@ export interface PlaceDto {
   rarityAvailability: number;
   externalIds: Record<string, string> | null;
   stats: Record<string, unknown> | null;
+  country?: string | null;
+  region?: string | null;
+  timezone?: string | null;
+  website?: string | null;
+  wikidataId?: string | null;
+  source?: PlaceSource;
+  sourceUpdatedAt?: Instant | null;
+  fetchedAt?: Instant | null;
+  visibility?: Visibility;
+  images?: PlaceImageDto[];
+  sources?: PlaceSourceDto[];
+  metrics?: PlaceMetricsDto | null;
   createdAt: Instant;
 }
 export interface SetDto {
@@ -78,6 +103,7 @@ export interface EditionDto {
   outingId: UUID | null;
   photo: SignedPhotoDto | null;
   createdAt: Instant;
+  visibility?: Visibility;
 }
 export interface CollectionEntryDto extends EditionDto {
   place: PlaceDto;
@@ -94,12 +120,14 @@ export interface EditionCreate {
   origin?: "capture" | "import";
   importSourceId?: string | null;
   outingId?: UUID | null;
+  visibility?: Visibility;
 }
 export interface EditionPatch {
   capturedAt?: Instant;
   timezone?: string;
   note?: string | null;
   companions?: string[];
+  visibility?: Visibility;
 }
 export interface PhotoUploadRequest {
   requestId: UUID;
@@ -136,6 +164,7 @@ export interface WishlistItemPut {
   placeId: UUID;
   saved: boolean;
   completed?: boolean;
+  visibility?: Visibility;
 }
 export interface RankingDto {
   placeId: UUID;
@@ -158,6 +187,7 @@ export interface RankingPut {
   comparedTo?: UUID | null;
   tiedWith?: UUID | null;
   group?: RankingGroupDto;
+  visibility?: Visibility;
 }
 export interface PlacePreferenceDto {
   placeId: UUID;
@@ -223,6 +253,8 @@ export interface BootstrapDto {
 export interface ProfilePatch {
   displayName?: string;
   homeCity?: string | null;
+  homeCountry?: string | null;
+  statsVisibility?: Visibility;
 }
 export interface AuthContext {
   userId: UUID;

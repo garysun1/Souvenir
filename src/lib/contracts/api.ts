@@ -11,21 +11,12 @@ import type {
   WishlistItemPut,
 } from "../../../shared/api-contract";
 import { categorySchema, editionVariantSchema, sentimentSchema } from "@/lib/schemas";
+import { countrySchema, visibilitySchema } from "@/lib/schemas/worldwide";
+import { instantSchema, timezoneSchema, uuidSchema } from "./primitives";
 
-export const uuidSchema = z.string().uuid();
-export const instantSchema = z.string().datetime({ offset: true });
-export const timezoneSchema = z
-  .string()
-  .min(1)
-  .max(100)
-  .refine((timezone) => {
-    try {
-      new Intl.DateTimeFormat("en", { timeZone: timezone }).format();
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Use an IANA timezone");
+export * from "./worldwide";
+export * from "./metrics";
+export { instantSchema, timezoneSchema, uuidSchema } from "./primitives";
 const companionsSchema = z.array(z.string().trim().min(1).max(100)).max(30);
 const noteSchema = z.string().max(2000).nullable();
 const photoPathSchema = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/);
@@ -42,6 +33,7 @@ export const editionCreateSchema = z
     origin: z.enum(["capture", "import"]).optional(),
     importSourceId: z.string().min(1).max(200).nullable().optional(),
     outingId: uuidSchema.nullable().optional(),
+    visibility: visibilitySchema.optional(),
   })
   .strict()
   .refine(
@@ -54,6 +46,7 @@ export const editionPatchSchema = z
     timezone: timezoneSchema.optional(),
     note: noteSchema.optional(),
     companions: companionsSchema.optional(),
+    visibility: visibilitySchema.optional(),
   })
   .strict()
   .refine(
@@ -83,6 +76,7 @@ export const wishlistItemPutSchema = z
     placeId: uuidSchema,
     saved: z.boolean(),
     completed: z.boolean().optional(),
+    visibility: visibilitySchema.optional(),
   })
   .strict() satisfies z.ZodType<WishlistItemPut>;
 export const wishlistMemberSchema = z
@@ -116,6 +110,7 @@ export const rankingPutSchema = z
     comparedTo: uuidSchema.nullable().optional(),
     tiedWith: uuidSchema.nullable().optional(),
     group: rankingGroupSchema.optional(),
+    visibility: visibilitySchema.optional(),
   })
   .strict()
   .refine(
@@ -184,6 +179,8 @@ export const profilePatchSchema = z
   .object({
     displayName: z.string().trim().min(1).max(100).optional(),
     homeCity: z.string().trim().max(100).nullable().optional(),
+    homeCountry: countrySchema.nullable().optional(),
+    statsVisibility: visibilitySchema.optional(),
   })
   .strict()
   .refine(

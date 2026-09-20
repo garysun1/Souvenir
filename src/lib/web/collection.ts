@@ -7,7 +7,12 @@ import type {
 import type { Place } from "@/lib/schemas";
 
 export function legacyPlace(place: PlaceDto): Place {
-  return { ...place, createdAt: new Date(place.createdAt) };
+  return {
+    ...place,
+    sourceUpdatedAt: place.sourceUpdatedAt ? new Date(place.sourceUpdatedAt) : null,
+    fetchedAt: place.fetchedAt ? new Date(place.fetchedAt) : null,
+    createdAt: new Date(place.createdAt),
+  };
 }
 
 export function groupEditions(collection: CollectionEntryDto[]) {

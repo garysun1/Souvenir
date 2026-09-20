@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isPublicSupabaseKey } from "../../shared/public-supabase-config";
 
 const optionalString = z.preprocess(
   (value) => (value === "" ? undefined : value),
@@ -8,16 +9,22 @@ const optionalUrl = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().url().optional(),
 );
-const publicSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z
-      .string()
-      .regex(/^sb_publishable_[A-Za-z0-9_-]+$/)
-      .optional(),
-  ),
-});
+const publicSchema = z
+  .object({
+    NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().optional(),
+    ),
+  })
+  .refine(
+    (value) =>
+      !value.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      isPublicSupabaseKey(
+        value.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+        value.NEXT_PUBLIC_SUPABASE_URL,
+      ),
+  );
 
 export function getPublicEnv(): z.output<typeof publicSchema> {
   const result = publicSchema.safeParse({

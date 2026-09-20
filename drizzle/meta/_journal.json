@@ -36,6 +36,34 @@
       "when": 1789864384311,
       "tag": "0004_private_api_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789880360855,
+      "tag": "0005_worldwide_social",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789880425943,
+      "tag": "0006_worldwide_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789880521955,
+      "tag": "0007_worldwide_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789880866498,
+      "tag": "0008_nullable_website_corrections",
+      "breakpoints": true
     }
   ]
 }

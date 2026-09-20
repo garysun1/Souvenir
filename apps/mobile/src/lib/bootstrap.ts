@@ -56,7 +56,7 @@ export function installBootstrapCatalog(data: BootstrapDto) {
   const catalog: Place[] = data.places.map(place => {
     const fixtureId = Object.entries(mobileFixtureToSlug).find(([, slug]) => slug === place.slug)?.[0];
     return {
-      id: place.id, name: place.name, category: mobileCategory(place.category), neighborhood: place.city,
+      id: place.id, name: place.name, category: mobileCategory(place.category), neighborhood: place.city ?? '',
       summary: place.description, latitude: place.lat, longitude: place.lng, tags: [],
       priceCents: NaN, durationMinutes: NaN, openHour: NaN, closeHour: NaN, discoveryCount: NaN, cohort: NaN,
       sourceIds: [], bookingRequired: false, canonical: true, fixtureId, heroImageUrl: place.heroImageUrl ?? undefined,

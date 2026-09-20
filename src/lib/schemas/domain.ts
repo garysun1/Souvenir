@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  countrySchema,
+  latitudeSchema,
+  longitudeSchema,
+  placeSourceSchema,
+  visibilitySchema,
+} from "./worldwide";
 
 export const categorySchema = z.enum(["nature", "culture", "food", "landmark", "hidden_gem"]);
 export const rarityTierSchema = z.enum(["common", "uncommon", "rare", "epic", "legendary"]);
@@ -12,9 +19,22 @@ export const placeSchema = z.object({
   slug: z.string(),
   name: z.string(),
   category: categorySchema,
-  lat: z.number(),
-  lng: z.number(),
-  city: z.string(),
+  lat: latitudeSchema,
+  lng: longitudeSchema,
+  city: z.string().nullable(),
+  country: countrySchema.nullable().optional(),
+  region: z.string().max(200).nullable().optional(),
+  timezone: z.string().max(100).nullable().optional(),
+  website: z.string().url().nullable().optional(),
+  wikidataId: z
+    .string()
+    .regex(/^Q[1-9]\d*$/)
+    .nullable()
+    .optional(),
+  source: placeSourceSchema.optional(),
+  sourceUpdatedAt: z.coerce.date().nullable().optional(),
+  fetchedAt: z.coerce.date().nullable().optional(),
+  visibility: visibilitySchema.optional(),
   description: z.string(),
   heroImageUrl: z.string().url().nullable(),
   rarityTier: rarityTierSchema,
