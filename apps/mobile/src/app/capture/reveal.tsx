@@ -43,10 +43,10 @@ export default function RevealCapture() {
   const save = async () => {
     setSaveError(undefined);
     try {
-      const next = await commit({ type: 'ADD_EDITION', edition: captureToEdition(draft, state.clock) });
+      const next = await commit({ type: 'ADD_EDITION', edition: captureToEdition(draft, state.mode === 'account' ? new Date().toISOString() : state.clock) });
       const saved = next.editions.find(item => item.requestId === draft.id);
       if (!saved) throw new Error('The edition was not written.');
-    } catch { setSaveError('Your edition could not be saved. The reveal and draft are preserved—retry when storage is available.'); }
+    } catch (reason) { setSaveError(reason instanceof Error ? reason.message : 'Your edition could not be saved. The draft is preserved; retry when connected.'); }
   };
   const backRotation = turn.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['0deg', '90deg', '90deg'] });
   const frontRotation = turn.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['-90deg', '-90deg', '0deg'] });
@@ -76,6 +76,6 @@ function SavedCapture({ editionId }: { editionId: string }) {
     <PlacePhoto placeId={place.id} uri={edition.photoUri} style={captureStyles.photoRounded} />
     {setMember && <View style={[captureStyles.notice, { marginTop: 16 }]}><T variant="label">Downtown Firsts · {progress} of {downtownSet.placeIds.length}</T><T variant="small" muted>{progress === downtownSet.placeIds.length ? 'Set complete. Every place is counted once.' : 'Unique places move the set forward; return editions do not.'}</T></View>}
     <View style={captureStyles.actionRow}><Button label="Recommend it?" onPress={() => router.push({ pathname: '/recommend/[placeId]', params: { placeId: place.id, editionId } })} /><Button label="Open edition" variant="outline" onPress={() => router.push({ pathname: '/edition/[editionId]', params: { editionId } })} />{setMember && <Button label={progress === downtownSet.placeIds.length ? 'View completed set' : 'Complete Downtown Firsts'} variant="outline" onPress={() => router.push({ pathname: '/sets/[setId]', params: { setId: downtownSet.id } })} />}{next && <Button label={`Capture next stop · ${placeById(next)?.name ?? 'Itinerary stop'}`} variant="outline" onPress={async () => { await commit({ type: 'DRAFT', draft: null }); router.replace({ pathname: '/capture', params: { placeId: next, outingId: edition.outingId! } }); }} />}<Button label="Continue to Collection" variant="ghost" onPress={() => router.replace('/collection')} /></View>
-    <DemoLabel label="Saved locally on this device" />
+    <DemoLabel label={state.mode === 'account' ? 'Saved to your private account collection' : 'Saved locally on this device'} />
   </Screen>;
 }

@@ -55,8 +55,8 @@ export function Itinerary({ stops, constraints, totalCostCents, totalMinutes, re
           </Pressable>
           <View style={plannerStyles.cardBody}>
             <View style={plannerStyles.row}><View style={plannerStyles.number}><T variant="label" color="#fff">{index + 1}</T></View><T variant="heading" style={{ flex: 1 }}>{place.name}</T></View>
-            <T variant="label" color={colors.brand}>{minuteLabel(stop.arrivalMinute)}–{minuteLabel(stop.departureMinute)} · {money(stop.costCents)} admission/person</T>
-            <T variant="small" muted>{stop.arrivalMinute - reachesVenue} min before visit: 10-minute arrival buffer{stop.arrivalMinute - reachesVenue > 10 ? ' + opening / timed-entry wait' : ''}.</T>
+            <T variant="label" color={colors.brand}>{minuteLabel(stop.arrivalMinute)}–{minuteLabel(stop.departureMinute)} · {money(stop.costCents)} {place.canonical ? 'estimated per person' : 'admission/person'}</T>
+            <T variant="small" muted>{place.canonical ? 'User-entered time and cost estimates. Venue hours, admission and travel are not verified.' : `${stop.arrivalMinute - reachesVenue} min before visit: 10-minute arrival buffer${stop.arrivalMinute - reachesVenue > 10 ? ' + opening / timed-entry wait' : ''}.`}</T>
             {reasons?.[place.id] && <T>{reasons[place.id]}</T>}
             <T variant="small" muted>{sampleAccess[place.id]?.note ?? 'Access source unavailable.'}</T>
             <Pressable accessibilityRole="button" accessibilityLabel={`Sample sources for ${place.name}`} onPress={() => setSourceId(place.id)} style={plannerStyles.sourceButton}><Icon name="info" size={16} /><T variant="small" color={colors.brand}>Sample hours · cost · access · travel</T></Pressable>
@@ -68,13 +68,13 @@ export function Itinerary({ stops, constraints, totalCostCents, totalMinutes, re
     })}
     {c.returnToOrigin && stops.length > 0 && <Notice title="Return to the origin included"><T variant="small">{sampleTravel[c.transport][travelKey(stops[stops.length - 1].placeId, PLANNER_ORIGIN)]?.minutes ?? 'Unknown'} min {c.transport} · sample estimate. Arrive {minuteLabel(c.startMinute + totalMinutes)}.</T></Notice>}
     <View style={plannerStyles.summary}>
-      <T variant="label">2 experiences · {duration(totalMinutes)} · {dollars(totalCostCents)}/person</T>
+      <T variant="label">{stops.length} experiences · {duration(totalMinutes)} · {dollars(totalCostCents)}/person</T>
       <T variant="small" muted>Admission + travel · Ends {minuteLabel(c.startMinute + totalMinutes)} LA time</T>
       <T variant="small" muted>{dollars(totalCostCents * c.participantIds.length)} for {c.participantIds.length} {c.participantIds.length === 1 ? 'person' : 'people'}. Meals and optional purchases excluded.</T>
       <T variant="small" muted>{c.returnToOrigin ? 'Includes return to origin.' : 'Finishes at the last stop; return travel excluded.'}</T>
     </View>
     <Sheet visible={!!sourcePlace} onClose={() => setSourceId(null)} title="Planning assumptions">
-      {sourcePlace && <>
+      {sourcePlace?.canonical ? <T>Hours, admission, access and travel are unknown. The saved plan contains user-entered estimates only.</T> : sourcePlace && <>
         <DemoLabel label={PLANNING_SOURCE} />
         <T variant="place">{sourcePlace.name}</T>
         <T>Sample hours: {minuteLabel(sourcePlace.openHour * 60)}–{minuteLabel(sourcePlace.closeHour * 60)} in America/Los_Angeles.</T>

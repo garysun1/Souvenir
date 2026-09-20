@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextProps, type ViewStyle, type TextInputProps } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextProps, type ViewStyle, type TextInputProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '@/design/tokens';
 import { useApp } from '@/state/AppProvider';
@@ -12,10 +12,11 @@ export function T({ variant = 'body', muted, color, style, ...props }: TextProps
   return <Text {...props} style={[styles.text, textVariants[variant], muted && { color: colors.muted }, color && { color }, style]} />;
 }
 export function Screen({ children, scroll = true, padded = true, style }: { children: ReactNode; scroll?: boolean; padded?: boolean; style?: StyleProp<ViewStyle> }) {
-  const { error, clearError } = useApp();
+  const { error, clearError, mode, refresh, refreshing, ready } = useApp();
   return <SafeAreaView edges={['top', 'left', 'right']} style={[styles.screen, style]}>
-    {error && <Pressable accessibilityRole="button" accessibilityLabel="Dismiss storage error" onPress={clearError} style={styles.error}><T color={colors.error}>{error}</T></Pressable>}
-    {scroll ? <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, padded && styles.padding]}>{children}</ScrollView> : <View style={[{ flex: 1 }, padded && styles.padding]}>{children}</View>}
+    {error && <Pressable accessibilityRole="button" accessibilityLabel="Dismiss error" onPress={clearError} style={styles.error}><T color={colors.error}>{error}</T></Pressable>}
+    {mode === 'account' && ready && <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22 }}><T variant="small" muted>Account · synced visits</T><Button label={refreshing ? 'Refreshing…' : 'Refresh'} loading={refreshing} variant="ghost" onPress={refresh} /></View>}
+    {scroll ? <ScrollView refreshControl={mode === 'account' && ready ? <RefreshControl refreshing={refreshing} onRefresh={() => { void refresh().catch(() => undefined); }} /> : undefined} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, padded && styles.padding]}>{children}</ScrollView> : <View style={[{ flex: 1 }, padded && styles.padding]}>{children}</View>}
   </SafeAreaView>;
 }
 export function Header({ title, back = false, right, subtitle }: { title?: string; back?: boolean; right?: ReactNode; subtitle?: string }) {
@@ -67,7 +68,7 @@ export function Sheet({ visible, onClose, title, children }: { visible: boolean;
   </Modal>;
 }
 export function Avatar({ userId, size = 34 }: { userId: string; size?: number }) {
-  const user = users.find(person => person.id === userId) ?? users[0];
+  const user = users.find(person => person.id === userId) ?? { name: userId, color: '#D5E3DC', initials: userId.slice(0, 1).toUpperCase() };
   return <View accessibilityLabel={user.name} style={{ height: size, width: size, borderRadius: size / 2, backgroundColor: user.color, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' }}><T variant="label" color={colors.brand} style={{ fontSize: size * 0.36 }}>{user.initials}</T></View>;
 }
 export function AvatarStack({ ids }: { ids: string[] }) {

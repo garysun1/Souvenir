@@ -11,6 +11,7 @@ import { useApp } from '@/state/AppProvider';
 import { ownEditions, setProgress } from '@/state/selectors';
 import { DiscoveryCard, FilterSheet, PlannerCard, SearchLauncher } from '@/features/discovery/components';
 import { downtownLocation, requestDiscoveryLocation, type DiscoveryLocation } from '@/platform/location';
+import { AccountSets } from '@/features/collection/AccountSets';
 
 export default function Discover() {
   const { state } = useApp();
@@ -48,11 +49,11 @@ export default function Discover() {
     <View>{nearby.map(hit => <PlaceRow key={hit.place.id} place={hit.place} subtitle={`${hit.distanceKm.toFixed(1)} km · ${availabilityLabel(hit.place, state)}`} />)}</View>
     {!nearby.length && <View style={styles.nearbyEmpty}><T muted>No matching catalog places within {filters.radiusKm ?? 8} km of this starting point.</T><Button label="Change starting point" variant="ghost" onPress={() => setLocationSheet(true)} /></View>}
     <Pressable accessibilityRole="button" onPress={() => router.push('/settings/sources')} style={styles.weather}><Icon name="cloud" size={18} color={colors.muted} /><T variant="small" muted style={{ flex: 1 }}>Weather unknown · {state.preferences.sourceStatus === 'sample' ? 'no forecast in the place catalog' : `source ${state.preferences.sourceStatus}`}</T><Icon name="info" size={15} color={colors.muted} /></Pressable>
-    <SectionHeading title="Downtown Firsts" />
-    <Pressable accessibilityRole="button" onPress={() => router.push('/sets/downtown-firsts')} style={styles.setCard}>
+    <SectionHeading title={state.mode === 'account' ? 'Catalog sets' : 'Downtown Firsts'} />
+    {state.mode === 'account' ? <AccountSets /> : <Pressable accessibilityRole="button" onPress={() => router.push('/sets/downtown-firsts')} style={styles.setCard}>
       <PlacePhoto placeId={nextSetPlace?.id ?? downtownSet.placeIds[0]} style={styles.setImage} />
       <View style={styles.setCopy}><T variant="heading">Three Downtown icons</T><T muted>{downtownSet.description}</T><View accessibilityLabel={`${collected} of 3 places collected`} style={styles.progress}><View style={[styles.progressDone, { width: `${(collected / 3) * 100}%` }]} /></View><T variant="small" color={colors.brand}>{collected} of 3 places collected · View set</T></View>
-    </Pressable>
+    </Pressable>}
     <PlannerCard />
     <FilterSheet visible={filtersOpen} filters={filters} onChange={setFilters} onClose={() => setFiltersOpen(false)} />
     <Sheet visible={locationSheet} onClose={() => setLocationSheet(false)} title="Starting point"><T>{location.message}</T><DemoLabel label={location.label} /><Button label="Use my location" loading={locating} icon="pin" onPress={useLocation} />{location.device && <Button label="Use Downtown sample instead" variant="outline" onPress={() => setLocation(downtownLocation('Downtown sample origin selected.'))} />}<T variant="small" muted>Location is requested only after tapping. Souvenir uses foreground access for distance sorting and does not track in the background.</T></Sheet>

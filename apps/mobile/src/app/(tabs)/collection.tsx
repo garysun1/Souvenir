@@ -10,6 +10,7 @@ import { Button, Header, IconButton, Screen, Sheet, Tabs, T } from '@/components
 import { PlacePhoto } from '@/components/cards/PlacePhoto';
 import { CollectionFilterBar, filtersActive } from '@/features/collection/CollectionFilters';
 import { Album, BeenList, CollectionEmpty, CollectionMap, SavedList } from '@/features/collection/CollectionViews';
+import { AccountSets } from '@/features/collection/AccountSets';
 
 type ViewMode = 'list' | 'album' | 'map';
 export default function CollectionScreen() {
@@ -34,10 +35,10 @@ export default function CollectionScreen() {
     <Header title="Collection" subtitle={`${owned.length} places · ${editions.length} editions`} right={<IconButton name="more" label="Collection options" onPress={() => setOptions(true)} />} />
     <Tabs underline value={section} onChange={changeSection} options={[{ value: 'been', label: `Been ${owned.length}` }, { value: 'saved', label: `Want to go ${saved.length}` }, { value: 'sets', label: 'Sets' }]} />
     {section === 'sets' ? <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-      <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/sets/[setId]', params: { setId: downtownSet.id } })} style={styles.setCard}>
+      {state.mode === 'account' ? <AccountSets /> : <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/sets/[setId]', params: { setId: downtownSet.id } })} style={styles.setCard}>
         <PlacePhoto placeId="la-central-library" style={{ height: 190 }}><View style={styles.cover}><T variant="title" color="#fff">{downtownSet.title}</T><T color="#fff">{setProgress(state)} of {downtownSet.placeIds.length} places collected</T></View></PlacePhoto>
         <View style={{ gap: 9 }}><T>{downtownSet.description}</T><View style={styles.progress}><View style={[styles.progressFill, { width: `${setProgress(state) / downtownSet.placeIds.length * 100}%` }]} /></View><T variant="label" color={colors.brand}>{setProgress(state) === downtownSet.placeIds.length ? 'Completed · View badge' : 'View set and plan remaining'} →</T></View>
-      </Pressable>
+      </Pressable>}
     </ScrollView> : <>
       <View style={styles.controls}><Tabs value={view === 'album' ? 'list' : view} onChange={changeView} options={[{ value: 'list', label: 'List' }, { value: 'map', label: 'Map' }]} /><IconButton name="grid" label={view === 'album' ? 'Show place list' : 'Show album'} filled={view === 'album'} onPress={() => changeView(view === 'album' ? 'list' : 'album')} /></View>
       <View><CollectionFilterBar filters={filters} onChange={setFilters} /></View>

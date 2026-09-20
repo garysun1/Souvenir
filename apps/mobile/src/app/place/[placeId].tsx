@@ -32,17 +32,17 @@ export default function PlaceDetail() {
     try { await commit({ type: 'SAVE_PLACE', placeId: place.id, wishlistId }); } catch { /* Shared error is displayed inside this sheet. */ } finally { setSavingList(undefined); }
   };
   const signalContent = signal === 'appeal' ? { title: 'Your personal appeal', body: appeal.explanation, note: 'This is calculated from your local preferences, visits and recommendations. It is not a public rating or rarity claim.' }
-    : signal === 'frequency' ? { title: 'Demo discovery frequency', body: `${place.discoveryCount} of ${place.cohort} seeded demo collector profiles include this destination (${discoveryPercent}%).`, note: 'Illustrative 30-day cohort ending September 19, 2026. Both visitors and the cohort denominator are synthetic fixtures, not observed app users. This is not attendance, popularity or availability.' }
+    : signal === 'frequency' ? { title: 'Discovery frequency', body: place.canonical ? 'Discovery frequency is unavailable. No verified collector counts are provided.' : `${place.discoveryCount} of ${place.cohort} seeded demo collector profiles include this destination (${discoveryPercent}%).`, note: 'Demo counts are synthetic fixtures, not observed users or attendance.' }
       : { title: 'Sample availability', body: state.preferences.sourceStatus === 'sample' ? `${availabilitySignal}: ${String(place.openHour).padStart(2, '0')}:00–${String(place.closeHour).padStart(2, '0')}:00 Los Angeles, in the daily demo fixture. At the demo clock: ${availability}.${place.bookingRequired ? ' Timed admission is required in this sample; no ticket has been checked or booked.' : ''}` : 'The configured source is unavailable or stale, so current hours are unknown.', note: `${place.tags.includes('indoors') ? 'This describes the interior fixture.' : 'This describes the grounds/exterior fixture.'} It is not checked live. Open source details before planning a real visit.` };
   return <Screen>
     <Header back right={<View style={styles.headerActions}><IconButton name="bookmark" filled={state.wishlists.some(list => saveMembership(list.id).includes('you'))} label="Choose a save list" onPress={() => setSaveOpen(true)} /><IconButton name="heart" filled={favorite} label={favorite ? 'Remove favorite' : 'Add favorite'} onPress={() => { void commit({ type: 'FAVORITE', placeId: place.id }).catch(() => undefined); }} /></View>} />
     <PlacePhoto placeId={place.id} style={styles.hero} />
     <View style={styles.identity}><T variant="title">{place.name}</T><T muted>{categoryLabels[place.category]} · {place.neighborhood}</T></View>
     <T style={styles.summary}>{place.summary}</T>
-    <T variant="small" muted style={{ marginTop: 10 }}>Sample admission · {money(place.priceCents)} · Allow about {place.durationMinutes} minutes</T>
+    <T variant="small" muted style={{ marginTop: 10 }}>{place.canonical ? 'Admission cost, visit duration and hours are unknown.' : `Sample admission · ${money(place.priceCents)} · Allow about ${place.durationMinutes} minutes`}</T>
     <View style={styles.signals}>
       <PlaceSignal icon="sparkles" eyebrow="Personal appeal" value={appeal.label} onPress={() => setSignal('appeal')} />
-      <PlaceSignal icon="people" eyebrow="In-app discovery frequency" value={`${discoveryPercent}% of demo collectors`} onPress={() => setSignal('frequency')} />
+      <PlaceSignal icon="people" eyebrow="In-app discovery frequency" value={place.canonical ? 'Unavailable' : `${discoveryPercent}% of demo collectors`} onPress={() => setSignal('frequency')} />
       <PlaceSignal icon="clock" eyebrow="Documented availability" value={availabilitySignal} onPress={() => setSignal('availability')} />
     </View>
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/settings/sources', params: { placeId: place.id } })} style={styles.sourceLink}><DemoLabel label={`${state.preferences.sourceStatus === 'sample' ? 'Sample sources' : 'Source status: ' + state.preferences.sourceStatus}`} /><View style={{ flex: 1 }} /><T variant="small" color={colors.brand}>Source details</T><Icon name="chevron" size={15} /></Pressable>
@@ -73,7 +73,7 @@ export default function PlaceDetail() {
       <Button label="Done" onPress={() => setSaveOpen(false)} />
     </Sheet>
     <Sheet visible={tipOpen} onClose={() => setTipOpen(false)} title={`Private tip · ${place.name}`}>
-      <T variant="small" muted>Only you · stored locally. Updated dates are not recorded in this demo.</T>{error && <T color={colors.error}>{error} Your draft is still here; try Save again.</T>}<Field label="Tip" value={tip} onChangeText={setTip} multiline maxLength={280} placeholder="What should you remember next time?" /><T variant="small" muted style={{ textAlign: 'right' }}>{tip.length}/280</T>
+      <T variant="small" muted>{state.mode === 'account' ? 'Only you · synced privately to your account.' : 'Only you · stored locally.'}</T>{error && <T color={colors.error}>{error} Your draft is still here; try Save again.</T>}<Field label="Tip" value={tip} onChangeText={setTip} multiline maxLength={280} placeholder="What should you remember next time?" /><T variant="small" muted style={{ textAlign: 'right' }}>{tip.length}/280</T>
       <Button label="Save private tip" onPress={async () => { await commit({ type: 'TIP', placeId: place.id, text: tip.trim() }); setTipOpen(false); }} />
       {state.tips[place.id] && <Button label="Delete tip" variant="ghost" onPress={async () => { await commit({ type: 'TIP', placeId: place.id, text: '' }); setTip(''); setTipOpen(false); }} />}
     </Sheet>

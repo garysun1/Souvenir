@@ -56,6 +56,11 @@ export function reducer(state: AppState, action: Action): AppState {
       if (state.plans.some(plan => plan.requestId === action.plan.requestId)) return state;
       return { ...state, plans: [...state.plans, action.plan], outings: [...state.outings, { id: `outing-${action.plan.id}`, planId: action.plan.id, title: action.plan.title, participantIds: action.plan.constraints.participantIds, placeIds: action.plan.stops.map(stop => stop.placeId) }] };
     }
+    case 'UPDATE_PLAN': return { ...state, plans: state.plans.map(plan => plan.id === action.plan.id ? action.plan : plan) };
+    case 'DELETE_PLAN': return { ...state, plans: state.plans.filter(plan => plan.id !== action.id), outings: state.outings.filter(outing => outing.planId !== action.id) };
+    case 'CREATE_WISHLIST':
+    case 'ADD_MEMBER':
+    case 'REMOVE_MEMBER': return state;
     case 'IMPORT_ITEMS': return { ...state, importItems: action.items };
   }
 }

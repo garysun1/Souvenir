@@ -16,7 +16,7 @@ export default function SavedPlansRoute() {
   const plans = state.plans.filter(plan => filter === 'all' || plan.status === filter).slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
   return <Screen>
     <Header title="Your plans" back right={<Button label="New" variant="ghost" onPress={() => router.push('/planner')} />} />
-    <DemoLabel label="Saved locally · sample itineraries, not reservations" />
+    <DemoLabel label={state.mode === 'account' ? 'Account plans · estimates, no reservations' : 'Saved locally · sample itineraries, not reservations'} />
     <View style={{ marginTop: 20 }}><Tabs options={[{ value: 'all', label: 'All' }, { value: 'accepted', label: 'To visit' }, { value: 'completed', label: 'Completed' }]} value={filter} onChange={setFilter} underline /></View>
     {plans.length === 0 ? <EmptyState icon="map" title={filter === 'completed' ? 'Memories still to make' : filter === 'accepted' ? 'A new afternoon awaits' : 'Make room for an afternoon'} message={filter === 'completed' ? 'Capture your own edition at each stop in an accepted outing to complete it. Friend captures do not count as yours.' : 'Build a two-stop sample plan, adjust it to suit you, then accept it here. No reservations are made.'} action={state.plans.length ? 'Show all plans' : 'Plan an afternoon'} onPress={() => state.plans.length ? setFilter('all') : router.push('/planner')} /> : <View style={{ gap: 18 }}>
       {plans.map(plan => {

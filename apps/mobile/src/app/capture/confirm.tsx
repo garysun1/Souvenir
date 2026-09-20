@@ -26,7 +26,7 @@ export default function ConfirmCapture() {
   const [saveError, setSaveError] = useState<string>();
   if (!draft || !local || draft.id !== local.id || !['confirm', 'reveal'].includes(draft.status)) return <CaptureUnavailable />;
   const place = local.placeId ? placeById(local.placeId) : undefined;
-  const visitError = validateVisit(local.visitedAt, state.clock, local.moment);
+  const visitError = validateVisit(local.visitedAt, state.mode === 'account' ? new Date().toISOString() : state.clock, local.moment);
   const patch = (update: Partial<CaptureDraft>) => {
     const next = { ...local, ...update, status: 'confirm' as const };
     setLocal(next); setSaveError(undefined);
@@ -48,9 +48,9 @@ export default function ConfirmCapture() {
       <View style={captureStyles.detailCard}><View style={captureStyles.row}><Icon name="pin" /><View style={{ flex: 1 }}>{place ? <><T variant="place">{place.name}</T><T variant="small" muted>{categoryLabels[place.category]} · {place.neighborhood}</T></> : <><T variant="place">Choose the place</T><T variant="small" muted>We won’t guess from an arbitrary photo.</T></>}</View></View><Button label={place ? 'Change place' : 'Search catalog'} variant="outline" onPress={() => setPlaceSearch(true)} /></View>
       {value(params.note) && <View style={captureStyles.notice}><T variant="small">{value(params.note)}</T></View>}
       <DateTimeField value={local.visitedAt} onChange={visitedAt => patch({ visitedAt })} />
-      <T variant="small" muted>Demo clock: {localVisitInput(state.clock).replace('T', ' ')} · Los Angeles. Photo dates, when available, are editable suggestions interpreted in this timezone.</T>
+      <T variant="small" muted>{state.mode === 'account' ? 'Visit timezone: America/Los_Angeles.' : `Demo clock: ${localVisitInput(state.clock).replace('T', ' ')} · Los Angeles.`} Photo dates, when available, are editable suggestions interpreted in this timezone.</T>
       {visitError && <T color="#A3383C" accessibilityRole="alert">{visitError}</T>}
-      <View><T variant="label">Companions</T><T variant="small" muted>Selecting someone records who was there; it does not invite them.</T><ChipRow>{users.filter(user => user.id !== 'you').map(user => { const selected = local.companions.includes(user.id); return <Pressable key={user.id} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={() => patch({ companions: selected ? local.companions.filter(id => id !== user.id) : [...local.companions, user.id] })} style={captureStyles.avatarChoice}><Avatar userId={user.id} size={42} /><T variant="small" color={selected ? '#144F5D' : undefined}>{selected ? '✓ ' : ''}{user.name}</T></Pressable>; })}</ChipRow></View>
+      {state.mode === 'account' ? <Field label="Companions (names, separated by commas)" value={local.companions.join(',')} onChangeText={text => patch({ companions: text.split(',') })} /> : <View><T variant="label">Companions</T><T variant="small" muted>Selecting someone records who was there; it does not invite them.</T><ChipRow>{users.filter(user => user.id !== 'you').map(user => { const selected = local.companions.includes(user.id); return <Pressable key={user.id} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={() => patch({ companions: selected ? local.companions.filter(id => id !== user.id) : [...local.companions, user.id] })} style={captureStyles.avatarChoice}><Avatar userId={user.id} size={42} /><T variant="small" color={selected ? '#144F5D' : undefined}>{selected ? '✓ ' : ''}{user.name}</T></Pressable>; })}</ChipRow></View>}
       {local.outingId && <View style={captureStyles.detailCard}><T variant="label">Linked outing</T><T>{state.outings.find(item => item.id === local.outingId)?.title ?? 'Accepted plan'}</T><Button label="Remove outing link" variant="ghost" onPress={() => patch({ outingId: undefined })} /></View>}
       <Field label="Moment (optional)" value={local.moment} onChangeText={moment => patch({ moment: moment.slice(0, 160) })} placeholder="What stayed with you?" multiline maxLength={160} />
       <T variant="small" muted style={{ textAlign: 'right' }}>{local.moment.length}/160</T>

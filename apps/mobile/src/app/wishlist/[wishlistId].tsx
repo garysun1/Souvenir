@@ -18,10 +18,11 @@ export default function WishlistScreen() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [notice, setNotice] = useState('');
+  const [handle, setHandle] = useState('');
   const list = state.wishlists.find(item => item.id === wishlistId);
-  if (!list || !list.memberIds.includes('you')) return <SocialUnavailable title="This wishlist is unavailable" message="This demo list was not found on your device, or you are not a member. Your other shared places are still here." />;
+  if (!list || !list.memberIds.includes('you')) return <SocialUnavailable title="This wishlist is unavailable" message="This list was not found, or you are not a member. Your other shared places are still here." />;
   const overlap = wishlistOverlap(list);
-  const shared = list.memberIds.length > 1;
+  const shared = list.isShared ?? list.memberIds.length > 1;
   const results = searchSocialPlaces(query);
   const plan = () => router.push({ pathname: '/planner', params: wishlistPlannerParams(list) });
   const openCatalog = () => { setQuery(''); setAddOpen(true); };
@@ -32,16 +33,16 @@ export default function WishlistScreen() {
   };
 
   return <Screen>
-    <Header back subtitle={shared ? 'A shared wishlist' : 'Your personal wishlist'} right={shared ? <IconButton name="share" label="Preview an invitation" onPress={() => setInviteOpen(true)} /> : undefined} />
+    <Header back subtitle={shared ? 'A shared wishlist' : 'Your personal wishlist'} right={shared && state.mode !== 'account' ? <IconButton name="share" label="Preview an invitation" onPress={() => setInviteOpen(true)} /> : undefined} />
     <T variant="title">{list.title}</T>
     <View style={[styles.row, { marginVertical: 14 }]}><AvatarStack ids={list.memberIds} /><T variant="small" muted>{memberNames(list.memberIds)} · {list.entries.length} places</T></View>
-    <DemoLabel label={state.preferences.offline ? 'Local demo · Saves work offline' : 'Local demo · Sample costs & hours'} />
+    <DemoLabel label={state.mode === 'account' ? 'Shared account list · venue costs and hours unknown' : state.preferences.offline ? 'Local demo · Saves work offline' : 'Local demo · Sample costs & hours'} />
     <T variant="small" muted style={{ marginTop: 8 }}>Your own saves are editable. Another person’s save is theirs to keep.</T>
 
     {shared && (overlap.length ? <View style={[styles.callout, { marginTop: 22 }]}>
       <T variant="heading">{list.memberIds.length === 2 && list.memberIds.includes('maya') ? `You and Maya both saved these ${overlap.length}.` : `${memberNames(list.memberIds)} all saved these ${overlap.length}.`}</T>
       <T variant="small" muted>{overlap.map(id => placeById(id)?.name).join(' · ')}</T>
-      <T variant="small" muted>Try {visitDate(state.clock)}. Choose a shared window in the planner; this is not Maya’s real availability.</T>
+      <T variant="small" muted>Try {visitDate(state.clock)}. Choose a shared window in the planner; no member’s availability has been checked.</T>
       <Button label="Plan together" icon="arrow" onPress={plan} />
       <Button label="Pick a time" variant="ghost" icon="clock" onPress={plan} />
     </View> : <View style={[styles.quietCard, { marginTop: 22 }]}>
@@ -71,13 +72,18 @@ export default function WishlistScreen() {
     <View style={{ gap: 10, marginTop: 18 }}>
       <Button label="Add a place" icon="plus" variant="outline" onPress={openCatalog} />
       <Button label={shared ? 'Plan together' : 'Plan from this list'} icon="arrow" onPress={plan} />
-      {shared && <Button label="Preview invitation" variant="ghost" icon="share" onPress={() => setInviteOpen(true)} />}
-      <T variant="small" muted>List names and membership are fixed in this prototype. Saves and done markers are stored locally; they are not sent to other devices.</T>
+      {shared && state.mode !== 'account' && <Button label="Preview invitation" variant="ghost" icon="share" onPress={() => setInviteOpen(true)} />}
+      <T variant="small" muted>{state.mode === 'account' ? 'Saves and completion markers sync to list members after refresh.' : 'Demo list names and membership are fixed; saves remain on this device.'}</T>
+      {state.mode === 'account' && list.isShared && list.ownerId === 'you' && <>
+        <Field label="Add member by account handle" value={handle} onChangeText={setHandle} autoCapitalize="none" />
+        <Button label="Add member" disabled={!handle.trim()} onPress={async () => { await commit({ type: 'ADD_MEMBER', wishlistId: list.id, handle: handle.trim() }); setHandle(''); }} />
+        {list.memberIds.filter(id => id !== 'you').map(id => <Button key={id} label={`Remove ${memberNames([id])}`} variant="ghost" onPress={() => commit({ type: 'REMOVE_MEMBER', wishlistId: list.id, userId: id })} />)}
+      </>}
     </View>
 
     <Sheet title="Add a little possibility" visible={addOpen} onClose={() => setAddOpen(false)}>
       <Field label="Search the catalog" placeholder="A place, neighborhood, or feeling" value={query} onChangeText={setQuery} autoCorrect={false} />
-      <T variant="small" muted>{results.length} {results.length === 1 ? 'place' : 'places'} · Sample admission costs</T>
+      <T variant="small" muted>{results.length} {results.length === 1 ? 'place' : 'places'} · {state.mode === 'account' ? 'Admission costs unknown' : 'Sample admission costs'}</T>
       {!!error && <T accessibilityLiveRegion="polite" color={colors.error}>{error} Your previous saves are unchanged. Tap Save to retry.</T>}
       {!!notice && !error && <T accessibilityLiveRegion="polite" variant="small" color={colors.brand}>{notice}</T>}
       {results.length ? results.map(place => {
@@ -86,6 +92,6 @@ export default function WishlistScreen() {
       }) : <EmptyState title="No places found" message="Try a neighborhood like Downtown, or a feeling like quiet." action="Clear search" onPress={() => setQuery('')} icon="search" />}
       <Button label="Done" onPress={() => setAddOpen(false)} />
     </Sheet>
-    <InvitationSheet list={list} visible={inviteOpen} onClose={() => setInviteOpen(false)} />
+    {state.mode !== 'account' && <InvitationSheet list={list} visible={inviteOpen} onClose={() => setInviteOpen(false)} />}
   </Screen>;
 }

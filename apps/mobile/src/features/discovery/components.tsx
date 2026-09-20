@@ -6,6 +6,7 @@ import { colors } from '@/design/tokens';
 import type { Place, Category } from '@/domain/types';
 import type { SearchFilters } from '@/domain/search';
 import { categoryLabels } from '@/fixtures/catalog';
+import { useApp } from '@/state/AppProvider';
 
 export function SearchLauncher({ placeholder = 'Quiet, free cultural place near us', onPress = () => router.push('/search') }: { placeholder?: string; onPress?: () => void }) {
   return <Pressable accessibilityRole="search" accessibilityLabel="Search places" onPress={onPress} style={styles.search}>
@@ -23,22 +24,24 @@ export function DiscoveryCard({ place, reason }: { place: Place; reason: string 
 }
 
 export function PlannerCard() {
+  const { mode } = useApp();
   return <Pressable accessibilityRole="button" onPress={() => router.push('/planner')} style={styles.planner}>
     <View style={styles.plannerIcon}><Icon name="sparkles" /></View>
-    <View style={{ flex: 1, gap: 3 }}><T variant="heading">Plan an afternoon</T><T muted>Build a sample two-stop outing around your tastes, time and budget.</T></View>
+    <View style={{ flex: 1, gap: 3 }}><T variant="heading">Plan an afternoon</T><T muted>{mode === 'account' ? 'Choose places and save a plan with your own time and cost estimates.' : 'Build a sample two-stop outing around your tastes, time and budget.'}</T></View>
     <Icon name="chevron" size={18} />
   </Pressable>;
 }
 
 export function FilterSheet({ visible, filters, onChange, onClose }: { visible: boolean; filters: SearchFilters; onChange: (filters: SearchFilters) => void; onClose: () => void }) {
+  const { mode } = useApp();
   const toggleCategory = (category: Category) => onChange({ ...filters, categories: filters.categories.includes(category) ? filters.categories.filter(item => item !== category) : [...filters.categories, category] });
   const toggleTag = (tag: string) => onChange({ ...filters, tags: filters.tags.includes(tag) ? filters.tags.filter(item => item !== tag) : [...filters.tags, tag] });
   return <Sheet visible={visible} onClose={onClose} title="Refine results">
-    <View style={styles.filterGroup}><T variant="label">Category</T><View style={styles.wrap}>{(['cultural', 'park', 'landmark'] as Category[]).map(category => <Chip key={category} selected={filters.categories.includes(category)} label={categoryLabels[category]} onPress={() => toggleCategory(category)} />)}</View></View>
+    <View style={styles.filterGroup}><T variant="label">Category</T><View style={styles.wrap}>{(['cultural', 'park', 'landmark', 'food', 'hidden_gem'] as Category[]).map(category => <Chip key={category} selected={filters.categories.includes(category)} label={categoryLabels[category]} onPress={() => toggleCategory(category)} />)}</View></View>
     <View style={styles.filterGroup}><T variant="label">Admission budget</T><View style={styles.wrap}><Chip label="Any price" selected={filters.maxPriceCents === undefined} onPress={() => { const next = { ...filters }; delete next.maxPriceCents; onChange(next); }} /><Chip label="Free" selected={filters.maxPriceCents === 0} onPress={() => onChange({ ...filters, maxPriceCents: 0 })} /><Chip label="$10 or less" selected={filters.maxPriceCents === 1000} onPress={() => onChange({ ...filters, maxPriceCents: 1000 })} /></View></View>
     <View style={styles.filterGroup}><T variant="label">Distance from starting point</T><View style={styles.wrap}><Chip label="Any distance" selected={filters.radiusKm === undefined} onPress={() => { const next = { ...filters }; delete next.radiusKm; onChange(next); }} /><Chip label="Within 3 km" selected={filters.radiusKm === 3} onPress={() => onChange({ ...filters, radiusKm: 3 })} /><Chip label="Within 8 km" selected={filters.radiusKm === 8} onPress={() => onChange({ ...filters, radiusKm: 8 })} /></View></View>
     <View style={styles.filterGroup}><T variant="label">Sample hours & tags</T><View style={styles.wrap}><Chip label="Open at demo time" selected={filters.openNow} onPress={() => onChange({ ...filters, openNow: !filters.openNow })} />{['quiet', 'art', 'garden', 'outdoors', 'indoors'].map(tag => <Chip key={tag} label={tag[0].toUpperCase() + tag.slice(1)} selected={filters.tags.includes(tag)} onPress={() => toggleTag(tag)} />)}</View></View>
-    <DemoLabel label="Filters apply to bundled sample catalog data" />
+    <DemoLabel label={mode === 'account' ? 'Canonical catalog · unknown costs/hours cannot match a budget or open filter' : 'Filters apply to bundled sample catalog data'} />
     <Button label="Show results" onPress={onClose} />
   </Sheet>;
 }

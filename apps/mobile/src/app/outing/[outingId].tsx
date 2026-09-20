@@ -33,8 +33,8 @@ export default function OutingScreen() {
     <View style={[styles.wrap, { marginVertical: 18 }]}>{outing.participantIds.map(userId => <Pressable key={userId} accessibilityRole="button" accessibilityLabel={`View ${users.find(user => user.id === userId)?.name ?? 'member'} profile`} onPress={() => openFriend(userId)} style={[styles.row, { minHeight: 44 }]}>
       <Avatar userId={userId} size={32} /><T variant="small">{users.find(user => user.id === userId)?.name ?? 'Member'}</T>
     </Pressable>)}</View>
-    <DemoLabel label="Local outing · Sample times & costs" />
-    <T variant="small" muted style={{ marginTop: 8 }}>Accepted locally. No reservation, invitation, or location tracking. Each person keeps their own memory.</T>
+    <DemoLabel label={state.mode === 'account' ? 'Shared account outing · unverified estimates' : 'Local outing · Sample times & costs'} />
+    <T variant="small" muted style={{ marginTop: 8 }}>{state.mode === 'account' ? 'Saved to the account. ' : 'Accepted locally. '}No reservation or location tracking. Each person keeps their own private memory.</T>
     <View style={[styles.callout, { marginTop: 20 }]}>
       <View style={styles.row}><Icon name={completed === plan.stops.length && completed > 0 ? 'check' : 'camera'} /><T variant="label">{completed} of {plan.stops.length} stops in your album</T></View>
       <T variant="small" muted>{money(plan.totalCostCents)} per person · {plan.totalMinutes} minutes · {plan.constraints.transport === 'walk' ? 'Walking' : 'Transit'} estimates</T>

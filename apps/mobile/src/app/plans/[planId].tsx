@@ -35,6 +35,10 @@ export default function SavedPlanRoute() {
     setMessage(`${rewinds ? 'Replayed' : 'Advanced to'} the sample arrival: ${minuteLabel(stop.arrivalMinute)} Los Angeles time. Capture is now enabled for this stop. No GPS check was performed.`);
   }
   async function captureStop(stop: PlanStop) {
+    if (state.mode === 'account' && plan && outing) {
+      router.push({ pathname: '/capture', params: { placeId: stop.placeId, outingId: outing.id, planId: plan.id } });
+      return;
+    }
     if (!plan || !outing || !arrived.includes(stop.placeId)) return;
     // Persist the scheduled arrival again if another demo control changed the clock.
     // Capture reads this shared clock when creating its fresh request/draft.
@@ -57,22 +61,22 @@ export default function SavedPlanRoute() {
   return <Screen>
     <Header title={visiting ? 'Your afternoon, unfolding' : 'Your saved afternoon'} back />
     <View style={plannerStyles.stack}>
-      <DemoLabel label="Accepted sample plan · no booking confirmation" />
+      <DemoLabel label={state.mode === 'account' ? 'Saved account plan · estimates, no booking confirmation' : 'Accepted sample plan · no booking confirmation'} />
       <T variant="heading">{plan.title}</T>
       <View style={plannerStyles.row}><AvatarStack ids={plan.constraints.participantIds} /><T variant="small" style={{ flex: 1 }}>{plan.constraints.participantIds.map(id => users.find(user => user.id === id)?.name ?? 'Unknown participant').join(' + ')}</T></View>
       <T>{visitDate(`${plan.constraints.date}T12:00:00Z`)} · {minuteLabel(plan.constraints.startMinute)}–{minuteLabel(plan.constraints.endMinute)} LA</T>
-      <T variant="label" color={colors.brand}>{plan.status === 'completed' ? 'Completed · two memories collected' : `${completedStops}/2 stops captured`} · Version {plan.version}</T>
-      <T variant="small" muted>Demo clock: {clockLabel} LA. Local calendar: America/Los_Angeles.</T>
+      <T variant="label" color={colors.brand}>{plan.status === 'completed' ? 'Completed' : `${completedStops}/${plan.stops.length} stops captured`} · Version {plan.version}</T>
+      <T variant="small" muted>{state.mode === 'account' ? 'Current time' : 'Demo clock'}: {clockLabel} LA. Local calendar: America/Los_Angeles.</T>
       {state.preferences.sourceStatus !== 'sample' && <Notice title="Current source checks are unavailable"><T variant="small">This saved itinerary is a snapshot of sample assumptions, not current verified feasibility. Sources are {state.preferences.sourceStatus}. Review them before planning a real visit.</T><Button label="Review sources" variant="outline" onPress={() => router.push('/settings/sources')} /></Notice>}
       {!!message && <Notice title="Plan update"><T accessibilityLiveRegion="polite">{message}</T></Notice>}
       {plan.status === 'completed' && <Notice title="An afternoon worth keeping"><T>Your own editions are linked to both outing stops. Friend editions and unrelated visits do not complete this plan.</T><Button label="Open your collection" variant="outline" onPress={() => router.push('/collection')} /></Notice>}
-      {!visiting ? <Button label={plan.status === 'completed' ? 'View visit memories & map' : 'Start visit'} icon="pin" onPress={() => setVisiting(true)} /> : <Notice title="Visit mode · explicitly simulated"><T variant="small">Simulate arrival before capture. This sets the demo clock to the stop’s scheduled arrival; if it is in the past, you are replaying that sample time. We never infer arrival from GPS.</T><Button label="Exit visit mode" variant="ghost" onPress={() => setVisiting(false)} /></Notice>}
+      {!visiting ? <Button label={plan.status === 'completed' ? 'View visit memories & map' : 'Start visit'} icon="pin" onPress={() => setVisiting(true)} /> : <Notice title={state.mode === 'account' ? 'Capture your own visits' : 'Visit mode · explicitly simulated'}><T variant="small">{state.mode === 'account' ? 'Capture each place when you visit it. Every capture creates only your own edition, linked to this outing.' : 'Simulate arrival before capture. This changes the demo clock; GPS is not checked.'}</T><Button label="Exit visit mode" variant="ghost" onPress={() => setVisiting(false)} /></Notice>}
       {visiting && <PlanRoute stops={plan.stops} />}
       <Itinerary {...plan} actions={visiting ? (stop, index) => {
         const edition = associatedEdition(state, plan.id, stop.placeId);
-        const ready = arrived.includes(stop.placeId);
+        const ready = state.mode === 'account' || arrived.includes(stop.placeId);
         return edition ? <View style={{ gap: 8 }}><T variant="label" color={colors.brand}>Your stop {index + 1} memory is saved</T><Button label="Open this edition" variant="outline" onPress={() => router.push({ pathname: '/edition/[editionId]', params: { editionId: edition.id } })} /></View> : <View style={{ gap: 10 }}>
-          <Button label={`${ready ? 'Replay' : 'Simulate'} arrival · ${minuteLabel(stop.arrivalMinute)}`} variant="outline" onPress={() => simulateArrival(stop)} />
+          {state.mode !== 'account' && <Button label={`${ready ? 'Replay' : 'Simulate'} arrival · ${minuteLabel(stop.arrivalMinute)}`} variant="outline" onPress={() => simulateArrival(stop)} />}
           <Button label="Capture this stop" icon="camera" disabled={!ready} onPress={() => captureStop(stop)} />
           {!ready && <T variant="small" muted>Arrival must be saved first so the capture gets this plan’s local visit time.</T>}
         </View>;
@@ -81,7 +85,8 @@ export default function SavedPlanRoute() {
       <SectionHeading title="Make it yours" />
       <Button label={unsaved.length ? 'Save stops to Want to go' : 'Both stops saved to Want to go'} variant="outline" disabled={!unsaved.length} loading={savingStops} onPress={saveStops} />
       <T variant="small" muted>This is optional and changes only your personal list. The plan did not automatically save places or invite friends.</T>
-      <Button label="Revise this plan" variant="outline" onPress={() => router.push({ pathname: '/planner', params: { planId: plan.id } })} />
+      {(state.mode !== 'account' || plan.createdBy === 'you') && <Button label="Revise this plan" variant="outline" onPress={() => router.push({ pathname: '/planner', params: { planId: plan.id } })} />}
+      {state.mode === 'account' && plan.createdBy === 'you' && <Button label="Delete saved plan" variant="ghost" onPress={async () => { await commit({ type: 'DELETE_PLAN', id: plan.id }); router.replace('/plans'); }} />}
       <Button label="Open shared outing" variant="ghost" onPress={() => router.push({ pathname: '/outing/[outingId]', params: { outingId: outing.id } })} />
       <T variant="small" muted>{constraints.assumeTimedEntry ? 'Timed-entry availability was explicitly assumed for the sample, not booked. ' : ''}Check real venue hours, tickets, access and weather yourself before visiting.</T>
     </View>

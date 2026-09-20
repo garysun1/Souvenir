@@ -268,7 +268,7 @@ export function acceptedPlan(proposal: Proposal, requestId: string, clock: strin
   return { id: `plan-${requestId}`, requestId, title: `${proposal.constraints.participantIds.length > 1 ? 'An afternoon together' : 'An afternoon for you'}`, constraints: proposal.constraints, stops: proposal.stops, totalCostCents: proposal.totalCostCents, totalMinutes: proposal.totalMinutes, checks: [...proposal.checks, ...proposal.warnings], version, status: 'accepted', createdAt: clock };
 }
 export function missingPersonalSaves(state: AppState, plan: Plan): string[] {
-  const personal = state.wishlists.find(list => list.id === 'personal');
+  const personal = state.wishlists.find(list => list.isDefault || list.id === 'personal');
   return plan.stops.map(stop => stop.placeId).filter(id => !personal?.entries.some(entry => entry.placeId === id && entry.saverIds.includes('you')));
 }
 export function associatedEdition(state: AppState, planId: string, placeId: string) {

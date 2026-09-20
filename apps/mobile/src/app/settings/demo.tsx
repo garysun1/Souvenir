@@ -43,6 +43,7 @@ export default function DemoScreen() {
     catch { setFailure('The collection was reset, but a few app-owned photo copies may remain in local storage. They are no longer linked to your profile.'); }
     setResetMode(null);
   };
+  if (state.mode === 'account') return <Screen><Header back title="Demo controls" /><T>Sign out and enter local demo mode to use simulations. Account records are never reset by demo controls.</T></Screen>;
   return <Screen>
     <Header title="Demo controls" back subtitle="Try another version of the afternoon." />
     <DemoLabel label="Changes are saved only on this installation" />

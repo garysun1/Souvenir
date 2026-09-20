@@ -7,6 +7,7 @@ import { colors } from '@/design/tokens';
 import { downtownSet, placeById } from '@/fixtures/catalog';
 import { useApp } from '@/state/AppProvider';
 import { collectedPlaceIds, ownEditions, setProgress } from '@/state/selectors';
+import { AccountSets } from '@/features/collection/AccountSets';
 
 export default function Profile() {
   const { state, commit } = useApp();
@@ -16,6 +17,7 @@ export default function Profile() {
   const [name, setName] = useState(state.preferences.name);
   const [handle, setHandle] = useState(state.preferences.handle);
   const [bio, setBio] = useState(state.preferences.bio);
+  const [homeCity, setHomeCity] = useState(state.preferences.homeCity ?? '');
   const assessed = state.assessments.filter(item => collected.includes(item.placeId)).length;
   return <Screen>
     <Header right={<IconButton name="settings" label="Open settings" onPress={() => router.push('/settings')} />} />
@@ -29,7 +31,7 @@ export default function Profile() {
     <View style={{ flexDirection: 'row', marginVertical: 22, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.divider, paddingVertical: 17 }}>
       {[['Places', collected.length], ['Editions', editions.length], ['Recommended', assessed]].map(([label, value], index) => <View key={label} style={{ flex: 1, alignItems: 'center', gap: 4, borderLeftWidth: index ? 1 : 0, borderColor: colors.divider }}><T variant="heading">{value}</T><T variant="small" muted>{label}</T></View>)}
     </View>
-    <DemoLabel label={`${state.mode === 'sample' ? 'Sample collection' : 'Your collection'} · Stored locally`} />
+    <DemoLabel label={state.mode === 'account' ? 'Your private account collection' : `${state.mode === 'sample' ? 'Sample collection' : 'Your collection'} · Stored locally`} />
     <SectionHeading title="Recent memories" action={editions.length ? 'See collection' : undefined} onPress={() => router.push('/collection')} />
     {editions.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
       {editions.slice(0, 6).map(edition => { const place = placeById(edition.placeId); return place ? <Pressable key={edition.id} accessibilityRole="button" accessibilityLabel={`Open your ${place.name} edition`} onPress={() => router.push({ pathname: '/edition/[editionId]', params: { editionId: edition.id } })} style={{ width: 142 }}>
@@ -38,7 +40,7 @@ export default function Profile() {
       </Pressable> : null; })}
     </ScrollView> : <View style={{ backgroundColor: colors.brandSoft, borderRadius: 14, padding: 20, gap: 10 }}><T variant="place">Your first memory starts outside.</T><T variant="small" muted>Capture a place you visit, or bring in an old travel photo.</T><Button label="Capture a visit" icon="camera" onPress={() => router.push('/capture')} /></View>}
     <SectionHeading title="Your collection" />
-    <ProfileRow icon="sparkles" title="Downtown Firsts" subtitle={`${setProgress(state)}/${downtownSet.placeIds.length} places collected`} onPress={() => router.push('/sets/downtown-firsts')} />
+    {state.mode === 'account' ? <AccountSets /> : <ProfileRow icon="sparkles" title="Downtown Firsts" subtitle={`${setProgress(state)}/${downtownSet.placeIds.length} places collected`} onPress={() => router.push('/sets/downtown-firsts')} />}
     <ProfileRow icon="heart" title="Favorites" subtitle={`${state.favorites.length} places you want close`} onPress={() => router.push('/profile/favorites')} />
     <ProfileRow icon="edit" title="Private tips" subtitle={`${Object.values(state.tips).filter(Boolean).length} notes only you can see`} onPress={() => router.push('/profile/tips')} />
     <ProfileRow icon="clock" title="Saved plans" subtitle={`${state.plans.length} accepted afternoons`} onPress={() => router.push('/plans')} />
@@ -53,9 +55,9 @@ export default function Profile() {
     </View>
     <Sheet visible={editing} title="Your profile" onClose={() => setEditing(false)}>
       <Field label="Name" value={name} onChangeText={setName} maxLength={40} />
-      <Field label="Handle" value={handle} onChangeText={setHandle} autoCapitalize="none" maxLength={28} />
-      <Field label="Bio" value={bio} onChangeText={setBio} multiline maxLength={160} />
-      <Button label="Save profile" disabled={!name.trim() || !handle.trim()} onPress={async () => { await commit({ type: 'PREFERENCES', patch: { name: name.trim(), handle: handle.trim().startsWith('@') ? handle.trim() : `@${handle.trim()}`, bio: bio.trim() } }); setEditing(false); }} />
+      {state.mode === 'account' ? <><T selectable>Account handle: {state.preferences.handle}</T><Field label="Home city" value={homeCity} onChangeText={setHomeCity} maxLength={100} /></> : <Field label="Handle" value={handle} onChangeText={setHandle} autoCapitalize="none" maxLength={28} />}
+      <Field label="Bio (this device only)" value={bio} onChangeText={setBio} multiline maxLength={160} />
+      <Button label="Save profile" disabled={!name.trim() || !handle.trim()} onPress={async () => { await commit({ type: 'PREFERENCES', patch: { name: name.trim(), ...(state.mode === 'account' ? { homeCity } : { handle: handle.trim().startsWith('@') ? handle.trim() : `@${handle.trim()}` }), bio: bio.trim() } }); setEditing(false); }} />
     </Sheet>
   </Screen>;
 }
