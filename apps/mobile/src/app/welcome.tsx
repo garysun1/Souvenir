@@ -18,7 +18,7 @@ export default function Welcome() {
     try {
       if (signup) {
         const signedIn = await signUp(email, password);
-        if (!signedIn) setMessage('Check your email to confirm your account, then return here and sign in. If you already have an account, sign in with your existing password.');
+        if (!signedIn) setMessage('Open the confirmation email on this device and tap the link: it returns to Souvenir and signs you in. You can also confirm elsewhere and sign in here with your password. If you already have an account, sign in with your existing password.');
       } else await signIn(email, password);
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Authentication failed. Please retry.'); }
     finally { setBusy(false); }

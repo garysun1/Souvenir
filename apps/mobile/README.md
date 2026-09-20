@@ -26,7 +26,17 @@ Copy `.env.example` to `.env.local` and provide only the Supabase publishable ke
 - `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: an `sb_publishable_…` key; never a database, secret or service-role key.
 - `EXPO_PUBLIC_API_URL`: the Next.js origin, reachable from the simulator/device. `localhost` only works when the server is on the same device. For Expo web, the API must allow its exact origin in the bearer CORS allowlist.
 
-The server must implement `shared/api-contract.ts` and the release migration/catalog setup. The private `captures` bucket needs the contract's MIME/size limits. Configure approved email-confirmation destinations during integration. Mobile signup without a session asks the user to confirm email and sign in; it does not pretend confirmation succeeded.
+The server must implement `shared/api-contract.ts` and the release migration/catalog setup. The private `captures` bucket needs the contract's MIME/size limits. Mobile signup without a session asks the user to confirm email; it does not pretend confirmation succeeded.
+
+### Email confirmation destinations
+
+Mobile signup requests the app's own deep link (`Linking.createURL('/auth/confirm')`) as the confirmation destination, so the email link returns to Souvenir on the device instead of the project's Site URL. Supabase rejects destinations that are not allowlisted and falls back to the Site URL, so add these under Authentication → URL Configuration → Redirect URLs:
+
+- `souvenir://auth/confirm` and `souvenir://**` for development and release builds.
+- `exp://*/--/auth/confirm` while testing inside Expo Go, whose links use the `exp://` host of the development server.
+- The web origins used by the Next.js app, which sends its own `emailRedirectTo`.
+
+The app completes the link by exchanging the `code` parameter (or an implicit `access_token`/`refresh_token` pair) for a session; a rejected or expired link reports the provider's reason and stays signed out.
 
 Expo and root Next.js dependencies remain separate. Metro watches only the shared contract/catalog directory outside mobile, avoiding imports of the root React/server dependency graph. Root TypeScript wire contracts are imported type-only.
 

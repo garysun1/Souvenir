@@ -11,6 +11,17 @@ import { emptyAccount } from '@/lib/bootstrap';
 jest.mock('@react-native-async-storage/async-storage', () => jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 jest.mock('@/lib/env', () => ({ getConfig: () => ({ apiUrl: 'https://app.test' }) }));
 jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({ auth: mockAuth }) }));
+jest.mock('expo-linking', () => ({
+  createURL: (path: string) => `souvenir://${path.replace(/^\//, '')}`,
+  getInitialURL: async () => mockInitialUrl,
+  addEventListener: (_event: string, handler: (event: { url: string }) => void) => {
+    mockLinkHandler = handler;
+    return { remove: jest.fn() };
+  },
+}));
+
+let mockInitialUrl: string | null = null;
+let mockLinkHandler: (event: { url: string }) => void = () => {};
 
 const alice = '1f413e17-58f5-4528-883b-0b2141c93a37';
 const bob = '153e9a36-7672-4905-ade6-a4f830ef4147';
@@ -22,6 +33,7 @@ const mockAuth = {
   onAuthStateChange: jest.fn((callback: typeof mockEvent) => { mockEvent = callback; return { data: { subscription: { unsubscribe: jest.fn() } } }; }),
   startAutoRefresh: jest.fn(), stopAutoRefresh: jest.fn(),
   signUp: jest.fn(async () => ({ data: { session: null }, error: null })),
+  exchangeCodeForSession: jest.fn(async () => ({ data: { session: mockSession }, error: null })),
   signInWithPassword: jest.fn(async () => ({ data: { session: mockSession }, error: null })),
   signOut: jest.fn(async () => { mockSession = null; mockEvent('SIGNED_OUT', null); return { error: null }; }),
 };
@@ -40,6 +52,7 @@ async function mount() { await act(async () => root.render(<AppProvider><Observe
 beforeEach(async () => {
   jest.clearAllMocks();
   mockSession = null;
+  mockInitialUrl = null;
   await AsyncStorage.clear();
   Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', { value: true, configurable: true });
   root = createRoot(document.createElement('div'));
@@ -56,6 +69,29 @@ test('signup requiring confirmation stays signed out and makes no bootstrap requ
   expect(current.mode).toBe('signedOut');
   expect(current.state.editions).toEqual([]);
   expect(fetcher).not.toHaveBeenCalled();
+});
+test('signup asks Supabase to return the confirmation link to this app', async () => {
+  await mount();
+  await act(async () => { await current.signUp('person@example.test', 'test-only-password'); });
+  expect(mockAuth.signUp).toHaveBeenCalledWith(expect.objectContaining({
+    options: { emailRedirectTo: 'souvenir://auth/confirm' },
+  }));
+});
+test('opening the confirmation deep link signs the account in', async () => {
+  await mount();
+  expect(current.mode).toBe('signedOut');
+  mockSession = session(alice);
+  await act(async () => { mockLinkHandler({ url: 'souvenir://auth/confirm?code=confirmation-code' }); });
+  expect(mockAuth.exchangeCodeForSession).toHaveBeenCalledWith('confirmation-code');
+  expect(current.mode).toBe('account');
+  expect(current.userId).toBe(alice);
+});
+test('a rejected confirmation link reports the reason and stays signed out', async () => {
+  await mount();
+  await act(async () => { mockLinkHandler({ url: 'souvenir://auth/confirm?error=access_denied&error_description=Email+link+is+invalid+or+has+expired' }); });
+  expect(mockAuth.exchangeCodeForSession).not.toHaveBeenCalled();
+  expect(current.mode).toBe('signedOut');
+  expect(current.error).toBe('Email link is invalid or has expired');
 });
 test('account switch clears old drafts and rejects callbacks captured by the former account', async () => {
   const stateA = emptyAccount();
