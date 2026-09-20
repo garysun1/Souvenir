@@ -2,8 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Place } from "@/lib/schemas";
+import type { PlaceDto } from "../../../shared/api-contract";
 
-export function PlaceCard({ place }: { place: Place }) {
+export function PlaceCard({ place }: { place: Place & Pick<PlaceDto, "images"> }) {
+  const hero = place.images?.find((image) => image.url === place.heroImageUrl);
   return (
     <Link href={`/places/${place.slug}`} className="block flex-1">
       <Card className="h-full overflow-hidden rounded-xl border-0 bg-white shadow-none ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-md">
@@ -30,6 +32,11 @@ export function PlaceCard({ place }: { place: Place }) {
         <CardContent className="line-clamp-2 text-sm text-text-secondary">
           {place.description}
         </CardContent>
+        {hero && (
+          <p className="px-6 pb-4 text-xs text-text-secondary">
+            Photo: {hero.attribution} · {hero.license}
+          </p>
+        )}
       </Card>
     </Link>
   );

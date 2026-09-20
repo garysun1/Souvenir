@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { PlaceDetailDto, PlaceDto } from "../../../shared/api-contract";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -9,7 +10,7 @@ import { useAccount } from "@/components/account/account-provider";
 import { SavePlace } from "./save-place";
 import { PlacePreferences } from "./place-preferences";
 import { useResource } from "@/lib/web/use-resource";
-import { placeLocation } from "@/lib/web/worldwide";
+import { placeLocation, safeExternalUrl } from "@/lib/web/worldwide";
 import { PlaceSignals } from "./place-signals";
 import { PlaceMetadata } from "./place-metadata";
 import { PlaceGallery, SourceLink } from "./place-gallery";
@@ -33,6 +34,7 @@ export function PlaceDetail({ slug }: { slug: string }) {
     );
   if (!place) return <p role="status">Loading place…</p>;
   const detail = "myNotes" in place ? place : null;
+  const hero = place.images?.find((image) => image.isHero && safeExternalUrl(image.url));
   const editions = data?.collection.filter((edition) => edition.placeId === place.id) ?? [];
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -41,6 +43,22 @@ export function PlaceDetail({ slug }: { slug: string }) {
       <p className="text-sm capitalize text-text-secondary">
         {place.category.replace("_", " ")} · {placeLocation(place)}
       </p>
+      {hero && (
+        <figure className="space-y-2">
+          <Image
+            src={hero.url}
+            width={hero.width ?? 960}
+            height={hero.height ?? 640}
+            unoptimized
+            alt={place.name}
+            className="max-h-96 w-full rounded-xl object-cover"
+          />
+          <figcaption className="text-xs text-text-secondary">
+            <SourceLink url={hero.sourcePageUrl}>{hero.attribution}</SourceLink> ·{" "}
+            <SourceLink url={hero.licenseUrl}>{hero.license}</SourceLink>
+          </figcaption>
+        </figure>
+      )}
       <p>{place.description}</p>
       {place.website && <SourceLink url={place.website}>Website</SourceLink>}
       <Button variant="outline" onClick={retry}>

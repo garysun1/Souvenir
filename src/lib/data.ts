@@ -12,6 +12,7 @@ import { ensureDefaultWishlist, getWishlists } from "@/lib/server/wishlists";
 import { lockUser } from "@/lib/server/transactions";
 import { placeVisibleTo } from "@/lib/server/place-visibility";
 import type { BootstrapDto } from "../../shared/api-contract";
+import { withCatalogImages } from "@/lib/server/catalog-images";
 
 export async function getFeaturedPlaces(limit = 6): Promise<Place[]> {
   const rows = await db
@@ -20,7 +21,7 @@ export async function getFeaturedPlaces(limit = 6): Promise<Place[]> {
     .where(placeVisibleTo())
     .orderBy(asc(places.id))
     .limit(limit);
-  return rows.map(serializePlace);
+  return (await withCatalogImages(rows)).map(serializePlace);
 }
 
 export async function getCollectionSets(): Promise<CollectionSet[]> {
@@ -40,7 +41,7 @@ export async function getCollectionSets(): Promise<CollectionSet[]> {
         description: set.description,
         coverImageUrl: set.coverImageUrl,
         city: set.city,
-        places: members.map(({ place }) => serializePlace(place)),
+        places: (await withCatalogImages(members.map(({ place }) => place))).map(serializePlace),
       };
     }),
   );

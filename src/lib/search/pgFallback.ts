@@ -16,6 +16,7 @@ import type {
 import { distanceM, radiusBounds, splitBounds } from "@/lib/places/geo";
 import { coordinatesSchema } from "@/lib/places/types";
 import { discoveryPredicate } from "@/lib/places/visibility";
+import { withCatalogImages } from "@/lib/server/catalog-images";
 
 export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   return distanceM({ lat: lat1, lng: lng1 }, { lat: lat2, lng: lng2 }) / 1000;
@@ -102,11 +103,14 @@ export async function searchPg(
     )
     .orderBy(...(distance ? [distance] : []), asc(places.name), asc(places.id))
     .limit(query.limit);
-  const sources = await sourcesForPlaces(
-    rows.map((row) => row.id),
-    database,
-  );
-  return rows.map((row) => {
+  const [sources, hydrated] = await Promise.all([
+    sourcesForPlaces(
+      rows.map((row) => row.id),
+      database,
+    ),
+    withCatalogImages(rows, database),
+  ]);
+  return hydrated.map((row) => {
     const place = { ...serializePlace(row), sources: sources.get(row.id) ?? [] };
     const distanceKm =
       query.lat !== undefined && query.lng !== undefined
@@ -140,13 +144,19 @@ export async function nearbyPg(
     .orderBy(distance, asc(places.id))
     .limit(query.limit);
   if (!rows.length) return [];
-  const sources = await sourcesForPlaces(
-    rows.map(({ place }) => place.id),
-    database,
-  );
-  return rows.map(({ place, distanceM }) => ({
+  const [sources, hydrated] = await Promise.all([
+    sourcesForPlaces(
+      rows.map(({ place }) => place.id),
+      database,
+    ),
+    withCatalogImages(
+      rows.map(({ place }) => place),
+      database,
+    ),
+  ]);
+  return rows.map(({ place, distanceM }, index) => ({
     place: {
-      ...serializePlaceDto(place),
+      ...serializePlaceDto(hydrated[index]),
       sources: sources.get(place.id) ?? [],
     },
     distanceM: Number(distanceM),

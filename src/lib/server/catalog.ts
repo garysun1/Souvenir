@@ -8,8 +8,10 @@ import type { PlaceDto, SetDto } from "../../../shared/api-contract";
 import { invalidRequest, notFound } from "./errors";
 import { longitudeBounds, placeVisibleTo, requireVisiblePlace } from "./place-visibility";
 import type { Database } from "./transactions";
+import { withCatalogImages } from "./catalog-images";
+import type { CatalogImagePlace } from "@/lib/places/catalog-images";
 
-export function serializeCatalogPlace(row: typeof places.$inferSelect): PlaceDto {
+export function serializeCatalogPlace(row: CatalogImagePlace): PlaceDto {
   return serializePlaceDto(row);
 }
 
@@ -31,7 +33,7 @@ export async function getPlaces(
       ),
     )
     .orderBy(asc(places.name), asc(places.id));
-  return rows.map(serializeCatalogPlace);
+  return (await withCatalogImages(rows, database)).map(serializeCatalogPlace);
 }
 
 const cursorSchema = z.object({ name: z.string().max(200), id: uuidSchema }).strict();
@@ -93,7 +95,7 @@ export async function getPlacePage(viewerId: string | undefined, query: CatalogQ
   const page = rows.slice(0, limit);
   const last = page.at(-1);
   return {
-    data: page.map(serializeCatalogPlace),
+    data: (await withCatalogImages(page)).map(serializeCatalogPlace),
     nextCursor:
       rows.length > limit && last
         ? Buffer.from(JSON.stringify({ name: last.name, id: last.id })).toString("base64url")
@@ -102,7 +104,8 @@ export async function getPlacePage(viewerId: string | undefined, query: CatalogQ
 }
 
 export async function getPlace(slug: string, viewerId?: string): Promise<PlaceDto> {
-  return serializeCatalogPlace(await requireVisiblePlace(db, slug, viewerId));
+  const [place] = await withCatalogImages([await requireVisiblePlace(db, slug, viewerId)]);
+  return serializeCatalogPlace(place);
 }
 
 export async function getSets(database: Database = db, viewerId?: string): Promise<SetDto[]> {
@@ -113,11 +116,16 @@ export async function getSets(database: Database = db, viewerId?: string): Promi
     .innerJoin(places, eq(setPlaces.placeId, places.id))
     .where(placeVisibleTo(viewerId))
     .orderBy(asc(setPlaces.position), asc(places.id));
+  const hydrated = await withCatalogImages(
+    members.map(({ place }) => place),
+    database,
+  );
+  const byId = new Map(hydrated.map((place) => [place.id, place]));
   return rows.map((set) => ({
     ...set,
     places: members
       .filter((member) => member.setId === set.id)
-      .map(({ place }) => serializeCatalogPlace(place)),
+      .map(({ place }) => serializeCatalogPlace(byId.get(place.id) ?? place)),
   }));
 }
 
