@@ -38,13 +38,15 @@ Only after approval, with `AI_PROVIDER=openai` and `OPENAI_API_KEY` configured o
 pnpm exec tsx tests/memories/run-eval.ts --live
 ```
 
-That executes the six text cases. To execute the three image cases, place only the
+That executes nine text cases, including overlapping interests and ambiguous
+tickets. The no-sources case abstains locally; the other eight call the provider.
+To execute the three image cases, place only the
 generated synthetic PNGs in an approved existing artifact/storage system, then
 supply its HTTPS directory with `--images-base-url=...`. The runner never deploys
 or uploads files. Never substitute real user photos. Each case calls the actual
 adapter once; SDK retries are disabled.
 
-The report retains individual outputs, expected-category misses, unsupported
+The report retains the model, timestamp, individual outputs, expected-category misses, unsupported
 categories, abstention behavior, rejected results, and latency. Schema/source
 validation runs in the production adapter. Free text still needs human review
 for unsupported claims, sensitive inference, and appropriate uncertainty.
@@ -56,8 +58,11 @@ The API follows `docs/memories-contracts.md`. Analyze imports in groups of at mo
 five items, with two provider calls in flight per request, and no more than three
 attempts per item. Taste refresh accepts up to 100 selected sources and at most
 five consented photo sources. The default is
-`TASTE_MODEL=gpt-4o-mini-2024-07-18`; the only other accepted model is
-`gpt-4o-2024-08-06`. No mock fallback is used in runtime routes. `AI_PROVIDER=mock`
+`TASTE_MODEL=gpt-4o-2024-08-06`; `gpt-4o-mini-2024-07-18` remains an explicit
+lower-cost override but omitted overlapping venue categories in live text checks.
+The default uses the model that covered those cases after schema and prompt alignment.
+This small evaluation is not a general quality score; image semantics need separate verification.
+No mock fallback is used in runtime routes. `AI_PROVIDER=mock`
 disables these provider calls; users can still review imports and edit interests manually.
 
 Refresh the returned version before a new mutation. Reusing an analysis request

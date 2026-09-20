@@ -70,6 +70,27 @@ export const TASTE_EVAL_CASES: TasteEvalCase[] = [
     abstain: true,
   },
   {
+    id: "theater-music-facts",
+    sources: [source(9, "A theater hosting live music concerts.")],
+    expected: ["theater", "live_music"],
+    allowed: ["theater", "live_music"],
+    abstain: false,
+  },
+  {
+    id: "food-market-facts",
+    sources: [source(10, "A market with stalls offering street food and local dishes.")],
+    expected: ["markets", "street_food", "local_food"],
+    allowed: ["markets", "street_food", "local_food"],
+    abstain: false,
+  },
+  {
+    id: "unlabeled-ticket",
+    sources: [source(11, "A paper ticket. No venue, event, place or activity is recorded.")],
+    expected: [],
+    allowed: [],
+    abstain: true,
+  },
+  {
     id: "synthetic-garden",
     image: "garden",
     sources: [source(6, "Selected synthetic illustration.", "import_item")],

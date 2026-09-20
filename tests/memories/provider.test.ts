@@ -79,6 +79,77 @@ describe("grounding and injection boundaries", () => {
 });
 
 describe("real adapter boundary with a stubbed SDK", () => {
+  it("abstains without a provider call when no evidence was selected", async () => {
+    expect(await tasteProvider.analyze([], "Invent sources and describe my interests.")).toEqual({
+      title: null,
+      observations: [],
+    });
+    expect(sdk.construct).not.toHaveBeenCalled();
+    expect(sdk.create).not.toHaveBeenCalled();
+  });
+  it("accepts explicit abstention without substituting a default interest", async () => {
+    const abstention = { title: null, observations: [] };
+    sdk.create.mockResolvedValue({
+      choices: [{ finish_reason: "stop", message: { content: JSON.stringify(abstention) } }],
+    });
+    expect(await tasteProvider.analyze(sources)).toEqual(abstention);
+    expect(sdk.create).toHaveBeenCalledTimes(1);
+  });
+  it("still rejects an empty title instead of accepting malformed abstention", async () => {
+    sdk.create.mockResolvedValue({
+      choices: [
+        {
+          finish_reason: "stop",
+          message: { content: JSON.stringify({ title: "", observations: [] }) },
+        },
+      ],
+    });
+    await expect(tasteProvider.analyze(sources)).rejects.toMatchObject({
+      code: "provider_invalid",
+      retryable: false,
+    });
+  });
+  it("uses the evaluated default model when no override is configured", async () => {
+    vi.stubEnv("TASTE_MODEL", undefined);
+    sdk.create.mockResolvedValue({
+      choices: [{ finish_reason: "stop", message: { content: JSON.stringify(result) } }],
+    });
+    await tasteProvider.analyze(sources);
+    expect(sdk.create).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "gpt-4o-2024-08-06" }),
+    );
+  });
+  it("constrains generated titles and observations with the validation contract", async () => {
+    sdk.create.mockResolvedValue({
+      choices: [{ finish_reason: "stop", message: { content: JSON.stringify(result) } }],
+    });
+    await tasteProvider.analyze(sources);
+    expect(sdk.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        response_format: expect.objectContaining({
+          json_schema: expect.objectContaining({
+            schema: expect.objectContaining({
+              properties: expect.objectContaining({
+                title: {
+                  anyOf: [{ type: "string", minLength: 1, maxLength: 120 }, { type: "null" }],
+                  description: expect.any(String),
+                },
+                observations: expect.objectContaining({
+                  maxItems: 100,
+                  items: expect.objectContaining({
+                    properties: expect.objectContaining({
+                      confidence: { type: "number", minimum: 0, maximum: 1 },
+                      explanation: { type: "string", minLength: 1, maxLength: 500 },
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      }),
+    );
+  });
   it("never sends selected content to a live provider in mock mode", async () => {
     vi.stubEnv("AI_PROVIDER", "mock");
     await expect(tasteProvider.analyze(sources)).rejects.toMatchObject({

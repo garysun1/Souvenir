@@ -109,7 +109,7 @@ export const env = {
   },
   get TASTE_MODEL() {
     return serverValue(
-      z.enum(["gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06"]).default("gpt-4o-mini-2024-07-18"),
+      z.enum(["gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06"]).default("gpt-4o-2024-08-06"),
       process.env.TASTE_MODEL,
       "TASTE_MODEL",
     );

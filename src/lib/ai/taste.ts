@@ -45,22 +45,15 @@ Abstain with no observations when ambiguous or irrelevant. A note cannot create 
 Explain only the visible scene or supplied place facts; no personal claims.
 The optional title describes observed place interests only, never a person's traits.`;
 
-const observation = z
-  .object({
-    source: z
-      .object({
-        kind: z.enum(["edition", "import_item", "saved_place", "favorite", "recommendation"]),
-        id: z.string(),
-      })
-      .strict(),
-    interest: z.enum(TASTE_INTERESTS),
-    intent: z.enum(["enjoyed", "want_to_try"]),
-    confidence: z.number(),
-    explanation: z.string(),
-  })
-  .strict();
 const outputSchema = z
-  .object({ title: z.string().nullable(), observations: z.array(observation) })
+  .object({
+    observations: tasteAnalysisResultSchema.shape.observations.describe(
+      "Zero or more grounded observations. Categories overlap: consider the place type and its activities separately. Include every directly supported category, and none for unrelated or ambiguous evidence. Never select a default category.",
+    ),
+    title: tasteAnalysisResultSchema.shape.title.describe(
+      "A concise description of the observed place interests, or null when there are no observations. Never an empty string.",
+    ),
+  })
   .strict();
 const imageSchema = z
   .object({
@@ -110,7 +103,17 @@ export function tasteMessages(
     );
   }
   return [
-    { role: "system", content: TASTE_SYSTEM_PROMPT },
+    {
+      role: "system",
+      content: `${TASTE_SYSTEM_PROMPT}
+Use multi-label classification: check each allowed interest independently for each source.
+One source may support several observations with different interests. A place's type
+and its described activities can both qualify; do not choose only the most specific label.
+For example, a bookshop containing a coffee cafe supports both bookshops and cafes.
+Require explicit facts or directly visible image evidence for every category.
+Do not infer additional activities, amenities or views from what is typical of a place.
+Omit unsupported categories. When no category is supported, return observations: [] and title: null.`,
+    },
     { role: "user", content },
   ];
 }
@@ -150,6 +153,7 @@ async function structured<S extends z.ZodType>(
 
 export const tasteProvider = {
   async analyze(sources: TasteSourceContent[], note?: string): Promise<TasteAnalysisResult> {
+    if (!sources.length) return { title: null, observations: [] };
     return validateTasteResult(
       await structured(outputSchema, tasteMessages(sources, note)),
       sources,

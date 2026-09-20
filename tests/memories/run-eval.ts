@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { tasteProvider } from "@/lib/ai/taste";
+import { env } from "@/lib/env";
 import { TASTE_EVAL_CASES, SYNTHETIC_IMAGES } from "./eval-fixtures";
 import type { TasteAnalysisResult, TasteInterest } from "../../shared/memories-contract";
 
@@ -81,6 +82,8 @@ async function main() {
   }
   const report = {
     mode: live ? "live" : "offline",
+    model: live ? env.TASTE_MODEL : null,
+    generatedAt: new Date().toISOString(),
     license: "Original synthetic fixtures, CC0-1.0",
     reports,
   };
