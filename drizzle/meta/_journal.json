@@ -8,6 +8,34 @@
       "when": 1789852433242,
       "tag": "0000_lean_baron_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789864351355,
+      "tag": "0001_supabase_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789864351994,
+      "tag": "0002_backfill_sync_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789864383671,
+      "tag": "0003_require_sync_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789864384311,
+      "tag": "0004_private_api_boundary",
+      "breakpoints": true
     }
   ]
 }
