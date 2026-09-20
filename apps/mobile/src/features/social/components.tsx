@@ -59,14 +59,14 @@ export function ActivityCard({ activity, state }: { activity: SocialActivity; st
   </View>;
 }
 
-export function WishlistCard({ list }: { list: Wishlist }) {
+export function WishlistCard({ list, account = false }: { list: Wishlist; account?: boolean }) {
   const overlap = wishlistOverlap(list);
   const cover = list.entries.find(entry => placeById(entry.placeId));
   return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${list.title}, ${list.entries.length} places, ${overlap.length} in common`} onPress={() => openWishlist(list.id)} style={styles.listCard}>
     {cover && <PlacePhoto placeId={cover.placeId} style={{ height: 132 }} />}
     <View style={styles.row}><View style={styles.flex}><T variant="heading">{list.title}</T><T variant="small" muted>{list.entries.length} places · {memberNames(list.memberIds)}</T></View><Icon name="chevron" size={19} /></View>
     <View style={styles.between}><AvatarStack ids={list.memberIds} /><T variant="small" color={colors.brand} style={{ flex: 1, textAlign: 'right' }}>{overlap.length ? `${overlap.length} places in common` : 'Find your next shared favorite'}</T></View>
-    <T variant="small" muted>Local list · Saved changes shown here</T>
+    <T variant="small" muted>{account ? 'Account list · Syncs across web and mobile' : 'Local list · Saved changes shown here'}</T>
   </Pressable>;
 }
 

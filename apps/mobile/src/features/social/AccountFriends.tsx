@@ -18,7 +18,7 @@ export function AccountFriends() {
   return <Screen><Header title="Friends" subtitle="Shared places, separate memories." />
     <T muted>Share a list with an existing account by handle. Members can see shared saves and plans; your visit photos, notes and tips stay private.</T>
     <SectionHeading title="Your lists" />
-    {state.wishlists.map(list => <WishlistCard key={list.id} list={list} />)}
+    {state.wishlists.map(list => <WishlistCard key={list.id} list={list} account />)}
     <SectionHeading title="Create a shared list" />
     <Field label="List name" value={name} editable={!locked} onChangeText={setName} maxLength={120} />
     <Button label={locked ? 'Retry creating list' : 'Create shared list'} disabled={!name.trim()} onPress={create} />
