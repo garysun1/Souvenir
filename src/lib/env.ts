@@ -120,6 +120,48 @@ export const env = {
       "SEARCH_PROVIDER",
     );
   },
+  get PLACES_PROVIDER() {
+    return serverValue(
+      z.enum(["osm", "mock"]).default("osm"),
+      process.env.PLACES_PROVIDER,
+      "PLACES_PROVIDER",
+    );
+  },
+  get PLACES_DISPOSABLE_DATABASE_URL() {
+    return serverValue(
+      optionalString,
+      process.env.PLACES_DISPOSABLE_DATABASE_URL,
+      "PLACES_DISPOSABLE_DATABASE_URL",
+    );
+  },
+  get PLACES_LAZY_FILL() {
+    return (
+      serverValue(
+        z.enum(["true", "false"]).default("false"),
+        process.env.PLACES_LAZY_FILL,
+        "PLACES_LAZY_FILL",
+      ) === "true"
+    );
+  },
+  get OVERPASS_URL() {
+    return serverValue(optionalUrl, process.env.OVERPASS_URL, "OVERPASS_URL");
+  },
+  get OVERPASS_MANAGED_ENDPOINT() {
+    return (
+      serverValue(
+        z.enum(["true", "false"]).default("false"),
+        process.env.OVERPASS_MANAGED_ENDPOINT,
+        "OVERPASS_MANAGED_ENDPOINT",
+      ) === "true"
+    );
+  },
+  get PLACES_USER_AGENT() {
+    return serverValue(
+      z.string().min(12).max(250).default("Souvenir/0.1 (+https://github.com/garysun1/Souvenir)"),
+      process.env.PLACES_USER_AGENT,
+      "PLACES_USER_AGENT",
+    );
+  },
   get AI_PROVIDER() {
     return serverValue(
       z.enum(["openai", "mock"]).default("mock"),
