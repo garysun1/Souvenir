@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import type {
@@ -8,6 +8,7 @@ import type {
   FriendsDto,
   LeaderboardDto,
   PlaceDetailDto,
+  NearbyDto,
   ProfileDto,
   ProfileStatsDto,
   UserDetailDto,
@@ -18,7 +19,7 @@ import { appEnvironment, database, status, type Database } from "./local";
 import { type Manifest } from "./manifest";
 import { explainOracle, integrityOracle, metricsOracle, profileOracle } from "./oracle";
 import { fixtureId, fixtureSlug } from "./run";
-import { persona } from "./fixtures";
+import { cities, fixtures, persona } from "./fixtures";
 import { ROOT, SUPABASE_ORIGIN, guardedFetch } from "./safety";
 
 type Check = { name: string; status: "passed" | "failed" | "blocked"; detail?: string };
@@ -98,8 +99,13 @@ async function leaderboardOracle(db: Database, viewer: ApiClient) {
   const board = await viewer.call<LeaderboardDto>("GET", "/api/leaderboard?scope=global&limit=50");
   const rows = await db`
     WITH counts AS (
-      SELECT u.id,count(DISTINCT e.place_id)::int AS places
-      FROM users u LEFT JOIN editions e ON e.user_id=u.id
+      SELECT u.id,(
+        SELECT count(DISTINCT e.place_id)::int FROM editions e
+        JOIN places p ON p.id=e.place_id
+        WHERE e.user_id=u.id AND e.visibility='public'
+          AND p.visibility='public' AND e.captured_at<now()
+      ) AS places
+      FROM users u
       WHERE u.stats_visibility='public' GROUP BY u.id
     )
     SELECT id,places,rank() OVER (ORDER BY places DESC)::int AS rank
@@ -123,7 +129,14 @@ export async function report(manifest: Manifest) {
   const checks: Check[] = [];
   const clients = new Map<number, ApiClient>();
   const sampled = [
-    ...new Set([0, 1, 2, Math.floor(manifest.options.accounts / 2), manifest.options.accounts - 1]),
+    ...new Set([
+      0,
+      1,
+      2,
+      ...Array.from({ length: 48 }, (_, index) =>
+        Math.floor((index * (manifest.options.accounts - 1)) / 47),
+      ),
+    ]),
   ].filter((index) => index < manifest.options.accounts);
   let plans: unknown;
   const check = async (name: string, action: () => Promise<void>) => {
@@ -234,6 +247,28 @@ export async function report(manifest: Manifest) {
           assert(!JSON.stringify(detail.sources).includes('"payload"'));
         });
       }
+      await check("100 viewer/place SQL samples and eight-city nearby discovery", async () => {
+        for (let sample = 0; sample < 100; sample++) {
+          const viewer = clients.get(sampled[sample % sampled.length])!;
+          const index = (sample * 37) % fixtures.length;
+          const detail = await viewer.call<PlaceDetailDto>(
+            "GET",
+            `/api/places/${fixtureSlug(manifest.options.runId, index)}`,
+          );
+          assert(detail.metrics);
+          await metricsOracle(db, detail.id, detail.metrics);
+          await socialOracle(db, viewer, detail.id, detail);
+          const city = cities[sample % cities.length];
+          const nearby = await viewer.call<NearbyDto>(
+            "GET",
+            `/api/places/nearby?lat=${city.lat}&lng=${city.lng}&radiusM=5000&limit=20`,
+          );
+          assert(nearby.places.length > 0);
+          assert(nearby.places.every((entry) => entry.distanceM <= 5000));
+          assert(nearby.places.some((entry) => entry.place.city === city.city));
+          await viewer.call<FeedDto>("GET", "/api/feed?limit=25");
+        }
+      });
       await check("feed privacy and strict cursor pagination", async () => {
         await feedOracle(db, first);
       });
@@ -340,9 +375,24 @@ export async function report(manifest: Manifest) {
         );
         assert.deepEqual(await snapshot(), before);
       });
+      if (manifest.options.accounts >= 1000) {
+        await check("1000-account read latency p95 below 300ms", async () => {
+          const latency = latencyReport();
+          for (const route of [
+            "GET /api/places/:place",
+            "GET /api/feed",
+            "GET /api/places/nearby",
+          ]) {
+            const timing = latency.find((entry) => entry.route === route);
+            assert(timing && timing.count >= 100, `Insufficient latency samples for ${route}`);
+            assert(timing.p95Ms < 300, `${route} p95 ${timing.p95Ms.toFixed(1)}ms exceeds 300ms`);
+          }
+        });
+      }
     }
   } finally {
     await db.end();
+    const previousReport = resolve(manifest.dir, "report.json");
     const result = {
       runId: manifest.options.runId,
       mode: manifest.options.mode,
@@ -354,6 +404,9 @@ export async function report(manifest: Manifest) {
       generatedAt: new Date().toISOString(),
       checks,
       latency: latencyReport(),
+      previousRunLatency: existsSync(previousReport)
+        ? (JSON.parse(readFileSync(previousReport, "utf8")) as { latency: unknown }).latency
+        : null,
       explain: plans,
       scope:
         "Real local Auth + Storage + bearer Next API; SQL oracle. No browser test. No provider coverage or real-place license verification implied by synthetic fixtures.",

@@ -144,7 +144,7 @@ export async function explainOracle(db: Database, id: string, place: string) {
     const plans = [
       await tx`EXPLAIN (FORMAT TEXT) SELECT user_id FROM editions WHERE place_id=${place} AND captured_at>=now()-interval '90 days' ORDER BY captured_at,user_id`,
       await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM editions WHERE user_id=${id} ORDER BY captured_at DESC`,
-      await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM activity_events WHERE user_id=${id} ORDER BY created_at DESC NULLS LAST,id DESC NULLS LAST LIMIT 25`,
+      await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM activity_events WHERE user_id>=${id} ORDER BY user_id,created_at DESC NULLS LAST,id DESC NULLS LAST LIMIT 25`,
       await tx`EXPLAIN (FORMAT TEXT) SELECT * FROM user_stats ORDER BY places_visited DESC NULLS LAST,user_id LIMIT 25`,
     ].map((rows) => rows.map((row) => String(row["QUERY PLAN"])).join("\n"));
     for (let i = 0; i < expected.length; i++)

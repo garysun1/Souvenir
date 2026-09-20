@@ -160,10 +160,11 @@ The workload additionally needs:
 
 Typed inputs/DTOs come from `shared/api-contract.ts`; no app/server/schema
 implementation is supplied by this component. No endpoint is emulated.
-The current contract has no incremental/full recomputation command:
-the report explicitly marks that comparison blocked. The integrator must
-supply an entrypoint to test incremental rebuild drift. The existing metric
-oracles compare API results to full SQL ground truth on each verification.
+Worldwide reports call the loopback-only `scripts/recompute-stats.ts` and
+compare persisted incremental/full projections, excluding computation/window
+timestamps. Metric oracles independently compare APIs with SQL ground truth.
+The integrated cleanup command `cleanup-images --apply` processes expired
+public derivative deletion intents in the local `place-images` bucket.
 
 ## Resume, verify, report and cleanup
 
@@ -234,17 +235,23 @@ visibility and five cursor pages; non-friend stats/capture isolation;
 friend convergence and old-cursor privacy after revocation; visibility-change
 metric freshness; FK/event integrity and RLS/revoked grants.
 The entire run's edition count is checked, while profile/metric API parity is
-sampled. This is not an exhaustive privacy proof or a provider quality audit.
+sampled (up to 50 profiles and 100 viewer/place pairs). Nearby discovery and feed
+reads also collect 100 samples each. At 1,000 accounts, verification enforces
+p95 below 300 ms for detail, feed and nearby. Reports retain the preceding
+verification's latency summary for comparison. This is not an exhaustive
+privacy proof or a provider quality audit.
 
 EXPLAIN uses ordered probes with `enable_seqscan=off` and `enable_sort=off`
 to establish index eligibility, not production cost selection. Small datasets
 can legitimately prefer an older single-column index for an unordered count;
 that is not treated as evidence that the composite index is missing.
 The contracts' descending indexes use `NULLS LAST`; the
-matching feed/leaderboard ordering in the EXPLAIN probes is explicit.
+matching feed/leaderboard ordering in the EXPLAIN probes is explicit. The
+per-user cursor probe orders across a user-ID range so PostgreSQL cannot
+substitute the global cursor index for an equality-filtered tiny dataset.
 Core mode marks unimplemented worldwide checks blocked and can pass the
 infrastructure smoke. Worldwide mode fails on missing required endpoints or
-failed assertions and separately reports the missing recomputation interface.
+failed assertions, including incremental/full recomputation drift.
 
 ## Reviewed API and license references
 

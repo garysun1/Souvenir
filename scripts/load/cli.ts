@@ -65,7 +65,11 @@ async function main() {
         ],
         {
           cwd: ROOT,
-          env: { ...appEnvironment(config), PLACES_DISPOSABLE_DATABASE_URL: config.DB_URL },
+          env: {
+            ...appEnvironment(config),
+            NODE_ENV: "test",
+            PLACES_DISPOSABLE_DATABASE_URL: config.DB_URL,
+          },
           stdio: "inherit",
         },
       );
