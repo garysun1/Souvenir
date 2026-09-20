@@ -95,7 +95,8 @@ function Edition({ id }: { id: string }) {
       <p className="text-sm text-text-secondary">
         Edition {edition.visitSequence} ·{" "}
         {edition.visitSequence > 1 ? "Return visit" : "First visit"} ·{" "}
-        {new Date(edition.capturedAt).toLocaleString()} · Recorded in {edition.timezone}
+        {new Date(edition.capturedAt).toLocaleString(undefined, { timeZone: edition.timezone })} ·
+        Recorded in {edition.timezone}
       </p>
       {edition.photo && (
         <SignedPhoto

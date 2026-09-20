@@ -81,7 +81,11 @@ export function PlaceDetail({ slug }: { slug: string }) {
                 className="flex min-h-11 items-center justify-between border-b border-divider text-sm"
               >
                 <span>Edition {edition.visitSequence}</span>
-                <span>{new Date(edition.capturedAt).toLocaleDateString()}</span>
+                <span>
+                  {new Date(edition.capturedAt).toLocaleDateString(undefined, {
+                    timeZone: edition.timezone,
+                  })}
+                </span>
               </Link>
             ))}
           </section>
