@@ -65,8 +65,8 @@ export function ImportItem({
         <p role="alert" className="text-sm text-destructive">
           {item.error.message}{" "}
           {item.error.retryable
-            ? "Select this photo and retry analysis."
-            : "This item cannot be saved in its current state. Remove it and import again without analysis if needed."}
+            ? "Select this photo and retry analysis, or review and save its metadata to continue without analysis."
+            : "Review and save this photo’s metadata or confirm its stop to continue without analysis."}
         </p>
       )}
       {item.analysis && (
