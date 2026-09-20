@@ -24,7 +24,7 @@ export class AccountApi {
     private tokens: TokenProvider,
     readonly userId: string,
     private scope: ReturnType<AccountScope['capture']>,
-    private send: typeof fetch = fetch,
+    private send: typeof fetch = (input, init) => globalThis.fetch(input, init),
   ) {}
   assertCurrent() { this.scope.assertCurrent(); }
   async request<T>(path: string, method = 'GET', input?: unknown): Promise<T> {

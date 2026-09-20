@@ -11,6 +11,26 @@ function setup() {
   const scope = new AccountScope();
   return { tokens, send, scope, api: new AccountApi('https://souvenir.test', tokens, userId, scope.capture(), send) };
 }
+test.each([200, 401])('default fetch uses its global receiver, including refresh (status=%p)', async firstStatus => {
+  const { tokens, scope } = setup();
+  let calls = 0;
+  const nativeFetch = jest.spyOn(globalThis, 'fetch').mockImplementation(function (this: typeof globalThis) {
+    if (this !== globalThis) throw new TypeError('Illegal invocation');
+    return Promise.resolve(response(calls++ === 0 ? firstStatus : 200, { data: { id: 'shared' } }));
+  });
+  try {
+    const api = new AccountApi('https://souvenir.test', tokens, userId, scope.capture());
+    await expect(api.request('/api/bootstrap')).resolves.toEqual({ id: 'shared' });
+    expect(nativeFetch).toHaveBeenCalledTimes(firstStatus === 401 ? 2 : 1);
+    expect(tokens.refreshSession).toHaveBeenCalledTimes(firstStatus === 401 ? 1 : 0);
+    expect(nativeFetch).toHaveBeenLastCalledWith('https://souvenir.test/api/bootstrap', expect.objectContaining({
+      credentials: 'omit',
+      headers: expect.objectContaining({ Authorization: `Bearer ${firstStatus === 401 ? 'refreshed' : 'first'}` }),
+    }));
+  } finally {
+    nativeFetch.mockRestore();
+  }
+});
 test('bearer refresh retries once with unchanged request ID and body, without cookies', async () => {
   const { api, send, tokens } = setup();
   send.mockResolvedValueOnce(response(401, { error: 'unauthorized' })).mockResolvedValueOnce(response(201, { data: { id: 'saved' } }));
