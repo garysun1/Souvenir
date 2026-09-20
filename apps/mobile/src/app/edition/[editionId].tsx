@@ -28,7 +28,8 @@ export default function EditionDetail() {
   if (!edition || !place) return <Screen><Header title="Edition unavailable" back /><EmptyState icon="image" title="This edition isn’t here" message="It may have been deleted, or the link is no longer valid." action="Return to Collection" onPress={() => router.replace('/collection')} /></Screen>;
   const assessment = state.assessments.find(item => item.placeId === place.id);
   const outing = edition.outingId ? state.outings.find(item => item.id === edition.outingId) : undefined;
-  const dateError = validateVisit(edit.visitedAt, state.clock, edit.moment);
+  const momentLimit = state.mode === 'account' ? 2000 : 160;
+  const dateError = validateVisit(edit.visitedAt, state.mode === 'account' ? new Date().toISOString() : state.clock, edit.moment, momentLimit);
   const openEdit = () => { setEdit({ moment: edition.moment, visitedAt: edition.visitedAt, companions: edition.companions }); setError(undefined); setEditing(true); };
   const saveEdit = async () => {
     if (dateError) return;
@@ -40,7 +41,7 @@ export default function EditionDetail() {
       const next = await commit({ type: 'DELETE_EDITION', id: edition.id });
       if (edition.photoUri && next.captureDraft?.photoUri !== edition.photoUri && !next.editions.some(item => item.photoUri === edition.photoUri)) await deleteMedia(edition.photoUri).catch(() => undefined);
       setDeleting(false); router.replace('/collection');
-    } catch { setError('The edition could not be deleted. Nothing was removed.'); setDeleting(false); }
+    } catch { setError('Deletion could not be confirmed. Refresh to check its status, then retry.'); setDeleting(false); }
   };
   const share = async () => {
     try { await Share.share({ title: `${place.name} · Souvenir`, message: `My ${editionStamp(edition.sequence).toLowerCase()} at ${place.name} on ${visitDate(edition.visitedAt)}.${edition.moment ? ` ${edition.moment}` : ''}` }); }
@@ -67,13 +68,13 @@ export default function EditionDetail() {
     <Sheet visible={editing} onClose={() => setEditing(false)} title="Edit this edition">
       <DateTimeField value={edit.visitedAt} onChange={visitedAt => setEdit(current => ({ ...current, visitedAt }))} />
       {dateError && <T color="#A3383C">{dateError}</T>}
-      <View><T variant="label">Companions</T><ChipRow>{users.filter(user => user.id !== 'you').map(user => { const selected = edit.companions.includes(user.id); return <Pressable key={user.id} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={() => setEdit(current => ({ ...current, companions: selected ? current.companions.filter(id => id !== user.id) : [...current.companions, user.id] }))} style={captureStyles.avatarChoice}><Avatar userId={user.id} size={42} /><T variant="small">{selected ? '✓ ' : ''}{user.name}</T></Pressable>; })}</ChipRow></View>
-      <Field label="Moment" value={edit.moment} onChangeText={moment => setEdit(current => ({ ...current, moment: moment.slice(0, 160) }))} multiline maxLength={160} />
-      <T variant="small" muted style={{ textAlign: 'right' }}>{edit.moment.length}/160</T>
+      {state.mode === 'account' ? <Field label="Companion names (comma separated)" value={edit.companions.join(', ')} onChangeText={value => setEdit(current => ({ ...current, companions: value.split(',').map(name => name.trim()) }))} /> : <View><T variant="label">Companions</T><ChipRow>{users.filter(user => user.id !== 'you').map(user => { const selected = edit.companions.includes(user.id); return <Pressable key={user.id} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={() => setEdit(current => ({ ...current, companions: selected ? current.companions.filter(id => id !== user.id) : [...current.companions, user.id] }))} style={captureStyles.avatarChoice}><Avatar userId={user.id} size={42} /><T variant="small">{selected ? '✓ ' : ''}{user.name}</T></Pressable>; })}</ChipRow></View>}
+      <Field label="Moment" value={edit.moment} onChangeText={moment => setEdit(current => ({ ...current, moment: moment.slice(0, momentLimit) }))} multiline maxLength={momentLimit} />
+      <T variant="small" muted style={{ textAlign: 'right' }}>{edit.moment.length}/{momentLimit}</T>
       {error && <T color="#A3383C">{error}</T>}<Button label="Save changes" disabled={!!dateError} onPress={saveEdit} />
     </Sheet>
     <Sheet visible={tipOpen} onClose={() => setTipOpen(false)} title="Private tip">
-      <T muted>This note stays on this device and belongs to the place, so it remains if this edition is deleted.</T><Field label="Tip" value={tip} onChangeText={value => setTip(value.slice(0, 280))} multiline maxLength={280} /><T variant="small" muted style={{ textAlign: 'right' }}>{tip.length}/280</T><Button label="Save private tip" onPress={async () => { await commit({ type: 'TIP', placeId: place.id, text: tip.trim() }); setTipOpen(false); }} />
+      <T muted>This private note belongs to the place and remains if this edition is deleted. {state.mode === 'account' ? 'It syncs only to your account.' : 'It stays on this device.'}</T><Field label="Tip" value={tip} onChangeText={value => setTip(value.slice(0, 280))} multiline maxLength={280} /><T variant="small" muted style={{ textAlign: 'right' }}>{tip.length}/280</T><Button label="Save private tip" onPress={async () => { await commit({ type: 'TIP', placeId: place.id, text: tip.trim() }); setTipOpen(false); }} />
     </Sheet>
     <Sheet visible={deleting} onClose={() => setDeleting(false)} title="Delete this edition?">
       <T>This removes the personal photo, date, companions, and moment.</T>

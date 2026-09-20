@@ -1,18 +1,18 @@
+import { randomUUID } from 'expo-crypto';
 import type { AppState, CaptureDraft, Edition } from '@/domain/types';
-import { placeById, places } from '@/fixtures/catalog';
+import { placeById, places, users } from '@/fixtures/catalog';
 
 export const CAPTURE_TIMEZONE = 'America/Los_Angeles';
 export const samplePhoto = (placeId: string) => `sample:${placeId}`;
 export const samplePlaceId = (uri?: string) => uri?.startsWith('sample:') ? uri.slice(7) : undefined;
-let captureSequence = 0;
-export const newCaptureId = () => `capture-${Date.now().toString(36)}-${captureSequence++}`;
+export const newCaptureId = () => randomUUID();
 
 export function identifyCapture(draft: Pick<CaptureDraft, 'photoUri' | 'placeId'>, failure = false) {
   if (failure) return { candidates: [] as string[], selectedId: undefined, reason: 'Demo identification is unavailable. Your photo is safe; choose a place yourself.' };
   const sample = samplePlaceId(draft.photoUri);
   const known = sample && placeById(sample) ? sample : draft.placeId && placeById(draft.placeId) ? draft.placeId : undefined;
   return {
-    candidates: [...new Set([known, 'la-the-broad', 'la-grand-park', 'la-central-library'].filter((id): id is string => !!id))],
+    candidates: [...new Set([known, 'la-the-broad', 'la-grand-park', 'la-central-library'].filter((id): id is string => !!id && !!placeById(id)))],
     selectedId: known,
     reason: sample && known ? 'This sample photograph is linked to a catalog place. Please confirm it.' : known
       ? 'Suggested from capture context or available photo metadata, not from analysis of the pixels.'
@@ -34,10 +34,10 @@ export function searchCapturePlaces(query: string) {
   return places.filter(place => words.every(word => `${place.name} ${place.neighborhood} ${place.tags.join(' ')}`.toLocaleLowerCase().includes(word)));
 }
 
-export function validateVisit(visitedAt: string, clock: string, moment = ''): string | undefined {
+export function validateVisit(visitedAt: string, clock: string, moment = '', maxLength = 160): string | undefined {
   if (!visitedAt || !Number.isFinite(Date.parse(visitedAt))) return 'Choose a valid visit date and time.';
-  if (Date.parse(visitedAt) > Date.parse(clock)) return 'This visit is in the future of the demo clock. Choose an earlier time.';
-  if (moment.length > 160) return 'Keep your moment to 160 characters or fewer.';
+  if (Date.parse(visitedAt) > Date.parse(clock)) return 'This visit is in the future. Choose an earlier time.';
+  if (moment.length > maxLength) return `Keep your moment to ${maxLength} characters or fewer.`;
   return undefined;
 }
 
@@ -47,7 +47,7 @@ export function captureToEdition(draft: CaptureDraft, clock: string): Omit<Editi
   if (!draft.placeId || !placeById(draft.placeId)) throw new Error('Choose a catalog destination.');
   return { id: `edition-${draft.id}`, requestId: draft.id, ownerId: 'you', placeId: draft.placeId,
     photoUri: draft.photoUri, visitedAt: draft.visitedAt, timezone: CAPTURE_TIMEZONE,
-    companions: [...new Set(draft.companions.filter(id => ['maya', 'jordan', 'sam'].includes(id)))],
+    companions: [...new Set(draft.companions.map(name => name.trim()).filter(name => placeById(draft.placeId!)?.canonical ? !!name : users.some(user => user.id === name && name !== 'you')))],
     moment: draft.moment.trim(), outingId: draft.outingId, origin: 'capture' };
 }
 

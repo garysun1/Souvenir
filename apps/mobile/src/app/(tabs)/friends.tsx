@@ -5,6 +5,7 @@ import { Button, DemoLabel, EmptyState, Header, IconButton, Screen, SectionHeadi
 import { socialActivity, wishlistPlannerParams } from '@/domain/social';
 import { useApp } from '@/state/AppProvider';
 import { ActivityCard, FriendStrip, openFriend, OutingRow, styles, WishlistCard } from '@/features/social/components';
+import { AccountFriends } from '@/features/social/AccountFriends';
 
 export default function Friends() {
   const { state } = useApp();
@@ -15,6 +16,7 @@ export default function Friends() {
   const outings = state.outings.filter(outing => outing.participantIds.includes('you') && outing.participantIds.length > 1 && state.plans.some(plan => plan.id === outing.planId));
   const shared = state.wishlists.find(list => list.id === 'saturday-maya');
   const planTogether = () => router.push({ pathname: '/planner', params: shared ? wishlistPlannerParams(shared) : { participantIds: 'you,maya' } });
+  if (state.mode === 'account') return <AccountFriends />;
 
   return <Screen>
     <Header title="Friends" subtitle="Good places are better together." right={<IconButton name="people" label="Preview friend connection" onPress={() => setConnectionPreview(true)} />} />

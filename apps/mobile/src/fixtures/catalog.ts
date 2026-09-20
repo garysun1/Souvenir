@@ -1,6 +1,6 @@
 import type { Category, Place, User } from '@/domain/types';
 
-export const categoryLabels: Record<Category, string> = { park: 'Parks & outdoors', cultural: 'Culture', landmark: 'Landmarks' };
+export const categoryLabels: Record<Category, string> = { park: 'Parks & outdoors', cultural: 'Culture', landmark: 'Landmarks', food: 'Food', hidden_gem: 'Hidden gems' };
 type Row = [string, string, Category, string, number, number, number, string[], string];
 const rows: Row[] = [
   ['la-griffith-park', 'Griffith Park', 'park', 'Los Feliz', 34.1366, -118.2942, 0, ['outdoors', 'scenic', 'hiking'], 'A little wilderness in the middle of everything. Find a trail, a view, and room to breathe.'],
@@ -34,7 +34,7 @@ const rows: Row[] = [
   ['la-hollywood-bowl', 'Hollywood Bowl', 'landmark', 'Hollywood Hills', 34.1122, -118.3392, 0, ['music', 'outdoors'], 'An iconic hillside amphitheater. Exterior grounds, subject to event access.'],
   ['la-korean-bell', 'Korean Bell of Friendship', 'landmark', 'San Pedro', 33.7093, -118.2937, 0, ['scenic', 'outdoors', 'history'], 'Ocean air and an intricately painted pavilion on a coastal bluff.'],
 ];
-export const places: Place[] = rows.map(([id, name, category, neighborhood, latitude, longitude, priceCents, tags, summary], index) => ({
+export const fixturePlaces: Place[] = rows.map(([id, name, category, neighborhood, latitude, longitude, priceCents, tags, summary], index) => ({
   id, name, category, neighborhood, latitude, longitude, priceCents, tags, summary,
   durationMinutes: category === 'cultural' ? 60 : 30,
   openHour: category === 'park' ? 6 : 10, closeHour: category === 'park' ? 20 : 18,
@@ -42,11 +42,21 @@ export const places: Place[] = rows.map(([id, name, category, neighborhood, lati
   sourceIds: ['curated', 'opentripmap', ...(category === 'park' ? ['la-parks'] : [])],
   bookingRequired: id === 'la-the-broad' || id === 'la-getty',
 }));
+export let places = fixturePlaces;
 export const placeById = (id: string) => places.find(place => place.id === id);
-export const downtownSet = { id: 'downtown-firsts', title: 'Downtown Firsts', description: 'Three places. A whole new side of your city.', placeIds: ['la-central-library', 'la-the-broad', 'la-grand-park'] };
-export const users: User[] = [
+export interface CatalogSet { id: string; title: string; description: string; placeIds: string[] }
+const fixtureSet = { id: 'downtown-firsts', title: 'Downtown Firsts', description: 'Three places. A whole new side of your city.', placeIds: ['la-central-library', 'la-the-broad', 'la-grand-park'] };
+export let downtownSet: CatalogSet = fixtureSet;
+export let sets: CatalogSet[] = [fixtureSet];
+const fixtureUsers: User[] = [
   { id: 'you', name: 'You', initials: 'Y', color: '#D5E3DC', tastes: ['cultural', 'park'] },
   { id: 'maya', name: 'Maya', initials: 'M', color: '#EACCB8', tastes: ['cultural', 'park'] },
   { id: 'jordan', name: 'Jordan', initials: 'J', color: '#DAD8ED', tastes: ['landmark', 'park'] },
   { id: 'sam', name: 'Sam', initials: 'S', color: '#E5DBB3', tastes: ['cultural', 'landmark'] },
 ];
+export let users = fixtureUsers;
+export function restoreFixtureCatalog() { places = fixturePlaces; sets = [fixtureSet]; downtownSet = fixtureSet; users = fixtureUsers; }
+export function installCatalog(catalog: Place[], collections: CatalogSet[], people: User[]) {
+  places = catalog; sets = collections; users = people;
+  downtownSet = collections.find(set => set.title === 'Downtown Firsts') ?? { id: '', title: 'Sets', description: 'No sets available.', placeIds: [] };
+}

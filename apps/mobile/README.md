@@ -1,6 +1,6 @@
 # Souvenir
 
-Souvenir is a deterministic Expo 57 prototype for the loop:
+Souvenir is an Expo 57 app with shared Supabase account persistence and a separate local demo for the loop:
 
 **Discover → Visit → Capture → Reveal → Collect → Inspire the next visit**
 
@@ -16,7 +16,29 @@ It uses a Beli-inspired visual language: Playfair Display headings, Inter interf
 - Data: curated catalog, provider provenance, source scope/date/unit states, stale/unavailable controls, credits, and clear labels for sample assumptions.
 - Profiles and concepts: local profile editing, collection statistics, photo import, pocket diorama, future city editions, and booking-handoff previews.
 
-No production service is connected. Identification, semantic search, weather, routing, imports, social actions, data sources, and planning are bundled simulations. The app never claims a booking, payment, reservation, live forecast, live opening status, or message delivery.
+Account mode loads the canonical catalog and account-owned visits, saves, rankings, tips, shared lists and plans from the authenticated Next.js API. Camera/gallery photos upload privately before edition creation. Real accounts use manual place selection and user-entered planning estimates. The sample identification, Dropbox import, fictional friends and automatic planning flows stay in explicit demo mode. No mode claims a booking, payment, reservation, live forecast or live opening status.
+
+## Account configuration
+
+Copy `.env.example` to `.env.local` and provide only the Supabase publishable key, project URL and Next.js API origin. Restart Expo after changes:
+
+- `EXPO_PUBLIC_SUPABASE_URL`: the shared Supabase project origin.
+- `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: an `sb_publishable_…` key; never a database, secret or service-role key.
+- `EXPO_PUBLIC_API_URL`: the Next.js origin, reachable from the simulator/device. `localhost` only works when the server is on the same device. For Expo web, the API must allow its exact origin in the bearer CORS allowlist.
+
+The server must implement `shared/api-contract.ts` and the release migration/catalog setup. The private `captures` bucket needs the contract's MIME/size limits. Configure approved email-confirmation destinations during integration. Mobile signup without a session asks the user to confirm email and sign in; it does not pretend confirmation succeeded.
+
+Expo and root Next.js dependencies remain separate. Metro watches only the shared contract/catalog directory outside mobile, avoiding imports of the root React/server dependency graph. Root TypeScript wire contracts are imported type-only.
+
+## Persistence and retries
+
+Supabase Auth persists sessions in AsyncStorage and refreshes them on foreground. Data requests send a bearer token, never ambient cookies. A 401 refreshes the token once and retries the same request body. Further failures display an error without switching to sample data.
+
+Bootstrap replaces account state after sign-in, foregrounding, Refresh/pull-to-refresh and completed writes. Switching accounts clears private memory, aborts requests, rejects stale callbacks and remounts the navigation tree. Only preferences and capture drafts use `souvenir-account-v1:<userId>`; authoritative collection state comes from the server. The old `souvenir-state-v1` demo is never migrated to an account.
+
+Capture drafts hold one UUID per logical visit. The normalized edition payload is saved before upload and frozen for retries. Private uploads use device bytes as an ArrayBuffer and the exact server-provided user/request path. Successful prior uploads skip re-upload; signed read URLs are refreshed and never persisted as permanent photos. If a request might have succeeded, retry the same draft before editing the saved edition. A new capture creates a new UUID for a revisit. Account writes require connectivity; a failed draft remains local.
+
+Shared-list creation and manual plan acceptance reuse their request IDs while the retry screen remains open. Leaving those screens discards the unsaved form; refresh the server list before submitting a new create after an uncertain result. Collection photo drafts remain durable across restarts.
 
 ## Run
 
@@ -46,7 +68,7 @@ npm test -- --runInBand
 npm run export:web
 ```
 
-The automated suite covers capture idempotency, revisit and set invariants, media keys, edition deletion, ranking and ties, import deduplication and retries, search filters, map geometry, source-state propagation, planner feasibility and arithmetic, shared-list overlap, participant isolation, persistence migration, and demo controls.
+The automated suite covers bearer refresh/envelopes, account-generation invalidation, canonical bootstrap/category mapping, cache isolation, immutable capture retries, private upload/path validation, capture revisits, edition deletion, ranking, import deduplication, search, map geometry, source states and demo controls. Shell checks do not replace hosted cross-client or native device acceptance testing.
 
 ## Demo data
 
@@ -61,8 +83,8 @@ Choose **Start with an empty collection** on the welcome screen to exercise firs
 
 ## Verification and current limits
 
-TypeScript, lint, all 152 tests, Expo dependency compatibility, all 21 Expo Doctor checks, and the web export passed. Browser and physical-device end-to-end testing has not yet been performed.
+Browser, hosted cross-client and physical-device end-to-end testing belong to final integration. This component does not apply migrations, create a hosted bucket, run the destructive legacy seed or deploy publicly.
 
-`npm audit` reports 15 moderate advisories through the Expo tooling and routing dependency graph. Its proposed automated fixes include downgrading Expo 57 and Expo Router to incompatible major versions, so those downgrades were not applied.
+The dependency graph has npm audit advisories. Do not apply an automated fix that downgrades Expo 57 or Expo Router to incompatible major versions.
 
 The GNU Free Documentation License 1.2 text for the two images under that license is included in `assets/places/GFDL-1.2.txt`, copied verbatim from the SPDX license-list-data repository.

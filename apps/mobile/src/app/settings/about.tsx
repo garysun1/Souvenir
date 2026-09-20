@@ -8,12 +8,12 @@ export default function AboutScreen() {
     <Header title="About Souvenir" back />
     <T variant="wordmark" color={colors.brand}>souvenir</T>
     <T style={{ marginTop: 10 }}>Keep the places that stay with you.</T>
-    <View style={{ marginTop: 18 }}><DemoLabel label="An interactive, locally saved prototype" /></View>
-    <SectionHeading title="What works on your device" />
-    <T>Explore the bundled Los Angeles catalog, save places, collect visits, write moments, rank favorites and make sample plans. Your edits are persisted on this installation, with no sign-in.</T>
+    <View style={{ marginTop: 18 }}><DemoLabel label="Account sync and a separate local demo" /></View>
+    <SectionHeading title="Your collection" />
+    <T>Sign in to sync places, visits, private photos, moments, rankings, shared lists and saved plans with the web app. Pull to refresh or use Refresh to get the latest account state. Drafts and personal layout preferences stay on your device.</T>
     <T muted style={{ marginTop: 12 }}>Camera, photo-library selection and foreground location can use device features where supported and permitted. Sample-photo alternatives are available. A selected photo is not analyzed by an AI.</T>
     <SectionHeading title="What is simulated" />
-    <T>Identification, discovery counts, friends, shared lists, recommendations, itinerary planning, Dropbox import and provider feeds are local demonstrations. They do not contact an AI service, upload an album, collaborate across devices or connect an external account.</T>
+    <T>The separate demo includes fictional friends, sample shared lists, identification, Dropbox imports, discovery counts and automatic itinerary planning. These fixtures never migrate into an account. Real accounts use manual catalog selection and user-entered planning estimates; provider facts remain unknown.</T>
     <T muted style={{ marginTop: 12 }}>There is no live availability, ticket inventory, booking, payment or weather verification. Extension previews are concepts, not services. Offline mode is a demonstration, not a device network setting.</T>
     <SectionHeading title="Catalog documentation" />
     <T>Real destination names and approximate coordinates are bundled with authored descriptions and categories. Operational values—hours, duration, visit cost, booking notes and discovery counts—are sample fixtures, not retrieved venue records.</T>
@@ -27,7 +27,7 @@ export default function AboutScreen() {
       <T><T variant="label">Stale / unavailable: </T>operational facts are not checked; your catalog entries and memories remain intact.</T>
     </View>
     <SectionHeading title="Your local data" />
-    <T muted>There is no cloud backup or cross-device sync. Resetting the demo replaces local prototype records and references to selected photos, not the originals in your device library. Documentation links leave Souvenir and may require a connection.</T>
+    <T muted>Only account records sync across devices. Demo records remain local and resetting them does not change server records. Unsaved drafts and their device photo copies are scoped to the current account. Sign out before sharing a device. Documentation links leave Souvenir.</T>
     <View style={{ marginTop: 24, gap: 12 }}>
       <Button label="Explore data sources" variant="outline" icon="globe" onPress={() => router.push('/settings/sources')} />
       <Button label="Photography & font credits" variant="outline" icon="image" onPress={() => router.push('/settings/credits')} />

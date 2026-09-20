@@ -20,6 +20,10 @@ export default function IdentifyCapture() {
   const [message, setMessage] = useState<string>();
   useEffect(() => {
     if (!draft || draft.status !== 'identify') return;
+    if (state.mode === 'account') {
+      void commit({ type: 'DRAFT', draft: { ...draft, status: 'confirm' } }).then(() => router.replace('/capture/confirm')).catch(() => setMessage('Could not open the draft. Retry while connected.'));
+      return;
+    }
     const sequence = ++request.current;
     const controller = new AbortController();
     const animation = reducedMotion ? undefined : Animated.loop(Animated.sequence([
@@ -34,7 +38,7 @@ export default function IdentifyCapture() {
       if (!controller.signal.aborted && sequence === request.current) router.replace({ pathname: '/capture/confirm', params: { candidates: result.candidates.join(','), note: result.reason } });
     }).catch(() => { if (!controller.signal.aborted) setMessage('Identification could not finish. Your draft is preserved; retry or choose a place manually.'); });
     return () => { controller.abort(); animation?.stop(); subscription.remove(); };
-  }, [attempt, commit, draft, scan, state.preferences.identifyFailure, reducedMotion]);
+  }, [attempt, commit, draft, scan, state.preferences.identifyFailure, state.mode, reducedMotion]);
   if (!draft || draft.status !== 'identify') return <CaptureUnavailable />;
   return <Screen>
     <CaptureHeader title="Finding a place" onPause={() => { ++request.current; setMessage('Identification paused. Retry when you are ready, or choose a place manually.'); }} />

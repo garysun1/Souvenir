@@ -1,4 +1,5 @@
 import type { AppState, Category, Place, SourceStatus } from './types';
+import { categoryLabels } from '@/fixtures/catalog';
 
 export interface Coordinates { latitude: number; longitude: number }
 export interface MapBounds { north: number; south: number; east: number; west: number }
@@ -33,6 +34,8 @@ export function parseSearch(query: string): { filters: SearchFilters; explanatio
   take(/\b(?:cultural|culture|museums?)\b/g, () => { filters.categories.push('cultural'); });
   take(/\bparks?\b/g, () => { filters.categories.push('park'); });
   take(/\blandmarks?\b/g, () => { filters.categories.push('landmark'); });
+  take(/\bfood\b/g, () => { filters.categories.push('food'); });
+  take(/\bhidden[_ ]gems?\b/g, () => { filters.categories.push('hidden_gem'); });
   for (const [pattern, tag] of [
     [/\bquiet\b/g, 'quiet'], [/\bart\b/g, 'art'], [/\b(?:outdoors?|outside)\b/g, 'outdoors'],
     [/\bgardens?\b/g, 'garden'], [/\bindoor[s]?\b/g, 'indoors'], [/\barchitecture\b/g, 'architecture'],
@@ -51,7 +54,7 @@ export function queryForFilters(filters: SearchFilters): string {
 }
 
 export function filterChips(filters: SearchFilters): SearchChip[] {
-  const chips = filters.categories.map(category => ({ key: `category:${category}`, label: category === 'park' ? 'Parks' : category === 'cultural' ? 'Culture' : 'Landmarks' }));
+  const chips = filters.categories.map(category => ({ key: `category:${category}`, label: category === 'park' ? 'Parks' : category === 'cultural' ? 'Culture' : categoryLabels[category] }));
   filters.tags.forEach(tag => chips.push({ key: `tag:${tag}`, label: tag[0].toUpperCase() + tag.slice(1) }));
   if (filters.maxPriceCents !== undefined) chips.push({ key: 'budget', label: filters.maxPriceCents === 0 ? 'Free admission' : filters.maxPriceCents % 100 === 99 ? `Under $${(filters.maxPriceCents + 1) / 100}` : `$${filters.maxPriceCents / 100} or less` });
   if (filters.radiusKm !== undefined) chips.push({ key: 'radius', label: `Within ${filters.radiusKm} km` });
@@ -112,7 +115,7 @@ export function appealFor(place: Place, state: AppState): { label: string; expla
 export function recommendationReason(place: Place, state: AppState): string {
   if (state.assessments.some(item => item.placeId === place.id && item.sentiment === 'recommend')) return 'A place you recommended';
   if (state.wishlists.some(list => list.entries.some(entry => entry.placeId === place.id && entry.saverIds.includes('maya')))) return 'Saved by Maya';
-  if (state.preferences.tastes.includes(place.category)) return `You enjoy ${place.category === 'cultural' ? 'cultural places' : place.category === 'park' ? 'parks & outdoors' : 'landmarks'}`;
+  if (state.preferences.tastes.includes(place.category)) return `You enjoy ${place.category === 'cultural' ? 'cultural places' : place.category === 'park' ? 'parks & outdoors' : categoryLabels[place.category].toLowerCase()}`;
   return 'A curated Los Angeles discovery';
 }
 
@@ -123,7 +126,7 @@ export function searchPlaces(catalog: Place[], filters: SearchFilters, { state, 
   return catalog.flatMap(place => {
     const distance = distanceKm(origin, place);
     if (filters.categories.length && !filters.categories.includes(place.category)) return [];
-    if (filters.maxPriceCents !== undefined && place.priceCents > filters.maxPriceCents) return [];
+    if (filters.maxPriceCents !== undefined && (!Number.isFinite(place.priceCents) || place.priceCents > filters.maxPriceCents)) return [];
     if (filters.radiusKm !== undefined && distance > filters.radiusKm) return [];
     if (filters.openNow && isOpenAtDemoTime(place, state.clock, state.preferences.sourceStatus) !== true) return [];
     if (!filters.tags.every(tag => place.tags.includes(tag))) return [];
