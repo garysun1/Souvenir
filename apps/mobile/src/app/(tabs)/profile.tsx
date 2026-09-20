@@ -9,6 +9,7 @@ import { useApp } from '@/state/AppProvider';
 import { collectedPlaceIds, ownEditions, setProgress } from '@/state/selectors';
 import { AccountSets } from '@/features/collection/AccountSets';
 import { AccountProfileStats } from '@/features/social/AccountSocial';
+import { MemoryLinks } from '@/features/memories/MemoryUi';
 
 export default function Profile() {
   const { state, commit } = useApp();
@@ -29,6 +30,7 @@ export default function Profile() {
       <T muted style={{ textAlign: 'center', maxWidth: 290 }}>{state.preferences.bio}</T>
       <Button label="Edit profile" variant="outline" icon="edit" onPress={() => setEditing(true)} style={{ minHeight: 42 }} />
     </View>
+    {state.mode === 'account' && <><ProfileRow icon="sparkles" title="Your taste" subtitle="Review interests, private evidence and sharing" onPress={() => router.push('/profile/taste')} /><MemoryLinks /></>}
     {state.mode === 'account' ? <AccountProfileStats /> : <View style={{ flexDirection: 'row', marginVertical: 22, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.divider, paddingVertical: 17 }}>
       {[['Places', collected.length], ['Editions', editions.length], ['Recommended', assessed]].map(([label, value], index) => <View key={label} style={{ flex: 1, alignItems: 'center', gap: 4, borderLeftWidth: index ? 1 : 0, borderColor: colors.divider }}><T variant="heading">{value}</T><T variant="small" muted>{label}</T></View>)}
     </View>}
