@@ -543,6 +543,63 @@ describe("friendship, profiles and activity authorization", () => {
     expect(await db.select().from(editions).where(eq(editions.id, row.id))).toHaveLength(1);
   });
 
+  it("fills feed pages across hidden candidate batches and honors deletion and revocation", async () => {
+    await accept(0, 1);
+    await putFriend(people[0], people[2]);
+    await db.delete(activityEvents);
+    const captured = await db
+      .insert(editions)
+      .values(
+        Array.from({ length: 200 }, (_, index) => ({
+          userId: people[index < 196 ? 1 : index < 198 ? 2 : 0],
+          placeId: spots[0],
+          capturedAt: recent,
+          timezone: "UTC",
+          requestId: randomUUID(),
+          visitSequence: index + 1,
+          visibility: index >= 66 && index < 196 ? ("private" as const) : ("public" as const),
+        })),
+      )
+      .returning();
+    await db.insert(activityEvents).values(
+      captured.map((edition, index) => ({
+        userId: edition.userId,
+        kind: "edition" as const,
+        placeId: edition.placeId,
+        editionId: edition.id,
+        visibility: "public" as const,
+        createdAt: new Date(recent.getTime() + index),
+      })),
+    );
+    const oracle = () =>
+      db.execute<{ id: string }>(sql`
+        SELECT a.id FROM activity_events a JOIN editions e ON e.id=a.edition_id
+        WHERE a.user_id=${people[1]}::uuid AND e.visibility<>'private'
+        ORDER BY a.created_at DESC,a.id DESC`);
+    const expected = await oracle();
+    expect(expected).toHaveLength(66);
+    const first = await getFeed(people[0], { limit: 50 });
+    expect(first.events.map((event) => event.id)).toEqual(
+      expected.slice(0, 50).map((row) => row.id),
+    );
+    expect(first.nextCursor).not.toBeNull();
+    await db
+      .update(editions)
+      .set({ visibility: "private" })
+      .where(eq(editions.id, captured[15].id));
+    await db.delete(editions).where(eq(editions.id, captured[14].id));
+    const remaining = (await oracle()).slice(50);
+    const second = await getFeed(people[0], { limit: 50, cursor: first.nextCursor! });
+    expect(second.events.map((event) => event.id)).toEqual(remaining.map((row) => row.id));
+    expect(second.events).toHaveLength(14);
+    expect(second.nextCursor).toBeNull();
+    await deleteFriend(people[0], people[1]);
+    expect(await getFeed(people[0], { limit: 50, cursor: first.nextCursor! })).toEqual({
+      events: [],
+      nextCursor: null,
+    });
+  });
+
   it("computes set completion, edition-timezone ISO week streaks and overlap without repeat inflation", async () => {
     const [set] = await db
       .insert(sets)
