@@ -27,7 +27,7 @@ export default function Capture() {
   const [cameraReady, setCameraReady] = useState(false);
   const [available, setAvailable] = useState<boolean>();
   const [flash, setFlash] = useState(false);
-  const [resume, setResume] = useState(() => !!state.captureDraft);
+  const [resume, setResume] = useState(() => !!state.captureDraft && state.captureDraft.status !== 'saved');
   const [error, setError] = useState<string>();
   const [pendingUri, setPendingUri] = useState<string>();
   const requestedPlaceId = value(params.placeId);

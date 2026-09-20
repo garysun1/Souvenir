@@ -12,22 +12,28 @@ export function SignedPhoto({
   editionId,
   photo,
   alt,
+  className,
 }: {
   editionId: string;
   photo: SignedPhotoDto;
   alt: string;
+  className?: string;
 }) {
-  return <Photo key={photo.url} editionId={editionId} photo={photo} alt={alt} />;
+  return (
+    <Photo key={photo.url} editionId={editionId} photo={photo} alt={alt} className={className} />
+  );
 }
 
 function Photo({
   editionId,
   photo,
   alt,
+  className,
 }: {
   editionId: string;
   photo: SignedPhotoDto;
   alt: string;
+  className?: string;
 }) {
   const { request } = useAccount();
   const [current, setCurrent] = useState(photo);
@@ -67,7 +73,7 @@ function Photo({
           width={1000}
           height={750}
           unoptimized
-          className="max-h-96 w-full rounded-xl object-contain"
+          className={className ?? "max-h-96 w-full rounded-xl object-contain"}
           onError={() =>
             setError("The private photo could not be loaded. Refresh its access link below.")
           }

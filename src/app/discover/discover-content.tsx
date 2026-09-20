@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import type { PlaceDto, TrendingDto, NearbyDto } from "../../../shared/api-contract";
@@ -16,20 +17,29 @@ import { SavePlace } from "@/components/catalog/save-place";
 import { useCatalog } from "@/lib/web/use-catalog";
 import { legacyPlace, setProgress } from "@/lib/web/collection";
 import { useResource } from "@/lib/web/use-resource";
-import { cityOptions, placeLocation } from "@/lib/web/worldwide";
+import { placeLocation } from "@/lib/web/worldwide";
+import { destinationCities, countryName } from "../../../shared/destinations";
 import { ResourceState } from "@/components/catalog/resource-state";
-import { Atlas } from "@/components/catalog/atlas";
 import { useLocation } from "@/lib/web/use-location";
+import { useQueryState } from "@/lib/web/use-query-state";
+
+const Atlas = dynamic(() => import("@/components/catalog/atlas").then((module) => module.Atlas), {
+  ssr: false,
+  loading: () => <p role="status">Loading map…</p>,
+});
 
 export function DiscoverContent() {
   const { data, userId, error: accountError } = useAccount();
   const { catalog, error, retry } = useCatalog();
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
-  const [view, setView] = useState("list");
+  const [search, setSearch] = useQueryState("q");
+  const [selected, setSelected] = useQueryState("category");
+  const [city, setCity] = useQueryState("city");
+  const [country, setCountry] = useQueryState("country");
+  const [view, setView] = useQueryState("view", "list");
   const [nearbyMode, setNearbyMode] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+  const [choosingCity, setChoosingCity] = useState(false);
+  const cities = destinationCities(catalog?.places ?? []);
   const location = useLocation();
   const validLocality =
     (!country || /^[A-Z]{2}$/.test(country)) && (!city.trim() || /^[A-Z]{2}$/.test(country));
@@ -69,7 +79,12 @@ export function DiscoverContent() {
   return (
     <PageBody className="space-y-8">
       <div className="flex flex-wrap justify-between gap-3 text-sm">
-        <p>Discover worldwide</p>
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-brand">Find your next adventure</h1>
+          <p className="mt-2 text-text-secondary">
+            Discover a place. Go together. Keep a souvenir.
+          </p>
+        </div>
         <Link href={userId ? "/profile" : "/login"} className="text-brand underline">
           {userId ? "Your account" : "Sign in / Create account"}
         </Link>
@@ -120,54 +135,62 @@ export function DiscoverContent() {
             Browse worldwide
           </Button>
         )}
-        <label className="space-y-1 text-sm">
-          <span className="block">Catalog cities</span>
-          <select
-            aria-label="Catalog cities"
-            className="min-h-11 max-w-full rounded-xl border border-border px-3"
-            value={JSON.stringify([city, country])}
-            onChange={(event) => {
-              const match = cityOptions(catalog?.places ?? []).find(
-                ([key]) => key === event.target.value,
-              );
-              setCity(match?.[1].city ?? "");
-              setCountry(match?.[1].country ?? "");
-              setNearbyMode(false);
-            }}
+        <div className="w-full space-y-2 sm:w-80">
+          <Button
+            variant="outline"
+            aria-expanded={choosingCity}
+            onClick={() => setChoosingCity(!choosingCity)}
           >
-            <option value={JSON.stringify(["", ""])}>Worldwide</option>
-            {cityOptions(catalog?.places ?? []).map(([key, item]) => (
-              <option key={key} value={key}>
-                {item.city}, {item.country}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-1 text-sm">
-          City
-          <Input
-            value={city}
-            onChange={(event) => {
-              setCity(event.target.value);
-              setNearbyMode(false);
-            }}
-            maxLength={200}
-            placeholder="Any city"
-          />
-        </label>
-        <label className="space-y-1 text-sm">
-          Country code
-          <Input
-            value={country}
-            onChange={(event) => {
-              setCountry(event.target.value.toUpperCase());
-              setNearbyMode(false);
-            }}
-            maxLength={2}
-            placeholder="e.g. PT"
-            className="w-28"
-          />
-        </label>
+            {city ? `${city}, ${countryName(country)}` : "Where are you exploring?"}
+          </Button>
+          {choosingCity && (
+            <div className="space-y-2 rounded-xl border border-border p-3">
+              <Input
+                aria-label="Find a city"
+                placeholder="Search cities or countries"
+                value={citySearch}
+                onChange={(event) => setCitySearch(event.target.value)}
+              />
+              <div className="max-h-60 overflow-auto">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setCity("");
+                    setCountry("");
+                    setNearbyMode(false);
+                    setChoosingCity(false);
+                  }}
+                >
+                  Worldwide
+                </Button>
+                {cities
+                  .filter((item) => item.label.toLowerCase().includes(citySearch.toLowerCase()))
+                  .map((item) => (
+                    <Button
+                      className="w-full justify-start"
+                      variant="ghost"
+                      key={item.label}
+                      onClick={() => {
+                        setCity(item.city);
+                        setCountry(item.country);
+                        setNearbyMode(false);
+                        setChoosingCity(false);
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                {!cities.some((item) =>
+                  item.label.toLowerCase().includes(citySearch.toLowerCase()),
+                ) && (
+                  <p className="p-2 text-sm">
+                    No catalog city matches. Try searching for a destination by name.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         <Button
           variant="ghost"
           onClick={() => {
@@ -183,13 +206,13 @@ export function DiscoverContent() {
       </div>
       {!validLocality && (
         <p role="status" className="text-sm">
-          Choose a two-letter country code with the city.
+          This location link is incomplete. Choose a city or clear the filters.
         </p>
       )}
       {userId && city && validLocality && (
         <section className="space-y-3">
           <h2 className="font-serif text-xl font-bold text-brand">
-            Trending in {city}, {country}
+            Trending in {city}, {countryName(country)}
           </h2>
           <p className="text-xs text-text-secondary">
             Recent public collectors compared with eight complete weeks. This is activity, not
@@ -247,7 +270,7 @@ export function DiscoverContent() {
             aria-pressed={view === value}
             onClick={() => setView(value)}
           >
-            {value === "list" ? "List" : "Atlas"}
+            {value === "list" ? "Photos" : "Map"}
           </Button>
         ))}
       </div>
@@ -255,7 +278,9 @@ export function DiscoverContent() {
         <Atlas places={visiblePlaces} />
       ) : (
         <section className="space-y-3">
-          <h1 className="font-serif text-[21px] font-extrabold text-brand">Find your next place</h1>
+          <h2 className="font-serif text-[21px] font-extrabold text-brand">
+            {nearbyMode ? "Places near you" : city ? `Explore ${city}` : "Places worth discovering"}
+          </h2>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {visiblePlaces.map((place) => (
               <div key={place.id} className="flex flex-col gap-2">
@@ -270,7 +295,7 @@ export function DiscoverContent() {
       {!nearbyMode && (
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-xs text-text-secondary">
-            List and Atlas show this page of up to 100 destinations.
+            Photos and map show the same page of up to 100 destinations.
           </p>
           {cursors.length > 1 && (
             <Button
@@ -301,7 +326,9 @@ export function DiscoverContent() {
       )}
       {(catalog?.sets.length ?? 0) > 0 && (
         <section className="space-y-3">
-          <h2 className="font-serif text-[21px] font-extrabold text-brand">Sets</h2>
+          <h2 className="font-serif text-[21px] font-extrabold text-brand">
+            Explore a themed collection
+          </h2>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             {catalog!.sets.map((set) => (
               <CatalogSet
@@ -315,7 +342,7 @@ export function DiscoverContent() {
       )}
       <Link
         href="/plan"
-        className="flex min-h-14 items-center justify-between border-b border-t border-divider py-3 text-sm font-semibold text-brand lg:hidden"
+        className="flex min-h-14 items-center justify-between border-b border-t border-divider py-3 text-sm font-semibold text-brand"
       >
         Plan an afternoon <ArrowRight className="size-5" />
       </Link>

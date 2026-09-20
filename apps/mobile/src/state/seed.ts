@@ -10,7 +10,7 @@ export function createSeed(mode: 'sample' | 'empty' = 'sample'): AppState {
   }));
   return {
     version: 1, mode, clock: DEMO_CLOCK,
-    preferences: { onboardingComplete: false, tastes: ['cultural', 'park'], collectionView: 'list', collectionSection: 'been', offline: false, reducedMotion: false, sourceStatus: 'sample', identifyFailure: false, name: 'You', handle: 'your_souvenir', bio: 'Collecting moments, not things.' },
+    preferences: { onboardingComplete: false, tastes: ['cultural', 'park'], collectionView: 'album', collectionSection: 'been', offline: false, reducedMotion: false, sourceStatus: 'sample', identifyFailure: false, name: 'You', handle: 'your_souvenir', bio: 'Collecting moments, not things.' },
     editions, sequences: Object.fromEntries(editions.map(edition => [`${edition.ownerId}:${edition.placeId}`, edition.sequence])),
     wishlists: [
       { id: 'personal', title: 'Just for me', memberIds: ['you'], entries: [] },

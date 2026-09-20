@@ -4,6 +4,7 @@ import type {
   PhotoUploadDto,
   PhotoUploadRequest,
   Visibility,
+  CollectionEntryDto,
 } from "../../../shared/api-contract";
 import type { ApiOptions } from "./api";
 
@@ -23,6 +24,15 @@ export interface CaptureDraft {
 }
 
 const databaseName = "souvenir-web-drafts-v1";
+
+export function similarVisit(draft: CaptureDraft, collection: CollectionEntryDto[]) {
+  return collection.find(
+    (edition) =>
+      edition.requestId !== draft.requestId &&
+      edition.placeId === draft.placeId &&
+      Math.abs(Date.parse(edition.capturedAt) - Date.parse(draft.capturedAt)) < 60_000,
+  );
+}
 
 async function draftStore<T>(
   operation: (store: IDBObjectStore) => IDBRequest<T>,

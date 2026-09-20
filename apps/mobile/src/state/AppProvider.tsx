@@ -172,7 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!client || modeRef.current !== 'account') throw new Error('Sign in before saving to your account.');
       if (action.type === 'DRAFT') {
         if (reference.current.captureDraft?.submittedEdition && action.draft?.id === reference.current.captureDraft.id &&
-          (action.draft.moment !== reference.current.captureDraft.moment || action.draft.placeId !== reference.current.captureDraft.placeId || action.draft.photoUri !== reference.current.captureDraft.photoUri || action.draft.visitedAt !== reference.current.captureDraft.visitedAt || action.draft.timezone !== reference.current.captureDraft.timezone || JSON.stringify(action.draft.companions) !== JSON.stringify(reference.current.captureDraft.companions))) {
+          (action.draft.moment !== reference.current.captureDraft.moment || action.draft.placeId !== reference.current.captureDraft.placeId || action.draft.photoUri !== reference.current.captureDraft.photoUri || action.draft.visitedAt !== reference.current.captureDraft.visitedAt || action.draft.timezone !== reference.current.captureDraft.timezone || action.draft.visibility !== reference.current.captureDraft.visibility || action.draft.outingId !== reference.current.captureDraft.outingId || JSON.stringify(action.draft.companions) !== JSON.stringify(reference.current.captureDraft.companions))) {
           throw new Error('This capture has already been submitted. Retry saving it before editing the saved edition.');
         }
       } else {

@@ -54,7 +54,7 @@ export function captureToEdition(draft: CaptureDraft, clock: string): Omit<Editi
   return { id: `edition-${draft.id}`, requestId: draft.id, ownerId: 'you', placeId: place.id,
     photoUri: draft.photoUri, visitedAt: draft.visitedAt, timezone,
     companions: [...new Set(draft.companions.map(name => name.trim()).filter(name => place.canonical ? !!name : users.some(user => user.id === name && name !== 'you')))],
-    moment: draft.moment.trim(), outingId: draft.outingId, origin: 'capture' };
+    moment: draft.moment.trim(), outingId: draft.outingId, origin: 'capture', visibility: draft.visibility ?? 'private' };
 }
 
 export const editionStamp = (sequence: number) => `${sequence === 1 ? 'First visit' : 'Return visit'} · Edition ${String(sequence).padStart(2, '0')}`;
