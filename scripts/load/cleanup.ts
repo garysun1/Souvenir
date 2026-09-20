@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { adminClient, database, status } from "./local";
 import { type Manifest } from "./manifest";
 import { reconcileAccounts, emailFor } from "./accounts";
@@ -89,9 +91,41 @@ export async function cleanup(manifest: Manifest) {
       localUrl(config.DB_URL, "database");
       await db`DELETE FROM places WHERE id=${record.id} AND slug=${fixtureSlug(manifest.options.runId, record.index)} AND source='placeholder'`;
     }
-    const [remaining] =
-      await db`SELECT count(*)::int AS count FROM users WHERE id=ANY(${ids}::uuid[])`;
-    assert.equal(remaining.count, 0);
+    const placeIds = manifest.records.filter((row) => row.kind === "place").map((row) => row.id!);
+    const [remaining] = await db`
+      SELECT (SELECT count(*)::int FROM users WHERE id=ANY(${ids}::uuid[])) AS profiles,
+        (SELECT count(*)::int FROM auth.users WHERE id=ANY(${ids}::uuid[])) AS auth_users,
+        (SELECT count(*)::int FROM editions WHERE user_id=ANY(${ids}::uuid[])) AS editions,
+        (SELECT count(*)::int FROM storage.objects WHERE bucket_id='captures' AND split_part(name,'/',1)=ANY(${ids})) AS captures,
+        (SELECT count(*)::int FROM places WHERE id=ANY(${placeIds}::uuid[])) AS places,
+        (SELECT count(*)::int FROM friendships WHERE user_id=ANY(${ids}::uuid[]) OR friend_id=ANY(${ids}::uuid[])) AS friendships,
+        (SELECT count(*)::int FROM activity_events WHERE user_id=ANY(${ids}::uuid[]) OR friend_id=ANY(${ids}::uuid[])) AS activity_events,
+        (SELECT count(*)::int FROM place_notes WHERE user_id=ANY(${ids}::uuid[])) AS notes,
+        (SELECT count(*)::int FROM place_tags WHERE user_id=ANY(${ids}::uuid[])) AS tags,
+        (SELECT count(*)::int FROM rankings WHERE user_id=ANY(${ids}::uuid[])) AS rankings,
+        (SELECT count(*)::int FROM wishlist_saves WHERE user_id=ANY(${ids}::uuid[])) AS saves,
+        (SELECT count(*)::int FROM user_stats WHERE user_id=ANY(${ids}::uuid[])) AS user_stats,
+        (SELECT count(*)::int FROM place_stats WHERE place_id=ANY(${placeIds}::uuid[])) AS place_stats,
+        (SELECT count(*)::int FROM api_requests WHERE user_id=ANY(${ids}::uuid[])) AS api_requests`;
+    writeFileSync(
+      resolve(manifest.dir, "cleanup.json"),
+      JSON.stringify(
+        {
+          runId: manifest.options.runId,
+          generatedAt: new Date().toISOString(),
+          recordedAccounts: ids.length,
+          recordedPlaces: placeIds.length,
+          remaining,
+        },
+        null,
+        2,
+      ),
+      { mode: 0o600 },
+    );
+    assert(
+      Object.values(remaining).every((count) => count === 0),
+      "Recorded resources remain after cleanup",
+    );
     manifest.append({ kind: "cleaned", key: "run" });
     console.log(`Cleaned ${ids.length} recorded local accounts and their owned data.`);
   } finally {

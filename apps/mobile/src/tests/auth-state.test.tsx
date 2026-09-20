@@ -167,3 +167,72 @@ test('a failed account write rejects without optimistic state or fake success', 
   expect(current.state.tips).toEqual({});
   expect(current.error).toContain('Check your connection');
 });
+test.each(['request', 'page', 'write', 'photo', 'refresh'])('terminal authorization failure clears private state through %s', async operation => {
+  const stateA = emptyAccount();
+  stateA.captureDraft = { id: 'draft-a', moment: 'Private Alice draft', companions: [], visitedAt: '2026-09-19T00:00:00Z', status: 'confirm' };
+  await AsyncStorage.setItem(accountKey(alice), encodeLocal(stateA));
+  mockSession = session(alice);
+  await mount();
+  expect(current.state.captureDraft?.moment).toBe('Private Alice draft');
+  const oldCommit = current.commit;
+  fetcher.mockResolvedValue({ ok: false, status: 401, json: async () => ({ error: 'unauthorized' }) } as Response);
+  await act(async () => {
+    const request = operation === 'page' ? current.accountPage('/api/feed')
+      : operation === 'write' ? current.accountWrite('/api/places/global/tags', 'PUT', { tags: [] })
+      : operation === 'photo' ? current.signedPhoto('edition-a')
+      : operation === 'refresh' ? current.refresh()
+      : current.accountRequest('/api/me/stats');
+    await expect(request).rejects.toThrow();
+  });
+  expect(mockAuth.refreshSession).toHaveBeenCalledTimes(1);
+  expect(current.mode).toBe('signedOut');
+  expect(current.userId).toBeUndefined();
+  expect(current.ready).toBe(false);
+  expect(current.state.captureDraft).toBeNull();
+  expect(current.state.preferences.name).toBe('');
+  expect(current.error).toContain('session expired');
+  await expect(oldCommit({ type: 'TIP', placeId: 'private-place', text: 'Late write' })).rejects.toMatchObject({ code: 'account_changed' });
+});
+test('missing SDK session clears cached private data without waiting for an auth event', async () => {
+  mockSession = session(alice);
+  await mount();
+  mockSession = null;
+  await act(async () => {
+    await expect(current.accountRequest('/api/me')).rejects.toMatchObject({ status: 401 });
+  });
+  expect(current.mode).toBe('signedOut');
+  expect(current.userId).toBeUndefined();
+  expect(current.state.preferences.name).toBe('');
+});
+test('recoverable authorization and network errors keep the active account', async () => {
+  mockSession = session(alice);
+  await mount();
+  fetcher.mockResolvedValueOnce({ ok: false, status: 401, json: async () => ({ error: 'unauthorized' }) } as Response);
+  await act(async () => { await current.accountRequest('/api/me'); });
+  expect(current.mode).toBe('account');
+  expect(current.userId).toBe(alice);
+  fetcher.mockRejectedValueOnce(new TypeError('offline'));
+  await act(async () => {
+    await expect(current.accountRequest('/api/me')).rejects.toThrow('Check your connection');
+  });
+  expect(current.mode).toBe('account');
+  expect(current.state.preferences.name).toBe(alice);
+});
+test('a late unauthorized response from a previous account cannot sign out the new account', async () => {
+  mockSession = session(alice);
+  await mount();
+  let finish: (value: Response) => void = () => { throw new Error('No pending request'); };
+  fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const request = current.accountRequest('/api/me');
+  const rejected = expect(request).rejects.toMatchObject({ code: 'account_changed' });
+  await Promise.resolve();
+  await act(async () => { mockSession = session(bob); mockEvent('SIGNED_IN', mockSession); });
+  await act(async () => {
+    finish({ ok: false, status: 401, json: async () => ({ error: 'unauthorized' }) } as Response);
+    await rejected;
+  });
+  expect(current.mode).toBe('account');
+  expect(current.userId).toBe(bob);
+  expect(current.state.preferences.name).toBe(bob);
+  expect(current.error).toBeNull();
+});

@@ -21,7 +21,7 @@ import type {
 } from "../../shared/api-contract";
 import { type ApiClient } from "./api";
 import { account, reconcileAccounts } from "./accounts";
-import { fixtures, fixtureHash, stableId, persona } from "./fixtures";
+import { fixtures, fixtureHash, stableId, persona, friendPairs } from "./fixtures";
 import { database, status, type Database } from "./local";
 import { Manifest } from "./manifest";
 import { hash, loadPool, photoBytes, type Photo } from "./photos";
@@ -93,7 +93,7 @@ export async function editionInput(
   const visit = persona(manifest.options.seed, index, manifest.options.editions).visits[visitIndex];
   const requestId = stableId(`${manifest.options.runId}:edition:${index}:${visitIndex}`);
   let photoPath: string | null = null;
-  if (pool.length && (manifest.options.photoMode === "pool" || visitIndex % 20 === 0)) {
+  if (pool.length && (manifest.options.photoMode === "pool" || visitIndex % 5 === 0)) {
     const photo = pool[(index + visitIndex) % pool.length];
     photoPath = `${client.id}/${requestId}.jpg`;
     const objectKey = `object:${index}:${visitIndex}`;
@@ -174,12 +174,6 @@ async function behaviors(manifest: Manifest, client: ApiClient, index: number, p
       ranking: "unranked",
       visibility: visit.visibility,
     } satisfies RankingPut);
-    if (v % 3 === 0)
-      await client.call("PUT", `/api/wishlists/${wishlist}/items`, {
-        placeId: input.placeId,
-        saved: true,
-        visibility: visit.visibility,
-      } satisfies WishlistItemPut);
     if (manifest.options.mode === "worldwide" && v % 5 === 0) {
       const slug = fixtureSlug(manifest.options.runId, visit.place);
       const noteKey = `note:${index}:${v}`;
@@ -199,6 +193,18 @@ async function behaviors(manifest: Manifest, client: ApiClient, index: number, p
       } satisfies PlaceTagPut);
     }
     manifest.append({ kind: "done", key });
+  }
+  const savesKey = `save-audiences:${index}`;
+  if (!manifest.has(savesKey)) {
+    for (const [v, visit] of person.visits.entries()) {
+      if (v % 3 !== 0) continue;
+      await client.call("PUT", `/api/wishlists/${wishlist}/items`, {
+        placeId: fixtureId(manifest.options.runId, visit.place),
+        saved: true,
+        visibility: (["private", "friends", "public"] as const)[Math.floor(v / 3) % 3],
+      } satisfies WishlistItemPut);
+    }
+    manifest.append({ kind: "done", key: savesKey });
   }
 }
 
@@ -226,19 +232,25 @@ export async function run(manifest: Manifest) {
         clients[index] = await account(manifest, config, index);
       },
     );
+    console.log(`Provisioned ${clients.length} real Auth users and API profiles.`);
+    let completed = 0;
     await bounded(
       clients.map((client, index) => ({ client, index })),
       manifest.options.concurrency,
       async ({ client, index }) => {
         await behaviors(manifest, client, index, pool);
+        completed++;
+        if (completed % 25 === 0) console.log(`Completed ${completed}/${clients.length} personas.`);
       },
     );
     if (manifest.options.mode === "worldwide") {
-      for (let i = 0; i + 1 < clients.length; i += 2) {
-        await clients[i].call("PUT", `/api/friends/${clients[i + 1].id}`, {});
-        await clients[i + 1].call("PUT", `/api/friends/${clients[i].id}`, {});
-        await clients[i].call("PUT", `/api/friends/${clients[i + 1].id}`, {});
-      }
+      await bounded(friendPairs(clients.length), manifest.options.concurrency, async ([a, b]) => {
+        const key = `friend:${a}:${b}`;
+        if (manifest.has(key)) return;
+        await clients[a].call("PUT", `/api/friends/${clients[b].id}`, {});
+        await clients[b].call("PUT", `/api/friends/${clients[a].id}`, {});
+        manifest.append({ kind: "done", key });
+      });
     }
     manifest.append({ kind: "done", key: "run" });
     console.log(

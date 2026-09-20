@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
+import { cpus, totalmem, platform, release } from "node:os";
 import type {
   CollectionEntryDto,
   FeedDto,
@@ -18,9 +19,12 @@ import { ApiClient, ApiFailure, latencyReport } from "./api";
 import { appEnvironment, database, status, type Database } from "./local";
 import { type Manifest } from "./manifest";
 import { explainOracle, integrityOracle, metricsOracle, profileOracle } from "./oracle";
-import { fixtureId, fixtureSlug } from "./run";
-import { cities, fixtures, persona } from "./fixtures";
-import { ROOT, SUPABASE_ORIGIN, guardedFetch } from "./safety";
+import { bounded, fixtureId, fixtureSlug } from "./run";
+import { cities, fixtures, persona, placesPerCity, friendPairs } from "./fixtures";
+import { loadPool } from "./photos";
+import { edgeChecks } from "./edges";
+import { writeEvidence } from "./evidence";
+import { API_ORIGIN, ROOT, SUPABASE_ORIGIN, guardedFetch } from "./safety";
 
 type Check = { name: string; status: "passed" | "failed" | "blocked"; detail?: string };
 async function denied(client: ApiClient, method: string, path: string, body?: object) {
@@ -31,13 +35,31 @@ async function denied(client: ApiClient, method: string, path: string, body?: ob
 }
 
 async function feedOracle(db: Database, viewer: ApiClient) {
+  const expected = await db`
+    SELECT a.id FROM activity_events a
+    LEFT JOIN editions e ON e.id=a.edition_id
+    LEFT JOIN place_notes n ON n.id=a.note_id
+    LEFT JOIN rankings r ON r.user_id=a.user_id AND r.place_id=a.ranking_place_id
+    LEFT JOIN places p ON p.id=a.place_id
+    WHERE a.visibility<>'private' AND EXISTS (
+      SELECT 1 FROM friendships f WHERE f.status='accepted'
+        AND ((f.user_id=${viewer.id} AND f.friend_id=a.user_id) OR (f.friend_id=${viewer.id} AND f.user_id=a.user_id)))
+    AND ((a.kind='edition' AND e.visibility<>'private' AND p.visibility='public')
+      OR (a.kind='ranking' AND r.visibility<>'private' AND p.visibility='public')
+      OR (a.kind='note' AND n.visibility<>'private' AND NOT n.legacy_tip AND p.visibility='public')
+      OR (a.kind='friend' AND (a.friend_id=${viewer.id} OR EXISTS (
+        SELECT 1 FROM friendships f WHERE f.status='accepted'
+          AND ((f.user_id=${viewer.id} AND f.friend_id=a.friend_id) OR (f.friend_id=${viewer.id} AND f.user_id=a.friend_id))))
+        AND EXISTS (SELECT 1 FROM friendships f WHERE f.status='accepted'
+          AND ((f.user_id=a.user_id AND f.friend_id=a.friend_id) OR (f.friend_id=a.user_id AND f.user_id=a.friend_id)))))
+    ORDER BY a.created_at DESC,a.id DESC`;
   const seen = new Set<string>();
   let cursor: string | null = null;
   let previous: { createdAt: string; id: string } | undefined;
-  for (let page = 0; page < 5; page++) {
+  for (let page = 0; page <= expected.length; page++) {
     const feed: FeedDto = await viewer.call(
       "GET",
-      `/api/feed?limit=10${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+      `/api/feed?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
     );
     assert(!JSON.stringify(feed).includes("load-private-tip-"), "Feed exposed a private tip");
     for (const event of feed.events) {
@@ -71,10 +93,19 @@ async function feedOracle(db: Database, viewer: ApiClient) {
         );
       }
     }
-    if (!feed.nextCursor) break;
+    if (!feed.nextCursor) {
+      cursor = null;
+      break;
+    }
     assert.notEqual(feed.nextCursor, cursor, "Cursor did not advance");
     cursor = feed.nextCursor;
   }
+  assert.equal(cursor, null, "Feed did not terminate");
+  assert.deepEqual(
+    [...seen],
+    expected.map((row) => row.id),
+    "Feed omitted or added eligible events",
+  );
   return cursor;
 }
 
@@ -139,6 +170,7 @@ export async function report(manifest: Manifest) {
     ]),
   ].filter((index) => index < manifest.options.accounts);
   let plans: unknown;
+  let counts: unknown;
   const check = async (name: string, action: () => Promise<void>) => {
     try {
       await action();
@@ -168,12 +200,60 @@ export async function report(manifest: Manifest) {
       });
     await check("recorded accounts and deterministic edition totals", async () => {
       assert.equal(ids.length, manifest.options.accounts);
-      const [counts] =
+      const [editions] =
         await db`SELECT count(*)::int AS count FROM editions WHERE user_id=ANY(${ids}::uuid[])`;
       let total = 0;
       for (let index = 0; index < manifest.options.accounts; index++)
         total += persona(manifest.options.seed, index, manifest.options.editions).visits.length;
-      assert.equal(counts.count, total);
+      assert.equal(editions.count, total);
+      const [auth] =
+        await db`SELECT count(*)::int AS count FROM auth.users WHERE id=ANY(${ids}::uuid[])
+        AND raw_app_meta_data->>'load_run_id'=${manifest.options.runId} AND email LIKE '%@example.invalid'`;
+      const [profiles] =
+        await db`SELECT count(*)::int AS count FROM users WHERE id=ANY(${ids}::uuid[])`;
+      assert.equal(auth.count, manifest.options.accounts);
+      assert.equal(profiles.count, manifest.options.accounts);
+    });
+    await check("multi-city distribution, social writes and signed photo counts", async () => {
+      const distribution = await db`
+        SELECT p.city,p.country,count(*)::int AS editions,count(DISTINCT e.user_id)::int AS collectors
+        FROM editions e JOIN places p ON p.id=e.place_id WHERE e.user_id=ANY(${ids}::uuid[])
+        GROUP BY p.city,p.country ORDER BY p.city,p.country`;
+      const homes = await db`SELECT home_city,home_country,count(*)::int AS accounts
+        FROM users WHERE id=ANY(${ids}::uuid[]) GROUP BY home_city,home_country ORDER BY home_city`;
+      const saveAudiences = await db`SELECT visibility,count(*)::int AS saves FROM wishlist_saves
+        WHERE user_id=ANY(${ids}::uuid[]) GROUP BY visibility ORDER BY visibility`;
+      const [totals] = await db`
+        SELECT (SELECT count(*)::int FROM auth.users WHERE id=ANY(${ids}::uuid[])) AS auth_users,
+          (SELECT count(*)::int FROM users WHERE id=ANY(${ids}::uuid[])) AS profiles,
+          (SELECT count(*)::int FROM editions WHERE user_id=ANY(${ids}::uuid[])) AS editions,
+          (SELECT count(*)::int FROM editions WHERE user_id=ANY(${ids}::uuid[]) AND photo_path IS NOT NULL) AS photos,
+          (SELECT count(*)::int FROM storage.objects WHERE bucket_id='captures' AND split_part(name,'/',1)=ANY(${ids})) AS storage_objects,
+          (SELECT count(*)::int FROM friendships WHERE user_id=ANY(${ids}::uuid[]) AND friend_id=ANY(${ids}::uuid[]) AND status='accepted') AS friendships,
+          (SELECT count(*)::int FROM rankings WHERE user_id=ANY(${ids}::uuid[])) AS rankings,
+          (SELECT count(*)::int FROM wishlist_saves WHERE user_id=ANY(${ids}::uuid[])) AS saves,
+          (SELECT count(*)::int FROM wishlists WHERE owner_id=ANY(${ids}::uuid[])) AS wishlists,
+          (SELECT count(*)::int FROM place_notes WHERE user_id=ANY(${ids}::uuid[]) AND NOT legacy_tip) AS notes,
+          (SELECT count(*)::int FROM place_tags WHERE user_id=ANY(${ids}::uuid[])) AS tags,
+          (SELECT count(*)::int FROM activity_events WHERE user_id=ANY(${ids}::uuid[])) AS activity_events,
+          (SELECT count(*)::int FROM places WHERE slug LIKE ${`load-${manifest.options.runId}-%`}) AS places`;
+      counts = { ...totals, distribution, homes, saveAudiences };
+      assert.equal(totals.photos, totals.storage_objects);
+      if (manifest.options.accounts === 1000) {
+        assert.equal(distribution.length, 8);
+        assert(distribution.every((row) => row.editions > 1000 && row.collectors > 100));
+        assert.equal(totals.places, 2000);
+        assert(
+          totals.rankings > 12000 &&
+            totals.notes >= 7000 &&
+            totals.saves > 9000 &&
+            totals.tags > 9000,
+        );
+        assert.equal(totals.friendships, friendPairs(1000).length);
+        assert.equal(totals.photos, manifest.options.photoMode === "pool" ? 35000 : 7000);
+        assert(homes.length === 8 && homes.every((row) => row.accounts === 125));
+        assert(saveAudiences.length === 3 && saveAudiences.every((row) => row.saves > 1000));
+      }
     });
     for (const [index, client] of clients) {
       await check(`profile and collection SQL parity sample ${index}`, async () => {
@@ -201,6 +281,12 @@ export async function report(manifest: Manifest) {
     const first = clients.get(0);
     const second = clients.get(1);
     assert(first && second);
+    await check("anonymous Next requests cannot read account or social data", async () => {
+      for (const path of ["/api/me", "/api/me/collection", "/api/friends", "/api/feed"]) {
+        const response = await guardedFetch(API_ORIGIN)(`${API_ORIGIN}${path}`);
+        assert.equal(response.status, 401, `Anonymous ${path} was not rejected`);
+      }
+    });
     await check("real bearer PostgREST revocation and private Storage boundary", async () => {
       await first.verifyDataBoundary();
       const object = manifest.has("object:0:0", "object");
@@ -230,11 +316,11 @@ export async function report(manifest: Manifest) {
     await check("referential integrity, media ownership, orphan events and RLS grants", async () =>
       integrityOracle(db, ids),
     );
-    await check("EXPLAIN index eligibility", async () => {
+    await check("EXPLAIN ANALYZE at actual cardinalities with default planner", async () => {
       plans = await explainOracle(db, first.id, fixtureId(manifest.options.runId, 0));
     });
     if (manifest.options.mode === "worldwide") {
-      for (const index of [0, 20, 40, 60, 80, 100, 120, 140]) {
+      for (const index of cities.map((_, i) => i * placesPerCity)) {
         await check(`place metrics and friends SQL parity fixture ${index}`, async () => {
           const detail = await first.call<PlaceDetailDto>(
             "GET",
@@ -248,25 +334,37 @@ export async function report(manifest: Manifest) {
         });
       }
       await check("100 viewer/place SQL samples and eight-city nearby discovery", async () => {
-        for (let sample = 0; sample < 100; sample++) {
-          const viewer = clients.get(sampled[sample % sampled.length])!;
-          const index = (sample * 37) % fixtures.length;
-          const detail = await viewer.call<PlaceDetailDto>(
-            "GET",
-            `/api/places/${fixtureSlug(manifest.options.runId, index)}`,
-          );
-          assert(detail.metrics);
-          await metricsOracle(db, detail.id, detail.metrics);
-          await socialOracle(db, viewer, detail.id, detail);
-          const city = cities[sample % cities.length];
-          const nearby = await viewer.call<NearbyDto>(
-            "GET",
-            `/api/places/nearby?lat=${city.lat}&lng=${city.lng}&radiusM=5000&limit=20`,
-          );
-          assert(nearby.places.length > 0);
-          assert(nearby.places.every((entry) => entry.distanceM <= 5000));
-          assert(nearby.places.some((entry) => entry.place.city === city.city));
-          await viewer.call<FeedDto>("GET", "/api/feed?limit=25");
+        let positiveFriendVisits = 0;
+        let positiveFriendSaves = 0;
+        await bounded(
+          Array.from({ length: 100 }, (_, i) => i),
+          manifest.options.concurrency,
+          async (sample) => {
+            const viewer = clients.get(sampled[sample % sampled.length])!;
+            const index = (sample * 37) % fixtures.length;
+            const detail = await viewer.call<PlaceDetailDto>(
+              "GET",
+              `/api/places/${fixtureSlug(manifest.options.runId, index)}`,
+            );
+            assert(detail.metrics);
+            await metricsOracle(db, detail.id, detail.metrics);
+            await socialOracle(db, viewer, detail.id, detail);
+            if (detail.social.friendsBeen > 0) positiveFriendVisits++;
+            if (detail.social.friendsSaved > 0) positiveFriendSaves++;
+            const city = cities[sample % cities.length];
+            const nearby = await viewer.call<NearbyDto>(
+              "GET",
+              `/api/places/nearby?lat=${city.lat}&lng=${city.lng}&radiusM=5000&limit=20`,
+            );
+            assert(nearby.places.length > 0);
+            assert(nearby.places.every((entry) => entry.distanceM <= 5000));
+            assert(nearby.places.some((entry) => entry.place.city === city.city));
+            await viewer.call<FeedDto>("GET", "/api/feed?limit=25");
+          },
+        );
+        if (manifest.options.accounts === 1000) {
+          assert(positiveFriendVisits > 0, "Samples never exercised a positive friends-been count");
+          assert(positiveFriendSaves > 0, "Samples never exercised a positive friends-saved count");
         }
       });
       await check("feed privacy and strict cursor pagination", async () => {
@@ -276,7 +374,7 @@ export async function report(manifest: Manifest) {
         leaderboardOracle(db, first),
       );
       await check("non-friend private profile isolation", async () => {
-        const third = clients.get(2);
+        const third = clients.get(manifest.options.accounts - 1);
         assert(third, "Worldwide validation requires at least three accounts");
         const result = await third.call<UserDetailDto>("GET", `/api/users/${first.id}`);
         assert.equal(result.relationship, "none");
@@ -353,6 +451,7 @@ export async function report(manifest: Manifest) {
       });
     }
     if (manifest.options.mode === "worldwide") {
+      await edgeChecks(manifest, db, clients, check);
       await check("incremental/full recomputation drift", async () => {
         const snapshot = async () => ({
           places:
@@ -403,6 +502,25 @@ export async function report(manifest: Manifest) {
       processElapsedSeconds: process.uptime(),
       generatedAt: new Date().toISOString(),
       checks,
+      counts,
+      hardware: {
+        platform: platform(),
+        release: release(),
+        cpu: cpus()[0]?.model,
+        logicalCpus: cpus().length,
+        memoryBytes: totalmem(),
+        node: process.version,
+        cgroupCpu: existsSync("/sys/fs/cgroup/cpu.max")
+          ? readFileSync("/sys/fs/cgroup/cpu.max", "utf8").trim()
+          : null,
+        cgroupMemory: existsSync("/sys/fs/cgroup/memory.max")
+          ? readFileSync("/sys/fs/cgroup/memory.max", "utf8").trim()
+          : null,
+        concurrency: manifest.options.concurrency,
+        context:
+          "Supabase CLI 2.39.2 PostgreSQL 17/Auth/Storage and production Next on same VM; no remote database, no browser or external provider benchmark.",
+      },
+      stockPhotos: manifest.options.photoMode === "none" ? [] : loadPool(),
       latency: latencyReport(),
       previousRunLatency: existsSync(previousReport)
         ? (JSON.parse(readFileSync(previousReport, "utf8")) as { latency: unknown }).latency
@@ -418,6 +536,7 @@ export async function report(manifest: Manifest) {
     writeFileSync(resolve(manifest.dir, "report.json"), serialized, {
       mode: 0o600,
     });
+    writeEvidence(manifest.dir);
     console.log(`Report: out/load/runs/${manifest.options.runId}/report.json`);
     console.log(
       checks

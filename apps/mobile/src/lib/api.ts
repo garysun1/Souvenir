@@ -25,12 +25,22 @@ export class AccountApi {
     readonly userId: string,
     private scope: ReturnType<AccountScope['capture']>,
     private send: typeof fetch = (input, init) => globalThis.fetch(input, init),
+    private onUnauthorized?: (error: ApiError) => void,
   ) {}
   assertCurrent() { this.scope.assertCurrent(); }
   async request<T>(path: string, method = 'GET', input?: unknown): Promise<T> {
     return (await this.page<T>(path, method, input)).data;
   }
   async page<T>(path: string, method = 'GET', input?: unknown): Promise<{ data: T; nextCursor?: string | null }> {
+    try {
+      return await this.performPage<T>(path, method, input);
+    } catch (reason) {
+      this.assertCurrent();
+      if (reason instanceof ApiError && reason.status === 401) this.onUnauthorized?.(reason);
+      throw reason;
+    }
+  }
+  private async performPage<T>(path: string, method: string, input?: unknown): Promise<{ data: T; nextCursor?: string | null }> {
     const body = input === undefined ? undefined : JSON.stringify(input);
     for (let attempt = 0; attempt < 2; attempt++) {
       this.assertCurrent();

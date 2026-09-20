@@ -48,6 +48,7 @@ export class ApiClient {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
     });
+    const result = (await response.json()) as ApiResult<T>;
     const metric = `${method} ${path
       .split("?")[0]
       .replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, ":id")
@@ -59,7 +60,6 @@ export class ApiClient {
     counts[response.status] = (counts[response.status] ?? 0) + 1;
     statuses.set(metric, counts);
     if (!response.ok) throw new ApiFailure(response.status, method, path);
-    const result = (await response.json()) as ApiResult<T>;
     assert("data" in result, `Invalid API envelope: ${method} ${path}`);
     return result.data;
   }
@@ -69,6 +69,13 @@ export class ApiClient {
       .from("captures")
       .uploadToSignedUrl(path, token, bytes, { contentType: "image/jpeg" });
     assert(!result.error, "Signed upload failed");
+  }
+  async rejectUpload(path: string, token: string, bytes: Buffer, contentType: string) {
+    assert(path.startsWith(`${this.id}/`), "Foreign capture path refused");
+    const result = await this.auth.storage
+      .from("captures")
+      .uploadToSignedUrl(path, token, bytes, { contentType });
+    assert(result.error, "Storage accepted a forbidden MIME type or oversized upload");
   }
   async signedBytes(url: string) {
     const response = await guardedFetch(SUPABASE_ORIGIN)(url);
@@ -85,14 +92,15 @@ export class ApiClient {
 
 export function latencyReport() {
   return [...timings].map(([route, samples]) => {
-    samples.sort((a, b) => a - b);
+    const ordered = [...samples].sort((a, b) => a - b);
     return {
       route,
       count: samples.length,
       responseStatuses: statuses.get(route),
-      p50Ms: samples[Math.floor(samples.length * 0.5)],
-      p95Ms: samples[Math.floor(samples.length * 0.95)],
-      maxMs: samples.at(-1),
+      p50Ms: ordered[Math.ceil(ordered.length * 0.5) - 1],
+      p95Ms: ordered[Math.ceil(ordered.length * 0.95) - 1],
+      p99Ms: ordered[Math.ceil(ordered.length * 0.99) - 1],
+      maxMs: ordered.at(-1),
     };
   });
 }

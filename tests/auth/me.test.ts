@@ -1,5 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
+import type { UserStatsDto } from "../../shared/api-contract";
 
 const mocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
@@ -51,13 +52,46 @@ beforeEach(() => {
   mocks.getUserStats.mockResolvedValue(null);
 });
 
-it("returns only the verified profile using a private response", async () => {
+it("returns the verified profile with explicitly unavailable statistics in a private response", async () => {
   const response = await GET(new Request("https://souvenir.example/api/me"));
   expect(response.status).toBe(200);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   expect(await response.json()).toMatchObject({ data: { id: userId, stats: null } });
   expect(mocks.ensureProfile).toHaveBeenCalledWith(auth);
   expect(mocks.getUserStats).toHaveBeenCalledWith(userId, userId);
+});
+
+it("returns statistics for the verified owner and ignores a caller-selected user", async () => {
+  const stats: UserStatsDto = {
+    placesVisited: 7,
+    editions: 10,
+    citiesVisited: 2,
+    currentStreakWeeks: 1,
+    longestStreakWeeks: 3,
+    globalRank: null,
+    cityRanks: [],
+    computedAt: "2026-09-20T00:00:00Z",
+    provenance: "souvenir-activity",
+    definitionVersion: 1,
+    sampleStatus: "ready",
+  };
+  mocks.getUserStats.mockResolvedValue(stats);
+  const response = await GET(new Request("https://souvenir.example/api/me?userId=someone-else"));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(await response.json()).toMatchObject({ data: { id: userId, stats } });
+  expect(mocks.getUserStats).toHaveBeenCalledTimes(1);
+  expect(mocks.getUserStats).toHaveBeenCalledWith(userId, userId);
+});
+
+it("returns a sanitized error when statistics cannot be loaded", async () => {
+  mocks.getUserStats.mockRejectedValue(new Error("private SQL connection details"));
+  const response = await GET(new Request("https://souvenir.example/api/me"));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({
+    error: "service_unavailable",
+    message: "Your profile could not be loaded. Please retry.",
+  });
 });
 
 it("requires auth for profile reads and updates", async () => {
@@ -68,6 +102,7 @@ it("requires auth for profile reads and updates", async () => {
   expect((await PATCH(request('{"displayName":"Changed"}'))).status).toBe(401);
   expect(mocks.ensureProfile).not.toHaveBeenCalled();
   expect(mocks.update).not.toHaveBeenCalled();
+  expect(mocks.getUserStats).not.toHaveBeenCalled();
 });
 
 it("updates only approved fields with an owner predicate derived from auth", async () => {

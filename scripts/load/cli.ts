@@ -11,6 +11,9 @@ import { run } from "./run";
 import { report } from "./report";
 import { cleanup } from "./cleanup";
 import { smoke } from "./smoke";
+import { latencyReport } from "./api";
+import { provisionLogin } from "./accounts";
+import { writeEvidence } from "./evidence";
 
 async function main() {
   const { positionals, values } = parseArgs({
@@ -25,6 +28,7 @@ async function main() {
       concurrency: { type: "string" },
       mode: { type: "string" },
       photos: { type: "string" },
+      account: { type: "string" },
     },
   });
   const command = positionals[0];
@@ -39,6 +43,7 @@ async function main() {
       "cleanup",
       "cleanup-images",
       "smoke",
+      "provision-login",
     ].includes(command)
   )
     requireApply(values.apply === true);
@@ -103,8 +108,24 @@ async function main() {
       break;
     case "report": {
       const id = runId(values["run-id"] ?? "");
+      writeEvidence(resolve(RUNS, id));
       const data: unknown = JSON.parse(readFileSync(resolve(RUNS, id, "report.json"), "utf8"));
       console.log(JSON.stringify(data, null, 2));
+      break;
+    }
+    case "provision-login": {
+      const id = runId(values["run-id"] ?? "");
+      const manifest = new Manifest(id);
+      try {
+        await provisionLogin(
+          manifest,
+          status(),
+          Number(values.account ?? 0),
+          readFileSync(0, "utf8"),
+        );
+      } finally {
+        manifest.close();
+      }
       break;
     }
     case "run":
@@ -159,13 +180,22 @@ async function main() {
         );
         throw error;
       } finally {
+        writeFileSync(
+          resolve(manifest.dir, `${command}-latency-${Date.now()}.json`),
+          JSON.stringify(
+            { command, elapsedSeconds: process.uptime(), latency: latencyReport() },
+            null,
+            2,
+          ),
+          { mode: 0o600 },
+        );
         manifest.close();
       }
       break;
     }
     default:
       throw new Error(
-        "Expected start|stop|prepare|build|serve|photos|smoke|run|resume|verify|report|cleanup|cleanup-images|check|service",
+        "Expected start|stop|prepare|build|serve|photos|smoke|run|resume|verify|report|cleanup|cleanup-images|provision-login|check|service",
       );
   }
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, Globe } from "lucide-react";
 import { AppHeader } from "@/components/ui/app-header";
 import { DiscoverContent } from "./discover-content";
 
@@ -10,7 +10,7 @@ export default function DiscoverPage() {
       <AppHeader
         left={
           <span className="flex min-h-11 items-center gap-1 text-sm font-medium">
-            <MapPin className="size-4 text-brand" /> Explore
+            <Globe className="size-4 text-brand" /> Worldwide
           </span>
         }
         right={
